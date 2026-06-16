@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# FastAPI / Uvicorn
+*.log
+
+# Distribution / Packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Database
+*.db
+*.sqlite3
