@@ -71,18 +71,54 @@ model RosterPlayer {
 }
 
 model Projection {
-  playerId   String  @map("player_id")
-  season     Int     @db.SmallInt
-  week       Int     @db.SmallInt
-  source     String
+  playerId String @map("player_id")
+  season   Int    @db.SmallInt
+  week     Int    @db.SmallInt
+  source   String
+
+  // Pre-scored summary (fallback when stat lines absent)
   projPoints Decimal? @map("proj_points") @db.Decimal(6, 2)
   floor      Decimal? @db.Decimal(6, 2)
   ceiling    Decimal? @db.Decimal(6, 2)
   stdDev     Decimal? @map("std_dev") @db.Decimal(6, 2)
+
+  // Passing
+  passYd  Decimal? @map("pass_yd")  @db.Decimal(6, 2)
+  passTd  Decimal? @map("pass_td")  @db.Decimal(5, 2)
+  passInt Decimal? @map("pass_int") @db.Decimal(5, 2)
+  pass2pt Decimal? @map("pass_2pt") @db.Decimal(5, 2)
+
+  // Rushing
+  rushYd  Decimal? @map("rush_yd")  @db.Decimal(6, 2)
+  rushTd  Decimal? @map("rush_td")  @db.Decimal(5, 2)
+  rush2pt Decimal? @map("rush_2pt") @db.Decimal(5, 2)
+
+  // Receiving
+  rec    Decimal? @db.Decimal(5, 2)              // receptions (PPR pivot)
+  recYd  Decimal? @map("rec_yd")   @db.Decimal(6, 2)
+  recTd  Decimal? @map("rec_td")   @db.Decimal(5, 2)
+  rec2pt Decimal? @map("rec_2pt")  @db.Decimal(5, 2)
+
+  // Misc offense
+  fumLost Decimal? @map("fum_lost") @db.Decimal(5, 2)
+
+  // Kicking
+  fgMade Decimal? @map("fg_made") @db.Decimal(5, 2)
+  fgMiss Decimal? @map("fg_miss") @db.Decimal(5, 2)
+  xpMade Decimal? @map("xp_made") @db.Decimal(5, 2)
+
+  // Team defense / special teams
+  defSack    Decimal? @map("def_sack")     @db.Decimal(5, 2)
+  defInt     Decimal? @map("def_int")      @db.Decimal(5, 2)
+  defFumRec  Decimal? @map("def_fum_rec")  @db.Decimal(5, 2)
+  defTd      Decimal? @map("def_td")       @db.Decimal(5, 2)
+  defSafety  Decimal? @map("def_safety")   @db.Decimal(5, 2)
+  defPaAllow Decimal? @map("def_pa_allow") @db.Decimal(5, 2) // tiered scoring
 
   player Player @relation(fields: [playerId], references: [playerId])
 
   @@id([playerId, season, week, source])
   @@index([season, week])
   @@map("projections")
+
 }
