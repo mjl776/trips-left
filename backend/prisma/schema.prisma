@@ -14,3 +14,111 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
+
+model Player {
+  playerId  String   @id @map("player_id")
+  fullName  String   @map("full_name")
+  position  String
+  team      String?
+  status    String?
+  byeWeek   Int?     @map("bye_week") @db.SmallInt
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  rosterPlayers RosterPlayer[]
+  projections   Projection[]
+
+  @@index([position])
+  @@index([team])
+  @@map("players")
+}
+
+model League {
+  leagueId        String @id @map("league_id")
+  name            String?
+  season          Int    @db.SmallInt
+  scoringSettings Json   @map("scoring_settings")
+  rosterPositions String[] @map("roster_positions")
+  numTeams        Int?   @map("num_teams") @db.SmallInt
+
+  rosters Roster[]
+
+  @@map("leagues")
+}
+
+model Roster {
+  rosterId String @map("roster_id")
+  leagueId String @map("league_id")
+  ownerId  String? @map("owner_id")
+
+  league        League         @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade)
+  rosterPlayers RosterPlayer[]
+
+  @@id([rosterId, leagueId])
+  @@map("rosters")
+}
+
+model RosterPlayer {
+  rosterId String @map("roster_id")
+  leagueId String @map("league_id")
+  playerId String @map("player_id")
+  slot     String?
+
+  roster Roster @relation(fields: [rosterId, leagueId], references: [rosterId, leagueId], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [playerId])
+
+  @@id([rosterId, leagueId, playerId])
+  @@map("roster_players")
+}
+
+model Projection {
+  playerId String @map("player_id")
+  season   Int    @db.SmallInt
+  week     Int    @db.SmallInt
+  source   String
+
+  // Pre-scored summary (fallback when stat lines absent)
+  projPoints Decimal? @map("proj_points") @db.Decimal(6, 2)
+  floor      Decimal? @db.Decimal(6, 2)
+  ceiling    Decimal? @db.Decimal(6, 2)
+  stdDev     Decimal? @map("std_dev") @db.Decimal(6, 2)
+
+  // Passing
+  passYd  Decimal? @map("pass_yd")  @db.Decimal(6, 2)
+  passTd  Decimal? @map("pass_td")  @db.Decimal(5, 2)
+  passInt Decimal? @map("pass_int") @db.Decimal(5, 2)
+  pass2pt Decimal? @map("pass_2pt") @db.Decimal(5, 2)
+
+  // Rushing
+  rushYd  Decimal? @map("rush_yd")  @db.Decimal(6, 2)
+  rushTd  Decimal? @map("rush_td")  @db.Decimal(5, 2)
+  rush2pt Decimal? @map("rush_2pt") @db.Decimal(5, 2)
+
+  // Receiving
+  rec    Decimal? @db.Decimal(5, 2)              // receptions (PPR pivot)
+  recYd  Decimal? @map("rec_yd")   @db.Decimal(6, 2)
+  recTd  Decimal? @map("rec_td")   @db.Decimal(5, 2)
+  rec2pt Decimal? @map("rec_2pt")  @db.Decimal(5, 2)
+
+  // Misc offense
+  fumLost Decimal? @map("fum_lost") @db.Decimal(5, 2)
+
+  // Kicking
+  fgMade Decimal? @map("fg_made") @db.Decimal(5, 2)
+  fgMiss Decimal? @map("fg_miss") @db.Decimal(5, 2)
+  xpMade Decimal? @map("xp_made") @db.Decimal(5, 2)
+
+  // Team defense / special teams
+  defSack    Decimal? @map("def_sack")     @db.Decimal(5, 2)
+  defInt     Decimal? @map("def_int")      @db.Decimal(5, 2)
+  defFumRec  Decimal? @map("def_fum_rec")  @db.Decimal(5, 2)
+  defTd      Decimal? @map("def_td")       @db.Decimal(5, 2)
+  defSafety  Decimal? @map("def_safety")   @db.Decimal(5, 2)
+  defPaAllow Decimal? @map("def_pa_allow") @db.Decimal(5, 2) // tiered scoring
+
+  player Player @relation(fields: [playerId], references: [playerId])
+
+  @@id([playerId, season, week, source])
+  @@index([season, week])
+  @@map("projections")
+
+}
