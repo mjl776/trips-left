@@ -41,6 +41,7 @@ model League {
   scoringSettings Json   @map("scoring_settings")
   rosterPositions String[] @map("roster_positions")
   numTeams        Int?   @map("num_teams") @db.SmallInt
+  isMock          Boolean @default(false) @map("is_mock")
 
   rosters Roster[]
 
