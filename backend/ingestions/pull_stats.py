@@ -49,6 +49,15 @@ STAT_COLUMNS = {
     "receptions": "rec",
     "receiving_yards": "rec_yd",
     "receiving_tds": "rec_td",
+    # volume / opportunity (advanced analytics inputs)
+    "attempts": "attempts",
+    "carries": "carries",
+    "targets": "targets",
+    "passing_air_yards": "passing_air_yards",
+    "receiving_air_yards": "receiving_air_yards",
+    "target_share": "target_share",
+    "wopr": "wopr",
+    "passing_cpoe": "passing_cpoe",
 }
 
 # Mirrors scripts/syncPlayers.ts FANTASY_POSITIONS — the `players` table only
