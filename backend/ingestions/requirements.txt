@@ -1,0 +1,4 @@
+nflreadpy
+polars
+sqlalchemy
+psycopg2-binary

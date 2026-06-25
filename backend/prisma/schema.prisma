@@ -26,6 +26,8 @@ model Player {
 
   rosterPlayers RosterPlayer[]
   projections   Projection[]
+  stats       PlayerStats[]
+
 
   @@index([position])
   @@index([team])
@@ -121,4 +123,26 @@ model Projection {
   @@index([season, week])
   @@map("projections")
 
+}
+
+model PlayerStats {
+  playerId String @map("player_id")
+  season   Int    @db.SmallInt
+  week     Int    @db.SmallInt
+
+  // actual realized stat lines (same columns as Projection's stat lines)
+  passYd  Decimal? @map("pass_yd")  @db.Decimal(6, 2)
+  passTd  Decimal? @map("pass_td")  @db.Decimal(5, 2)
+  rushYd  Decimal? @map("rush_yd")  @db.Decimal(6, 2)
+  rushTd  Decimal? @map("rush_td")  @db.Decimal(5, 2)
+  rec     Decimal? @db.Decimal(5, 2)
+  recYd   Decimal? @map("rec_yd")   @db.Decimal(6, 2)
+  recTd   Decimal? @map("rec_td")   @db.Decimal(5, 2)
+  // ... etc, parallel to Projection
+
+  player Player @relation(fields: [playerId], references: [playerId])
+
+  @@id([playerId, season, week])
+  @@index([season, week])
+  @@map("player_stats")
 }
