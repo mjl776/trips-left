@@ -22,8 +22,8 @@ A lineup can't exist without a league setting attached, so one of these has to h
 |---|---|---|
 | `POST` | `/create-mock-league` | User defines their own scoring settings + roster slots, no real league behind it. |
 | `POST` | `/import-sleeper-league` | Given a Sleeper league ID, pulls its real scoring settings + roster positions. |
-| `GET` | `/view-league` | View the scoring settings + roster slots currently attached to a lineup. |
-| `PATCH` | `/update-league-settings` | Edit scoring settings on a **mock** league only. Real imported leagues stay read-only/synced from Sleeper — editing them would desync from the source league. |
+| `GET` | `/view-sleeper-league/:leagueId` | View the scoring settings + roster slots currently attached to a lineup. |
+| `PATCH` | `/update-mock-league-settings/:leagueId` | Edit scoring settings on a **mock** league only. Real imported leagues stay read-only/synced from Sleeper — editing them would desync from the source league. |
 
 ### Lineup management
 
