@@ -36,6 +36,11 @@ A lineup can't exist without a league setting attached, so one of these has to h
 | `PATCH` | `/swap-players` | Move a player between roster slots — bench ↔ starter, or starter ↔ starter. |
 | `GET` | `/view-lineup` | Full lineup view — every player currently rostered, starters and bench. |
 
+### Player
+
+| Method | Endpoint | Description |
+| `GET` | `/players` | Returns the full player list. No search/filter params — name search and slot-position eligibility are both handled client-side; used to find a `playerId` before `/add-player`. |
+
 ### Player stats & insights
 
 | Method | Endpoint | Description |
