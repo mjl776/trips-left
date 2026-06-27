@@ -1,23 +1,29 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { PrismaService } from './prisma.service';
-import { DEFAULT_SCORING_SETTINGS, League, LeagueSettings, ScoringSettings } from './models/league.models';
+import { PrismaService } from '../prisma.service';
+import {
+  DEFAULT_SCORING_SETTINGS,
+  League,
+  LeagueSettings,
+  ScoringSettings,
+} from './league.models';
 
 function toScoringSettings(json: unknown): ScoringSettings {
   return json as ScoringSettings;
 }
 
-function toLeague(record: Omit<League, 'scoringSettings'> & { scoringSettings: unknown }): League {
-  return { ...record, scoringSettings: toScoringSettings(record.scoringSettings) };
+function toLeague(
+  record: Omit<League, 'scoringSettings'> & { scoringSettings: unknown },
+): League {
+  return {
+    ...record,
+    scoringSettings: toScoringSettings(record.scoringSettings),
+  };
 }
 
 @Injectable()
 export class LeagueService {
   constructor(private readonly prisma: PrismaService) {}
-
-  getHello(): string {
-    return 'Hello from League Service!';
-  }
 
   async postMockLeague(): Promise<League> {
     const mockLeague = await this.prisma.league.create({
@@ -26,7 +32,28 @@ export class LeagueService {
         name: 'Mock League',
         season: 2026,
         scoringSettings: DEFAULT_SCORING_SETTINGS,
-        rosterPositions: ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'K', 'DEF', 'BN', 'BN', 'BN', 'BN', 'BN', 'BN', 'BN', 'BN', 'BN', 'BN'],
+        rosterPositions: [
+          'QB',
+          'RB',
+          'RB',
+          'WR',
+          'WR',
+          'TE',
+          'FLEX',
+          'FLEX',
+          'K',
+          'DEF',
+          'BN',
+          'BN',
+          'BN',
+          'BN',
+          'BN',
+          'BN',
+          'BN',
+          'BN',
+          'BN',
+          'BN',
+        ],
         numTeams: 1,
         isMock: true,
       },
@@ -36,7 +63,9 @@ export class LeagueService {
   }
 
   async importSleeperLeague(leagueId: string): Promise<League> {
-    const response = await fetch(`https://api.sleeper.app/v1/league/${leagueId}`);
+    const response = await fetch(
+      `https://api.sleeper.app/v1/league/${leagueId}`,
+    );
     if (response.ok) {
       const data = await response.json();
       if (data) {
@@ -66,12 +95,14 @@ export class LeagueService {
       throw new NotFoundException(`Sleeper league ${leagueId} not found`);
     }
 
-    return { ...result, scoringSettings: toScoringSettings(result.scoringSettings) };
+    return {
+      ...result,
+      scoringSettings: toScoringSettings(result.scoringSettings),
+    };
   }
 
   // Differed: Not critical to current core functionality
   async modifyMockLeagueSettings(leagueId: string): Promise<void> {
     return;
   }
-
 }

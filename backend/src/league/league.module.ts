@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from './prisma.module';
+import { PrismaModule } from '../prisma.module';
 import { LeagueController } from './league.controller';
 import { LeagueService } from './league.service';
 
@@ -8,5 +8,4 @@ import { LeagueService } from './league.service';
   controllers: [LeagueController],
   providers: [LeagueService],
 })
-
 export class LeagueModule {}

@@ -31,9 +31,9 @@ A lineup can't exist without a league setting attached, so one of these has to h
 |---|---|---|
 | `POST` | `/create-lineup` | Create a new lineup referencing a league setting (mock or imported). Required before `/add-player` has anywhere to add to. |
 | `POST` | `/add-player` | Add a player to the mock lineup. |
+| `POST` | `/add-drop-player` | Add a player and drop a player to the mock lineup. |
 | `DELETE` | `/remove-player` | Drop a player from the lineup. |
-| `PATCH` | `/swap` | Move a player between roster slots — bench ↔ starter, or starter ↔ starter. |
-| `GET` | `/view-player` | Player overview: season stats, projected points, recent performance history, AI insights (TBD, scoped to lift required). |
+| `PATCH` | `/swap-players` | Move a player between roster slots — bench ↔ starter, or starter ↔ starter. |
 | `GET` | `/view-lineup` | Full lineup view — every player currently rostered, starters and bench. |
 
 ### Player stats & insights
@@ -41,6 +41,7 @@ A lineup can't exist without a league setting attached, so one of these has to h
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/calculate-projected-points` | Computes projected fantasy points for every player in a lineup, using the lineup's league scoring settings. |
+| `GET` | `/view-player` | Player overview: season stats, projected points, recent performance history, AI insights (TBD, scoped to lift required). |
 
 `/calculate-projected-points` is the single source of truth the rest of the insight layer builds on — **best player**, **worst player** (drop candidate), and **dark horse** (sleeper pick) are all derived from this one ranked output rather than separate calculations, since they're different lenses on the same underlying per-player projection rather than independent computations.
 
