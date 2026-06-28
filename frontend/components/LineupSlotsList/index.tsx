@@ -2,6 +2,7 @@
 
 import { FC, Fragment } from "react";
 import styles from "./page.module.css";
+import LineupSlotComponent from "../LineupSlot";
 
 export type LineupSlot = {
   id: string;
@@ -26,20 +27,7 @@ const LineupSlotsList: FC<LineupSlotsListProps> = ({ sections, onSlotClick }) =>
         <Fragment key={section.title}>
           <div className={styles.divider}>{section.title}</div>
           {section.slots.map((slot) => (
-            <div key={slot.id} className={styles.slot}>
-              <span className={styles.position}>{slot.label}</span>
-              <span className={styles.placeholder}>{slot.assignedPlayerName ?? "Empty"}</span>
-              {onSlotClick && (
-                <button
-                  type="button"
-                  className={styles.addCircle}
-                  aria-label={`Add player to ${slot.label}`}
-                  onClick={() => onSlotClick(slot)}
-                >
-                  <span className={styles.plus}>+</span>
-                </button>
-              )}
-            </div>
+            <LineupSlotComponent key={slot.id} slot={slot} onClick={onSlotClick} />
           ))}
         </Fragment>
       ))}

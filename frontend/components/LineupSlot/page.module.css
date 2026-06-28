@@ -1,0 +1,57 @@
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 3.5rem;
+  flex-shrink: 0;
+  padding: 0 1rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
+}
+
+.position {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  border-radius: 0.75rem;
+  border: 2px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--foreground);
+}
+
+.placeholder {
+  flex: 1;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.addCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.addCircle:hover {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  border-color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.plus {
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--foreground);
+}

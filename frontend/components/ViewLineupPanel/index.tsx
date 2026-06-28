@@ -52,6 +52,8 @@ const ViewLineupPanel: FC = () => {
         loadPlayers();
     }, []);
 
+    
+
     return (
     <>
        <div className={styles.stack}>
