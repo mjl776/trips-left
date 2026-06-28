@@ -143,14 +143,19 @@ model PlayerStats {
   // ... etc, parallel to Projection
 
   // Volume / opportunity (advanced analytics inputs)
-  attempts          Decimal? @map("attempts")            @db.Decimal(5, 2)
-  carries           Decimal? @map("carries")             @db.Decimal(5, 2)
-  targets           Decimal? @map("targets")             @db.Decimal(5, 2)
-  passingAirYards   Decimal? @map("passing_air_yards")   @db.Decimal(6, 2)
-  receivingAirYards Decimal? @map("receiving_air_yards") @db.Decimal(6, 2)
-  targetShare       Decimal? @map("target_share")        @db.Decimal(5, 4)
-  wopr              Decimal? @map("wopr")                @db.Decimal(5, 4)
-  passingCpoe       Decimal? @map("passing_cpoe")        @db.Decimal(5, 2)
+  attempts                    Decimal? @map("attempts")                      @db.Decimal(5, 2)
+  carries                     Decimal? @map("carries")                       @db.Decimal(5, 2)
+  targets                     Decimal? @map("targets")                       @db.Decimal(5, 2)
+  passingAirYards             Decimal? @map("passing_air_yards")             @db.Decimal(6, 2)
+  receivingAirYards           Decimal? @map("receiving_air_yards")           @db.Decimal(6, 2)
+  targetShare                 Decimal? @map("target_share")                  @db.Decimal(5, 4)
+  wopr                        Decimal? @map("wopr")                          @db.Decimal(5, 4)
+  passingCpoe                 Decimal? @map("passing_cpoe")                  @db.Decimal(5, 2)
+  receiving_epa               Decimal? @map("receiving_epa")                 @db.Decimal(5, 2)
+  passing_epa                 Decimal? @map("passing_epa")                   @db.Decimal(5, 2)
+  rushing_epa                 Decimal? @map("rushing_epa")                   @db.Decimal(5, 2)
+  receiving_yards_after_catch Decimal? @map("receiving_yards_after_catch")   @db.Decimal(5, 2)
+  racr                        Decimal? @map("racr")                          @db.Decimal(5, 2)
 
   player Player @relation(fields: [playerId], references: [playerId])
 

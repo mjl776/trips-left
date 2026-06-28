@@ -58,6 +58,12 @@ STAT_COLUMNS = {
     "target_share": "target_share",
     "wopr": "wopr",
     "passing_cpoe": "passing_cpoe",
+    # efficiency / advanced metrics
+    "receiving_epa": "receiving_epa",
+    "passing_epa": "passing_epa",
+    "rushing_epa": "rushing_epa",
+    "receiving_yards_after_catch": "receiving_yards_after_catch",
+    "racr": "racr",
 }
 
 # Mirrors scripts/syncPlayers.ts FANTASY_POSITIONS — the `players` table only
