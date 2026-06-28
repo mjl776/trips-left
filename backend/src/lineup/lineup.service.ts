@@ -24,7 +24,7 @@ type RosterWithLeagueAndPlayers = Prisma.RosterGetPayload<{
 export class LineupService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createLineup({ leagueId, assignments }: CreateLineupInput) {
+  async createLineup({ leagueId, name, assignments }: CreateLineupInput) {
     const league = await this.prisma.league.findUnique({ where: { leagueId } });
     if (!league) {
       throw new NotFoundException(`League ${leagueId} not found`);
@@ -36,6 +36,7 @@ export class LineupService {
       data: {
         rosterId: randomUUID(),
         leagueId,
+        name,
         rosterPlayers: {
           create: assignments.map(({ playerId, slot }) => ({ playerId, slot })),
         },

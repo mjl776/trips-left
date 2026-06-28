@@ -35,7 +35,7 @@ const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSel
     ? players.filter((player) => player.fullName.toLowerCase().includes(trimmedQuery))
     : [];
   const results = matches.slice(0, MAX_RESULTS);
-  
+
   return (
     <div className={styles.backdrop} onClick={onClose}>
       <div className={styles.card} onClick={(event) => event.stopPropagation()}>

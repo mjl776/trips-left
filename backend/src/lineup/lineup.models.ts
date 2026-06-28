@@ -5,6 +5,7 @@ export type LineupSlotAssignment = {
 
 export type CreateLineupInput = {
   leagueId: string;
+  name: string;
   assignments: LineupSlotAssignment[];
 };
 
