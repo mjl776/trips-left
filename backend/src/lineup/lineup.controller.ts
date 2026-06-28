@@ -43,4 +43,9 @@ export class LineupController {
     return this.lineupService.viewLineup(input)
   }
 
+  @Delete('delete-lineup')
+  deleteRoster(@Body() input: GetLineupInput) {
+    return this.lineupService.deleteRoster(input);
+  }
+
 }

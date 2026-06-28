@@ -9,6 +9,7 @@ import {
   AddDropPlayerInput,
   AddPlayerInput,
   CreateLineupInput,
+  GetLineupInput,
   LineupSlotAssignment,
   RemovePlayerInput,
   SLOT_ELIGIBILITY,
@@ -250,6 +251,7 @@ export class LineupService {
         rosterPlayers: {
           include: { player: true },
         },
+        league: true,
       },
     });
 
@@ -258,6 +260,14 @@ export class LineupService {
     }
 
     return roster;
+  }
+
+  async deleteRoster({ rosterId, leagueId }: GetLineupInput) {
+    await this.getRoster(rosterId, leagueId);
+
+    return await this.prisma.roster.delete({
+      where: { rosterId_leagueId: { rosterId, leagueId } },
+    });
   }
 
   private async findUniqueRoster(
