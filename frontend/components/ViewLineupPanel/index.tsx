@@ -1,12 +1,14 @@
 'use client'
 
 import LineupSlotsList from "../LineupSlotsList"
+import type { playerStats } from "../LineupSlotsList";
 import { FC, useEffect, useState } from "react";
 import AddPlayerOverlay, { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { ActiveSlot, getEligiblePlayers } from "@/lib/playerEligibility";
 import { splitRosterPositions, buildAssignments } from "@/lib/lineupSections";
 import styles from './page.module.css'
 import { useSearchParams } from "next/navigation";
+import { fetchPlayerStatsByPlayerId, PROJECTION_BASE_SEASON } from "@/lib/playerStats";
 
 const ViewLineupPanel: FC = () => {
 
@@ -19,6 +21,7 @@ const ViewLineupPanel: FC = () => {
     const [assignments, setAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
     const [starterLabels, setStarterLabels] = useState<string[]>([]);
     const [benchLabels, setBenchLabels] = useState<string[]>([]);
+    const [playerStatsByPlayerId, setPlayerStatsByPlayerId] = useState<Record<string, playerStats>>({});
     const eligiblePlayers = activeSlot ? getEligiblePlayers(players, assignments, activeSlot) : [];
 
     useEffect(() => {
@@ -50,9 +53,21 @@ const ViewLineupPanel: FC = () => {
             }
           };
         loadPlayers();
-    }, []);
+    }, [rosterId, leagueId]);
 
-    
+    useEffect(() => {
+        const loadPlayerStats = async () => {
+            try {
+                const playerIds = Object.values(assignments).map((player) => player.playerId);
+                if (playerIds.length === 0) return;
+                const data = await fetchPlayerStatsByPlayerId(playerIds, PROJECTION_BASE_SEASON, leagueId);
+                setPlayerStatsByPlayerId(data);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+        loadPlayerStats();
+    }, [assignments, leagueId]);
 
     return (
     <>
@@ -61,19 +76,29 @@ const ViewLineupPanel: FC = () => {
                 sections={[
                 {
                     title: "Starters",
-                    slots: starterLabels.map((label, index) => ({
-                    id: `starter-${index}`,
-                    label,
-                    assignedPlayerName: assignments[`starter-${index}`]?.fullName,
-                    })),
+                    slots: starterLabels.map((label, index) => {
+                        const slotId = `starter-${index}`;
+                        const player = assignments[slotId];
+                        return {
+                            id: slotId,
+                            label,
+                            assignedPlayerName: player?.fullName,
+                            assignedPlayerStats: player ? playerStatsByPlayerId[player.playerId] : undefined,
+                        };
+                    }),
                 },
                 {
                     title: "Bench",
-                    slots: benchLabels.map((label, index) => ({
-                    id: `bench-${index}`,
-                    label,
-                    assignedPlayerName: assignments[`bench-${index}`]?.fullName,
-                    })),
+                    slots: benchLabels.map((label, index) => {
+                        const slotId = `bench-${index}`;
+                        const player = assignments[slotId];
+                        return {
+                            id: slotId,
+                            label,
+                            assignedPlayerName: player?.fullName,
+                            assignedPlayerStats: player ? playerStatsByPlayerId[player.playerId] : undefined,
+                        };
+                    }),
                 },
                 ]}
                 onSlotClick={(slot) => setActiveSlot(slot)}

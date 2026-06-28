@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/leagues", label: "Leagues" },
-  { href: "/lineup", label: "Lineup" },
+  { href: "/lineup-management", label: "Lineup" },
 ];
 
 const Navbar: FC = () => {

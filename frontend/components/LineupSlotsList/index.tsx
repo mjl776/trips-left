@@ -8,7 +8,16 @@ export type LineupSlot = {
   id: string;
   label: string;
   assignedPlayerName?: string | null;
+  assignedPlayerStats?: playerStats;
 };
+
+// Mirrors PlayerSeasonOverview in backend/src/player/player.models.ts
+export type playerStats = {
+  gamesPlayed: number;
+  totalPoints: number;
+  positionRank: number | null;
+  positionPlayerCount: number;
+}
 
 export type LineupSlotSection = {
   title: string;

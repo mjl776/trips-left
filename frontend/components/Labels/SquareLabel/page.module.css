@@ -1,0 +1,15 @@
+
+.squareLabel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.3rem;
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    border-radius: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+    background: color-mix(in srgb, var(--foreground) 5%, transparent);
+}

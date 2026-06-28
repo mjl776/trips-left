@@ -34,7 +34,6 @@ export function buildAssignments(
 
   benchLabels.forEach((label, index) => {
     const player = playersBySlot[label]?.shift();
-    console.log(player);
     if (player) assignments[`bench-${index}`] = player;
   });
 

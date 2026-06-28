@@ -10,11 +10,11 @@ const CreateLineupBox: FC = () => {
   return (
     <button
       type="button"
-      className={styles.box}
+      className={styles.createLineupBox}
       aria-label="Create mock lineup"
       onClick={() => router.push("/lineup-management/create")}
     >
-      <span className={styles.circle}>
+      <span className={styles.createLineupCircle}>
         <span className={styles.plus}>+</span>
       </span>
       <div className={styles.label}>Create a Mock Lineup</div>

@@ -1,6 +1,6 @@
 .panel {
   width: 100%;
-  max-width: 28rem;
+  max-width: 50rem;
   margin-bottom: 5rem;
   border-radius: 1.5rem;
   background: color-mix(in srgb, var(--foreground) 5%, transparent);
