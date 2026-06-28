@@ -49,5 +49,6 @@ export type LineupInsights = {
   leagueId: string;
   season: number;
   bestPlayer: RosterPlayerScore | null;
+  worstPlayer: RosterPlayerScore | null;
   darkHorse: DarkHorsePlayer | null;
 };

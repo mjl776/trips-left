@@ -191,8 +191,10 @@ export class ProjectionsService {
         totalPoints,
       };
     });
+
     scored.sort((a, b) => b.totalPoints - a.totalPoints);
     const bestPlayer = scored[0] ?? null;
+    const worstPlayer = scored.length > 1 ? scored[scored.length - 1] : null;
 
     const darkHorse = await this.findDarkHorse(
       roster.rosterPlayers,
@@ -206,6 +208,7 @@ export class ProjectionsService {
       leagueId,
       season: seasonNum,
       bestPlayer,
+      worstPlayer,
       darkHorse,
     };
   }
