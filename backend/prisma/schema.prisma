@@ -52,6 +52,7 @@ model Roster {
   rosterId String @map("roster_id")
   leagueId String @map("league_id")
   ownerId  String? @map("owner_id")
+  name String  @default("Untitled Lineup") @map("name")
 
   league        League         @relation(fields: [leagueId], references: [leagueId], onDelete: Cascade)
   rosterPlayers RosterPlayer[]

@@ -9,6 +9,7 @@ import {
   AddDropPlayerInput,
   AddPlayerInput,
   CreateLineupInput,
+  GetLineupInput,
   LineupSlotAssignment,
   RemovePlayerInput,
   SLOT_ELIGIBILITY,
@@ -24,7 +25,7 @@ type RosterWithLeagueAndPlayers = Prisma.RosterGetPayload<{
 export class LineupService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createLineup({ leagueId, assignments }: CreateLineupInput) {
+  async createLineup({ leagueId, name, assignments }: CreateLineupInput) {
     const league = await this.prisma.league.findUnique({ where: { leagueId } });
     if (!league) {
       throw new NotFoundException(`League ${leagueId} not found`);
@@ -36,6 +37,7 @@ export class LineupService {
       data: {
         rosterId: randomUUID(),
         leagueId,
+        name,
         rosterPlayers: {
           create: assignments.map(({ playerId, slot }) => ({ playerId, slot })),
         },
@@ -249,6 +251,7 @@ export class LineupService {
         rosterPlayers: {
           include: { player: true },
         },
+        league: true,
       },
     });
 
@@ -257,6 +260,14 @@ export class LineupService {
     }
 
     return roster;
+  }
+
+  async deleteRoster({ rosterId, leagueId }: GetLineupInput) {
+    await this.getRoster(rosterId, leagueId);
+
+    return await this.prisma.roster.delete({
+      where: { rosterId_leagueId: { rosterId, leagueId } },
+    });
   }
 
   private async findUniqueRoster(
