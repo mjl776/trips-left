@@ -20,7 +20,7 @@ const LineupBox: FC<LineupBoxProps> = ({ name, leagueId, rosterId }) => {
       className={styles.box}
       onClick={() => router.push(`/lineup-management/view-lineup?leagueId=${leagueId}&rosterId=${rosterId}`)}
     >
-      <div className={styles.name}>{name}</div>
+      <div className={styles.name}>{name || "Untitled Lineup"}</div>
     </button>
   );
 };
