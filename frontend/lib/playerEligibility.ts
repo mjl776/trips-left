@@ -14,7 +14,7 @@ export function getEligiblePlayers(
   return players.filter((player) => {
     const isAssignedElsewhere = Object.entries(assignments).some(
       ([slotId, assignedPlayer]) =>
-        slotId !== activeSlot.id && assignedPlayer.playerId === player.playerId,
+        slotId !== activeSlot.id && assignedPlayer?.playerId === player.playerId,
     );
     if (isAssignedElsewhere) return false;
 

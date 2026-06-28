@@ -1,10 +1,10 @@
 'use client'
 
-import { BENCH_SLOTS, STARTER_SLOTS } from "@/constants";
 import LineupSlotsList from "../LineupSlotsList"
 import { FC, useEffect, useState } from "react";
 import AddPlayerOverlay, { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { ActiveSlot, getEligiblePlayers } from "@/lib/playerEligibility";
+import { splitRosterPositions, buildAssignments } from "@/lib/lineupSections";
 import styles from './page.module.css'
 import { useSearchParams } from "next/navigation";
 
@@ -17,6 +17,8 @@ const ViewLineupPanel: FC = () => {
     const [players, setPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
     const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
     const [assignments, setAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
+    const [starterLabels, setStarterLabels] = useState<string[]>([]);
+    const [benchLabels, setBenchLabels] = useState<string[]>([]);
     const eligiblePlayers = activeSlot ? getEligiblePlayers(players, assignments, activeSlot) : [];
 
     useEffect(() => {
@@ -25,15 +27,17 @@ const ViewLineupPanel: FC = () => {
                 const response = await fetch(
                     `${process.env.NEXT_PUBLIC_API_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}`,
                 );
-                const data = await response.json();
-                console.log(data);
-                setAssignments(data);
+                const roster = await response.json();
+                const { starterLabels, benchLabels } = splitRosterPositions(roster.league.rosterPositions);
+                setStarterLabels(starterLabels);
+                setBenchLabels(benchLabels);
+                setAssignments(buildAssignments(starterLabels, benchLabels, roster.rosterPlayers));
             } catch (error) {
                 console.error(error);
             }
         }
         loadLineup();
-    }, [searchParams])
+    }, [rosterId, leagueId])
 
     useEffect(() => {
         const loadPlayers = async () => {
@@ -55,7 +59,7 @@ const ViewLineupPanel: FC = () => {
                 sections={[
                 {
                     title: "Starters",
-                    slots: STARTER_SLOTS.map((label, index) => ({
+                    slots: starterLabels.map((label, index) => ({
                     id: `starter-${index}`,
                     label,
                     assignedPlayerName: assignments[`starter-${index}`]?.fullName,
@@ -63,7 +67,7 @@ const ViewLineupPanel: FC = () => {
                 },
                 {
                     title: "Bench",
-                    slots: BENCH_SLOTS.map((label, index) => ({
+                    slots: benchLabels.map((label, index) => ({
                     id: `bench-${index}`,
                     label,
                     assignedPlayerName: assignments[`bench-${index}`]?.fullName,

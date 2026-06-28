@@ -48,12 +48,16 @@ const CreateLineupSlotsPanel: FC = () => {
       }
       const league: { leagueId: string } = await leagueRes.json();
 
-      const slotAssignments: LineupSlotAssignment[] = STARTER_SLOTS
-        .map((slot, index) => {
+      const slotAssignments: LineupSlotAssignment[] = [
+        ...STARTER_SLOTS.map((slot, index) => {
           const player = assignments[`starter-${index}`];
           return player ? { playerId: player.playerId, slot } : null;
-        })
-        .filter((assignment): assignment is LineupSlotAssignment => assignment !== null);
+        }),
+        ...BENCH_SLOTS.map((slot, index) => {
+          const player = assignments[`bench-${index}`];
+          return player ? { playerId: player.playerId, slot } : null;
+        }),
+      ].filter((assignment): assignment is LineupSlotAssignment => assignment !== null);
 
       const lineupRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/create-lineup`, {
         method: "POST",
