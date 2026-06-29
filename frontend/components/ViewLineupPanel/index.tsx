@@ -42,6 +42,7 @@ const ViewLineupPanel: FC = () => {
   const [lineupInsights, setLineupInsights] = useState<LineupInsights | null>(
     null,
   );
+  const [lineupName, setLineupName] = useState("");
 
   const eligiblePlayers = activeSlot
     ? getEligiblePlayers(players, assignments, activeSlot)
@@ -62,6 +63,7 @@ const ViewLineupPanel: FC = () => {
         setAssignments(
           buildAssignments(starterLabels, benchLabels, roster.rosterPlayers),
         );
+        setLineupName(roster.name);
       } catch (error) {
         console.error(error);
       }
@@ -131,6 +133,7 @@ const ViewLineupPanel: FC = () => {
   return (
     <>
       <div className={styles.stack}>
+        <h1 className={styles.title}>{lineupName || "Untitled Lineup"}</h1>
         <LineupSlotsList
           sections={[
             {
