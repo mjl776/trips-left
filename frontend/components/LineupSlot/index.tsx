@@ -9,21 +9,13 @@ import SquareLabel from "../Labels/SquareLabel";
 type LineupSlotProps = {
   slot: LineupSlotType;
   onClick?: (slot: LineupSlotType) => void;
-  onViewPlayer?: (slot: LineupSlotType) => void;
 };
 
-const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer }) => {
+const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick }) => {
   return (
     <div className={styles.slot}>
-      <button
-        type="button"
-        className={styles.playerInfo}
-        disabled={!slot.assignedPlayerName || !onViewPlayer}
-        onClick={() => onViewPlayer?.(slot)}
-      >
-        <span className={styles.position}>{slot.label}</span>
-        <span className={styles.placeholder}>{slot.assignedPlayerName ?? "Empty"}</span>
-      </button>
+      <span className={styles.position}>{slot.label}</span>
+      <span className={styles.placeholder}>{slot.assignedPlayerName ?? "Empty"}</span>
       {onClick && !slot.assignedPlayerName && (
         <button
           type="button"
@@ -36,14 +28,10 @@ const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer }) => {
       )}
       {onClick && slot.assignedPlayerName && (
         <>
-          {slot.isBestPlayer && <SquareLabel labelText="Best Player"/>}
-          {slot.isDarkHorse && <SquareLabel labelText="Dark Horse"/>}
-          {slot.isWorstPlayer && <SquareLabel labelText="Worst Player"/>}
           <SquareLabel labelText="Proj. Points"/>
           <ProjectPointsBox stats={slot.assignedPlayerStats} />
         </>
       )}
-
     </div>
   );
 };
