@@ -1,4 +1,3 @@
-
 export type DarkHorsePlayer = {
   playerId: string;
   fullName: string;
@@ -7,8 +6,10 @@ export type DarkHorsePlayer = {
   stat: EpaStat;
   value: number;
   leagueThreshold: number;
+  positionRank: number | null;
+  positionPlayerCount: number;
+  percentile: number | null;
 };
-
 export type EpaStat = 'passing_epa' | 'rushing_epa' | 'receiving_epa';
 
 export type LineupInsights = {

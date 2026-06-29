@@ -41,14 +41,13 @@ const EPA_STAT_BY_POSITION: Record<string, EpaStat> = {
   TE: 'receiving_epa',
 };
 
-// Top 20% of this position's league-wide EPA distribution for the season.
-// Returns Infinity (nobody qualifies) if there's no data to compare against.
-async function getLeagueTopPercentileThreshold(
+// This position's league-wide EPA totals for the season, best-to-worst.
+async function getLeagueEpaDistribution(
   prisma: PrismaService,
   position: string,
   stat: EpaStat,
   season: number,
-): Promise<number> {
+): Promise<Array<{ playerId: string; value: number }>> {
   const rows = await prisma.playerStats.findMany({
     where: { season, week: { lte: REGULAR_SEASON_WEEKS }, player: { position } },
   });
@@ -60,12 +59,19 @@ async function getLeagueTopPercentileThreshold(
     totalsByPlayer.set(row.playerId, (totalsByPlayer.get(row.playerId) ?? 0) + value);
   }
 
-  const sorted = [...totalsByPlayer.values()].sort((a, b) => b - a);
-  if (sorted.length === 0) {
+  return [...totalsByPlayer.entries()]
+    .map(([playerId, value]) => ({ playerId, value }))
+    .sort((a, b) => b.value - a.value);
+}
+
+// Top 20% cutoff value of a best-to-worst distribution.
+// Infinity (nobody qualifies) if there's no data to compare against.
+function getTopPercentileThreshold(distribution: Array<{ value: number }>): number {
+  if (distribution.length === 0) {
     return Infinity;
   }
-  const cutoffIndex = Math.max(0, Math.ceil(sorted.length * 0.2) - 1);
-  return sorted[cutoffIndex];
+  const cutoffIndex = Math.max(0, Math.ceil(distribution.length * 0.2) - 1);
+  return distribution[cutoffIndex].value;
 }
 
 function toNum(value: Prisma.Decimal | null | undefined): number | null {
@@ -240,7 +246,7 @@ export class ProjectionsService {
         EPA_STAT_BY_POSITION[rp.player.position] != null,
     );
 
-    const thresholdCache = new Map<string, number>();
+    const distributionCache = new Map<string, Array<{ playerId: string; value: number }>>();
     let darkHorse: DarkHorsePlayer | null = null;
     let bestMargin = -Infinity;
 
@@ -255,20 +261,29 @@ export class ProjectionsService {
       );
 
       const cacheKey = `${candidate.player.position}:${stat}`;
-      let threshold = thresholdCache.get(cacheKey);
-      if (threshold === undefined) {
-        threshold = await getLeagueTopPercentileThreshold(
+      let distribution = distributionCache.get(cacheKey);
+      if (distribution === undefined) {
+        distribution = await getLeagueEpaDistribution(
           this.prisma,
           candidate.player.position,
           stat,
           season,
         );
-        thresholdCache.set(cacheKey, threshold);
+        distributionCache.set(cacheKey, distribution);
       }
 
+      const threshold = getTopPercentileThreshold(distribution);
       const margin = value - threshold;
       if (margin >= 0 && margin > bestMargin) {
         bestMargin = margin;
+        const rankIndex = distribution.findIndex((d) => d.playerId === candidate.playerId);
+        const positionRank = rankIndex === -1 ? null : rankIndex + 1;
+        const positionPlayerCount = distribution.length;
+        const percentile =
+          positionRank == null
+            ? null
+            : ((positionPlayerCount - positionRank + 1) / positionPlayerCount) * 100;
+
         darkHorse = {
           playerId: candidate.playerId,
           fullName: candidate.player.fullName,
@@ -277,6 +292,9 @@ export class ProjectionsService {
           stat,
           value,
           leagueThreshold: threshold,
+          positionRank,
+          positionPlayerCount,
+          percentile,
         };
       }
     }
