@@ -9,4 +9,10 @@ This application is a fantasy football optimizer that uses advanced metrics the 
 
 ## Inspiration Behind the App
 
-For me, I have never formally won a fantasy football league but have always wanted to find a way to gain a unique edge on my competitors. I came up with the app idea of Trips Left that would help inspire to discover how I can identify the weakspots on my team and also acquire players who excel in advanced metrics. 
+For me, I have never formally won a fantasy football league but have always wanted to find a way to gain a unique edge on my competitors. I came up with the app idea of Trips Left that would help inspire to discover how I can identify the weakspots on my team and also acquire players who excel in advanced metrics.
+
+## What does Trips Left Mean?
+
+Trips Left specifically is a football formation for alignment. It means three receivers lined up on the left side of the offensive formation (the strong side is to the left), with one receiver on the right. "Trips" refers to the three-receiver bunch — the trio.
+
+The idea behind the name of the app is it is intended to help figure out your fantasy teams objectives and how you can find the right team to align with your goals for the fantasy season. 
