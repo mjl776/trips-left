@@ -10,6 +10,25 @@
   background: color-mix(in srgb, var(--foreground) 3%, transparent);
 }
 
+.playerInfo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.playerInfo:disabled {
+  cursor: default;
+}
+
 .position {
   display: flex;
   align-items: center;
