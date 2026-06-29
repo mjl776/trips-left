@@ -1,9 +1,9 @@
 import { FC } from "react";
 import styles from './page.module.css'
-import type { playerStats } from "../LineupSlotsList";
+import type { PlayerStats } from "../LineupSlotsList";
 
 type ProjectPointsBoxProps = {
-  stats?: playerStats;
+  stats?: PlayerStats;
 };
 
 const ProjectPointsBox: FC<ProjectPointsBoxProps> = ({ stats }) => {
