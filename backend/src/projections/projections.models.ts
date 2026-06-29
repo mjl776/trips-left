@@ -42,6 +42,9 @@ export type DarkHorsePlayer = {
   stat: EpaStat;
   value: number;
   leagueThreshold: number;
+  positionRank: number | null;
+  positionPlayerCount: number;
+  percentile: number | null;
 };
 
 export type LineupInsights = {
