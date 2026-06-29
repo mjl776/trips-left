@@ -1,4 +1,4 @@
-import type { playerStats } from "@/components/LineupSlotsList";
+import type { PlayerStats } from "@/components/LineupSlotsList";
 
 // "Projected points" = last season's real totals (see PlayerSeasonOverview on
 // the backend) — there's no forward-projection model yet, so this is the
@@ -9,7 +9,7 @@ export async function fetchPlayerStatsByPlayerId(
   playerIds: string[],
   season: number,
   leagueId?: string | null,
-): Promise<Record<string, playerStats>> {
+): Promise<Record<string, PlayerStats>> {
   const uniqueIds = [...new Set(playerIds)];
 
   const entries = await Promise.all(
@@ -20,12 +20,12 @@ export async function fetchPlayerStatsByPlayerId(
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/view-player?${params}`);
       if (!response.ok) return null;
 
-      const data: playerStats = await response.json();
+      const data: PlayerStats = await response.json();
       return [playerId, data] as const;
     }),
   );
 
   return Object.fromEntries(
-    entries.filter((entry): entry is [string, playerStats] => entry !== null),
+    entries.filter((entry): entry is [string, PlayerStats] => entry !== null),
   );
 }
