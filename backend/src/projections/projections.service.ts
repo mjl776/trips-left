@@ -27,6 +27,11 @@ type ProjectionWithPlayer = Prisma.ProjectionGetPayload<{
 // which fantasy leagues don't score. Excluded by default.
 const REGULAR_SEASON_WEEKS = 18;
 
+// player_stats has no FG-made/points-allowed columns yet, so K/DEF always
+// score 0 via realizedToStatLine() — excluded from "worst player" since that
+// 0 reflects a data gap, not an actual bad performance.
+const WORST_PLAYER_EXCLUDED_POSITIONS = ['K', 'DEF'];
+
 // One primary EPA stat per position — the only positions an EPA-based dark
 // horse makes sense for (kickers/defense have no equivalent column).
 const EPA_STAT_BY_POSITION: Record<string, EpaStat> = {
@@ -194,7 +199,14 @@ export class ProjectionsService {
 
     scored.sort((a, b) => b.totalPoints - a.totalPoints);
     const bestPlayer = scored[0] ?? null;
-    const worstPlayer = scored.length > 1 ? scored[scored.length - 1] : null;
+
+    const worstPlayerCandidates = scored.filter(
+      (player) => !WORST_PLAYER_EXCLUDED_POSITIONS.includes(player.position),
+    );
+    const worstPlayer =
+      worstPlayerCandidates.length > 1
+        ? worstPlayerCandidates[worstPlayerCandidates.length - 1]
+        : null;
 
     const darkHorse = await this.findDarkHorse(
       roster.rosterPlayers,
