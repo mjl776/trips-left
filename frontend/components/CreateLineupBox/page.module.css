@@ -6,6 +6,7 @@
   gap: 0.75rem;
   width: 10rem;
   height: 10rem;
+  font-weight: var(--medium-bold);
   border-radius: 1.5rem;
   border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
   background: color-mix(in srgb, var(--foreground) 5%, transparent);
@@ -15,7 +16,7 @@
 
 .label {
   font-size: 0.875rem;
-  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  color: var(--foreground);
   text-align: center;
 }
 

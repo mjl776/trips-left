@@ -20,7 +20,7 @@
 
 .name {
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: var(--medium-bold);
   color: var(--foreground);
   text-align: center;
   padding: 0 0.5rem;
