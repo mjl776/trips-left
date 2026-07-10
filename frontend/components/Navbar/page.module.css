@@ -18,9 +18,21 @@
 
 .logo {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: var(--medium-bold);
   color: var(--foreground);
+  display: flex;
   text-decoration: none;
+  align-items: flex-end;
+}
+
+.logoText {
+  display: inline-grid;
+  line-height: 1.1;
+  font-size: 0.8rem;
+}
+
+.topTextLogo {
+  color: white;
 }
 
 .desktopLinks {

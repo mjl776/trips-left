@@ -31,7 +31,7 @@
 
 .title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: var(--medium-bold);
 }
 
 .closeButton {
@@ -104,7 +104,7 @@
   border-radius: 0.5rem;
   border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: var(--medium-bold);
   color: var(--foreground);
 }
 
