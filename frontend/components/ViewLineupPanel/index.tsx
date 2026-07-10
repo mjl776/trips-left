@@ -16,6 +16,7 @@ import {
 } from "@/lib/playerStats";
 import IndividualPlayerCardOverlay from "@/components/IndividualPlayerCardOverlay";
 import { LineupInsights } from "@/types/PlayerTypes";
+import { API_BASE_URL } from "@/lib/api";
 
 type ActivePlayerViewSlot = {
   id: string;
@@ -52,7 +53,7 @@ const ViewLineupPanel: FC = () => {
     const loadLineup = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}`,
+          `${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}`,
         );
         const roster = await response.json();
         const { starterLabels, benchLabels } = splitRosterPositions(
@@ -75,7 +76,7 @@ const ViewLineupPanel: FC = () => {
     const loadPlayers = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/players`,
+          `${API_BASE_URL}/players`,
         );
         const data = await response.json();
         setPlayers(data);
@@ -115,7 +116,7 @@ const ViewLineupPanel: FC = () => {
           season: String(2025),
         });
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/lineup-insights?${params}`,
+          `${API_BASE_URL}/lineup-insights?${params}`,
         );
         if (!response.ok) {
           throw Error("Could not fetch player lineup insights");

@@ -1,4 +1,5 @@
 import type { PlayerStats } from "@/components/LineupSlotsList";
+import { API_BASE_URL } from "@/lib/api";
 
 // "Projected points" = last season's real totals (see PlayerSeasonOverview on
 // the backend) — there's no forward-projection model yet, so this is the
@@ -17,7 +18,7 @@ export async function fetchPlayerStatsByPlayerId(
       const params = new URLSearchParams({ playerId, season: String(season) });
       if (leagueId) params.set("leagueId", leagueId);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/view-player?${params}`);
+      const response = await fetch(`${API_BASE_URL}/view-player?${params}`);
       if (!response.ok) return null;
 
       const data: PlayerStats = await response.json();

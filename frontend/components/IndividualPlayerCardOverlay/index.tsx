@@ -4,6 +4,7 @@ import styles from './page.module.css'
 import { PlayerStats } from "@/components/LineupSlotsList";
 import { DarkHorsePlayer, LineupInsights } from "@/types/PlayerTypes";
 import { formatOrdinal } from "@/lib/formatOrdinal";
+import { API_BASE_URL } from "@/lib/api";
 
 type IndividualPlayerCardOverlayProps = {
     playerId: string;
@@ -32,7 +33,7 @@ const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ pla
             try {
                 const params = new URLSearchParams({ playerId, season: String(season) });
                 if (leagueId) params.set("leagueId", leagueId);
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/view-player?${params}`);
+                const response = await fetch(`${API_BASE_URL}/view-player?${params}`);
                 if (!response.ok) return null;
                 const data = await response.json();
                 setPlayerStats(data);

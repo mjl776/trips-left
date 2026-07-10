@@ -9,6 +9,7 @@ import { saveLineup } from "@/lib/savedLineups";
 import { getEligiblePlayers, type ActiveSlot } from "@/lib/playerEligibility";
 import { useRouter } from "next/navigation";
 import { BENCH_SLOTS, STARTER_SLOTS } from "@/constants";
+import { API_BASE_URL } from "@/lib/api";
 
 type LineupSlotAssignment = {
   playerId: string;
@@ -27,7 +28,7 @@ const CreateLineupSlotsPanel: FC = () => {
   useEffect(() => {
     const loadPlayers = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/players`);
+        const response = await fetch(`${API_BASE_URL}/players`);
         const data = await response.json();
         setPlayers(data);
       } catch (error) {
@@ -40,7 +41,7 @@ const CreateLineupSlotsPanel: FC = () => {
   const handleCreateLineup = async () => {
     setIsSubmitting(true);
     try {
-      const leagueRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/create-mock-league`, {
+      const leagueRes = await fetch(`${API_BASE_URL}/create-mock-league`, {
         method: "POST",
       });
       if (!leagueRes.ok) {
@@ -59,7 +60,7 @@ const CreateLineupSlotsPanel: FC = () => {
         }),
       ].filter((assignment): assignment is LineupSlotAssignment => assignment !== null);
 
-      const lineupRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/create-lineup`, {
+      const lineupRes = await fetch(`${API_BASE_URL}/create-lineup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leagueId: league.leagueId, name, assignments: slotAssignments }),
