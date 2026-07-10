@@ -1,9 +1,15 @@
 """
 pull_stats.py
 
-Pulls realized weekly NFL player stats from nflverse (via nflreadpy) and upserts
-them into the `player_stats` Postgres table, keyed to join with the Sleeper-keyed
-`players` table via the nflverse -> Sleeper ID crosswalk.
+Pulls realized weekly NFL stats from nflverse (via nflreadpy) and upserts them
+into the `player_stats` Postgres table.
+
+Two sources feed it:
+  - Individual offense/kicking stats (load_player_stats), joined to the
+    Sleeper-keyed `players` table via the nflverse -> Sleeper ID crosswalk.
+  - Team defense stats (load_team_stats + load_schedules for points allowed),
+    joined directly by team abbreviation since Sleeper keys DEF "players" by
+    their team code (e.g. "DEN").
 
 This is a standalone ingest job. It talks to Postgres directly and shares nothing
 with the Next.js app except the database. Run it manually or on a schedule
@@ -70,6 +76,20 @@ STAT_COLUMNS = {
 # carries these positions, so IDP/OL/special-teams stat rows have no FK target.
 FANTASY_POSITIONS = {"QB", "RB", "WR", "TE", "K", "DEF"}
 
+# Team defense stat mapping: nflverse load_team_stats column -> our player_stats
+# column. Mirrors Projection's def_* fields. def_td is derived separately below
+# (defensive TDs + special teams TDs, since Sleeper scores both under one bucket).
+DEF_STAT_COLUMNS = {
+    "def_sacks": "def_sack",
+    "def_interceptions": "def_int",
+    "fumble_recovery_opp": "def_fum_rec",
+    "def_safeties": "def_safety",
+}
+
+# nflverse team codes that differ from Sleeper's (our `players.team` / DEF
+# player_id convention). Confirmed by inspecting both sources directly.
+TEAM_ID_FIXES = {"LA": "LAR"}
+
 
 def get_engine():
     url = os.environ.get("DATABASE_URL")
@@ -108,7 +128,7 @@ def build_rows(seasons, week=None, inspect=False):
             print(" ", c)
         print("\n=== sample row ===")
         print(stats.head(1).to_dicts())
-        sys.exit(0)
+        return None
 
     if "position" in stats.columns:
         before = stats.height
@@ -142,6 +162,72 @@ def build_rows(seasons, week=None, inspect=False):
     joined = joined.rename({"sleeper_id": "player_id"}).drop("gsis_id")
     joined = joined.with_columns(pl.col("player_id").cast(pl.Utf8))
     return joined
+
+
+def build_def_rows(seasons, week=None, inspect=False):
+    """
+    Team defense stat lines. load_player_stats (individual players) doesn't
+    carry sacks/INTs/fumble recoveries for the DEF unit — that lives in the
+    separate team-level endpoint, keyed by team code rather than a player id.
+    """
+    print(f"Loading team defense stats for seasons {seasons}...")
+    team_stats = nfl.load_team_stats(seasons=seasons, summary_level="week")
+
+    if inspect:
+        print("\n=== nflverse load_team_stats columns ===")
+        for c in team_stats.columns:
+            print(" ", c)
+        print("\n=== sample row ===")
+        print(team_stats.head(1).to_dicts())
+        return None
+
+    if week is not None:
+        team_stats = team_stats.filter(pl.col("week") == week)
+
+    present = {src: dst for src, dst in DEF_STAT_COLUMNS.items() if src in team_stats.columns}
+    td_cols = [c for c in ("def_tds", "special_teams_tds") if c in team_stats.columns]
+    keep = ["team", "season", "week"] + list(present.keys()) + td_cols
+    team_stats = team_stats.select([c for c in keep if c in team_stats.columns])
+    team_stats = team_stats.rename(present)
+
+    # Defensive/return TDs (INT, fumble, blocked-kick, kick/punt return) all
+    # score under Sleeper's single "def_td" bucket, so combine them here.
+    if td_cols:
+        team_stats = team_stats.with_columns(pl.sum_horizontal(td_cols).alias("def_td")).drop(td_cols)
+
+    print(f"Loading schedules for seasons {seasons} to compute points allowed...")
+    schedules = nfl.load_schedules(seasons=seasons)
+    if week is not None:
+        schedules = schedules.filter(pl.col("week") == week)
+    schedules = schedules.filter(pl.col("home_score").is_not_null() & pl.col("away_score").is_not_null())
+
+    # Points allowed = the opponent's score that week; unpivot each game into
+    # one row per side so it can join back onto team_stats by (team, season, week).
+    points_allowed = pl.concat(
+        [
+            schedules.select(
+                pl.col("home_team").alias("team"),
+                pl.col("season"),
+                pl.col("week"),
+                pl.col("away_score").alias("def_pa_allow"),
+            ),
+            schedules.select(
+                pl.col("away_team").alias("team"),
+                pl.col("season"),
+                pl.col("week"),
+                pl.col("home_score").alias("def_pa_allow"),
+            ),
+        ]
+    )
+
+    team_stats = team_stats.join(points_allowed, on=["team", "season", "week"], how="left")
+    team_stats = team_stats.with_columns(pl.col("team").replace(TEAM_ID_FIXES))
+
+    # DEF rows are keyed by team abbreviation in `players` (Sleeper's convention
+    # for team defenses), so — unlike offense — no ID crosswalk join is needed.
+    team_stats = team_stats.rename({"team": "player_id"})
+    team_stats = team_stats.with_columns(pl.col("player_id").cast(pl.Utf8))
+    return team_stats
 
 
 def upsert_rows(engine, df: pl.DataFrame, dry_run=False):
@@ -209,12 +295,17 @@ def main():
                     help="Print nflverse columns + a sample row, then exit")
     args = ap.parse_args()
 
-    df = build_rows(args.seasons, week=args.week, inspect=args.inspect)
-    print(f"Prepared {df.height} mapped stat rows.")
+    offense_df = build_rows(args.seasons, week=args.week, inspect=args.inspect)
+    def_df = build_def_rows(args.seasons, week=args.week, inspect=args.inspect)
 
-    if not args.inspect:
-        engine = get_engine()
-        upsert_rows(engine, df, dry_run=args.dry_run)
+    if args.inspect:
+        sys.exit(0)
+
+    df = pl.concat([offense_df, def_df], how="diagonal_relaxed")
+    print(f"Prepared {df.height} mapped stat rows ({offense_df.height} offense, {def_df.height} defense).")
+
+    engine = get_engine()
+    upsert_rows(engine, df, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

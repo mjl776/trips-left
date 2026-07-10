@@ -142,6 +142,14 @@ model PlayerStats {
   recTd   Decimal? @map("rec_td")   @db.Decimal(5, 2)
   // ... etc, parallel to Projection
 
+  // Team defense / special teams (realized, parallel to Projection's def_* fields)
+  defSack    Decimal? @map("def_sack")     @db.Decimal(5, 2)
+  defInt     Decimal? @map("def_int")      @db.Decimal(5, 2)
+  defFumRec  Decimal? @map("def_fum_rec")  @db.Decimal(5, 2)
+  defTd      Decimal? @map("def_td")       @db.Decimal(5, 2)
+  defSafety  Decimal? @map("def_safety")   @db.Decimal(5, 2)
+  defPaAllow Decimal? @map("def_pa_allow") @db.Decimal(5, 2)
+
   // Volume / opportunity (advanced analytics inputs)
   attempts                    Decimal? @map("attempts")                      @db.Decimal(5, 2)
   carries                     Decimal? @map("carries")                       @db.Decimal(5, 2)
