@@ -1,9 +1,10 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, Fragment, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./page.module.css";
+import { LogoIcon } from "../Icons/LogoIcon";
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -18,7 +19,15 @@ const Navbar: FC = () => {
     <header className={styles.header}>
       <nav className={styles.nav}>
         <Link href="/" className={styles.logo} onClick={() => setIsOpen(false)}>
-          Trips Left
+          <LogoIcon />
+          <span className={styles.logoText}>
+            <span className={styles.topTextLogo}>
+              Trips
+            </span>
+            <span>
+              Left
+            </span>
+          </span>
         </Link>
 
         <ul className={styles.desktopLinks}>

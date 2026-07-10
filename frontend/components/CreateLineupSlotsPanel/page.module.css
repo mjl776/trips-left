@@ -44,7 +44,7 @@
   background: var(--foreground);
   color: var(--background);
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: var(--medium-bold);
   cursor: pointer;
 }
 

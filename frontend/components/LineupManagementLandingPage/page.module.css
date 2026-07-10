@@ -9,7 +9,7 @@
   width: 80%;
   height: 40rem;
   border-radius: 1.5rem;
-  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  background: color-mix(in srgb, var(--tertiary-color) 5%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
   display: grid;
   grid-template-columns: repeat(auto-fill, 12rem);

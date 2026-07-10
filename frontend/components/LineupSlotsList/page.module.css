@@ -14,7 +14,7 @@
 .divider {
   margin-top: 0.5rem;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: var(--medium-bold);
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--foreground) 50%, transparent);
