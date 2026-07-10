@@ -13,14 +13,15 @@ This application is a fantasy football optimizer that uses advanced metrics the 
 ┌─────────────────────────────┐
 │          Frontend           │
 │    Next.js 16 + React 19    │
-│       localhost:3000        │
+│   www.tripsleft.com (Vercel)│
 └──────────────┬──────────────┘
                │  REST / JSON over fetch
                ▼
 ┌─────────────────────────────┐
 │           Backend           │
 │      NestJS (Node.js)       │
-│       localhost:8080        │
+│ trips-left-production.up.   │
+│    railway.app (Railway)    │
 └──────────────┬──────────────┘
                │  SQL via Prisma ORM
                ▼
@@ -29,6 +30,11 @@ This application is a fantasy football optimizer that uses advanced metrics the 
 │    PostgreSQL (Supabase)    │
 └─────────────────────────────┘
 ```
+
+## Deployment
+
+- **Frontend** — hosted on [Vercel](https://vercel.com): [https://www.tripsleft.com](https://www.tripsleft.com)
+- **Backend** — hosted on [Railway](https://railway.app): [https://trips-left-production.up.railway.app](https://trips-left-production.up.railway.app)
 
 ## Inspiration Behind the App
 
