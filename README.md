@@ -10,11 +10,24 @@ This application is a fantasy football optimizer that uses advanced metrics the 
 ## System Design
 
 ```
-┌─────────────────────────┐        REST / fetch        ┌─────────────────────────┐        Prisma ORM        ┌───────────────────────┐
-│        Frontend         │  ─────────────────────────▶ │         Backend         │ ─────────────────────────▶│       Database        │
-│  Next.js 16 + React 19  │ ◀───────────────────────── │   NestJS (TypeScript)   │◀───────────────────────── │  PostgreSQL (Supabase)│
-│  localhost:3000         │        JSON responses        │   localhost:8080        │        SQL queries        │                        │
-└─────────────────────────┘                              └─────────────────────────┘                           └───────────────────────┘
+┌─────────────────────────────┐
+│          Frontend           │
+│    Next.js 16 + React 19    │
+│       localhost:3000        │
+└──────────────┬──────────────┘
+               │  REST / JSON over fetch
+               ▼
+┌─────────────────────────────┐
+│           Backend           │
+│      NestJS (Node.js)       │
+│       localhost:8080        │
+└──────────────┬──────────────┘
+               │  SQL via Prisma ORM
+               ▼
+┌─────────────────────────────┐
+│           Database          │
+│    PostgreSQL (Supabase)    │
+└─────────────────────────────┘
 ```
 
 ## Inspiration Behind the App
