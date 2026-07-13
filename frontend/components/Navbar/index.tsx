@@ -9,6 +9,7 @@ import { LogoIcon } from "../Icons/LogoIcon";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/lineup-management", label: "Lineup" },
+  { href: "/about", label: "About" },
 ];
 
 const Navbar: FC = () => {

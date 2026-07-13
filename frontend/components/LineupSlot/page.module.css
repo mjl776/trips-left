@@ -47,7 +47,7 @@
 .placeholder {
   flex: 1;
   font-size: 0.875rem;
-  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  color: var(--secondary-text-color)
 }
 
 .addCircle {
