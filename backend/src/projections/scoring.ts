@@ -115,8 +115,8 @@ export function decimalToNumber(value: DecimalLike | null | undefined): number |
   return value == null ? null : value.toNumber();
 }
 
-// player_stats only carries these 7 of StatLine's fields (no INT/2pt/fumbles/
-// FG/DEF realized data yet) — see pull_stats.py's STAT_COLUMNS.
+// player_stats carries these fields (no INT/2pt/fumbles/FG realized data yet)
+// — see pull_stats.py's STAT_COLUMNS and build_def_rows.
 export type RealizedStatLine = {
   passYd: DecimalLike | null;
   passTd: DecimalLike | null;
@@ -125,6 +125,12 @@ export type RealizedStatLine = {
   rec: DecimalLike | null;
   recYd: DecimalLike | null;
   recTd: DecimalLike | null;
+  defSack: DecimalLike | null;
+  defInt: DecimalLike | null;
+  defFumRec: DecimalLike | null;
+  defTd: DecimalLike | null;
+  defSafety: DecimalLike | null;
+  defPaAllow: DecimalLike | null;
 };
 
 export function realizedToStatLine(stat: RealizedStatLine): StatLine {
@@ -136,5 +142,11 @@ export function realizedToStatLine(stat: RealizedStatLine): StatLine {
     rec: decimalToNumber(stat.rec),
     recYd: decimalToNumber(stat.recYd),
     recTd: decimalToNumber(stat.recTd),
+    defSack: decimalToNumber(stat.defSack),
+    defInt: decimalToNumber(stat.defInt),
+    defFumRec: decimalToNumber(stat.defFumRec),
+    defTd: decimalToNumber(stat.defTd),
+    defSafety: decimalToNumber(stat.defSafety),
+    defPaAllow: decimalToNumber(stat.defPaAllow),
   };
 }
