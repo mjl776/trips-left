@@ -70,6 +70,18 @@ STAT_COLUMNS = {
     "rushing_epa": "rushing_epa",
     "receiving_yards_after_catch": "receiving_yards_after_catch",
     "racr": "racr",
+    # kicking. Makes are tracked by distance to match ScoringSettings'
+    # fgm_0_19...fgm_60p tiers; misses/XPs are scored at a single flat rate
+    # (fgmiss/xpm/xpmiss), so those stay as simple totals.
+    "fg_made_0_19": "fg_made_0_19",
+    "fg_made_20_29": "fg_made_20_29",
+    "fg_made_30_39": "fg_made_30_39",
+    "fg_made_40_49": "fg_made_40_49",
+    "fg_made_50_59": "fg_made_50_59",
+    "fg_made_60_": "fg_made_60p",
+    "fg_missed": "fg_miss",
+    "pat_made": "xp_made",
+    "pat_missed": "xp_miss",
 }
 
 # Mirrors scripts/syncPlayers.ts FANTASY_POSITIONS — the `players` table only
@@ -103,7 +115,7 @@ def get_engine():
 
 def load_id_crosswalk() -> pl.DataFrame:
     """
-    nflverse maintains an ID map across platforms. We need nflverse gsis_id
+    nflverse maintains an ID map  across platforms. We need nflverse gsis_id
     (the key in player stats) -> sleeper_id (our Player PK).
     """
     ids = nfl.load_ff_playerids()
