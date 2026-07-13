@@ -21,6 +21,7 @@ const MAX_RESULTS = 25;
 
 const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSelect, onClose }) => {
   const [query, setQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(MAX_RESULTS);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -30,11 +31,15 @@ const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSel
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  useEffect(() => {
+    setVisibleCount(MAX_RESULTS);
+  }, [query]);
+
   const trimmedQuery = query.trim().toLowerCase();
   const matches = trimmedQuery
     ? players.filter((player) => player.fullName.toLowerCase().includes(trimmedQuery))
     : [];
-  const results = matches.slice(0, MAX_RESULTS);
+  const results = matches.slice(0, visibleCount);
 
   return (
     <div className={styles.backdrop} onClick={onClose}>
@@ -76,10 +81,14 @@ const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSel
                   </div>
                 </button>
               ))}
-              {matches.length > MAX_RESULTS && (
-                <div className={styles.truncated}>
-                  Showing first {MAX_RESULTS} of {matches.length} matches
-                </div>
+              {matches.length > visibleCount && (
+                <button
+                  type="button"
+                  className={styles.showMoreButton}
+                  onClick={() => setVisibleCount((prev) => prev + MAX_RESULTS)}
+                >
+                  Show more ({matches.length - visibleCount} remaining)
+                </button>
               )}
             </>
           )}
