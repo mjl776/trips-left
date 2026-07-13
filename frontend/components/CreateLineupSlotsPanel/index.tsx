@@ -87,6 +87,14 @@ const CreateLineupSlotsPanel: FC = () => {
     }
   };
 
+  const handleRemovePlayer = (slotId: string) => {
+    setAssignments((prev) => {
+      const next = { ...prev };
+      delete next[slotId];
+      return next;
+    });
+  };
+
   const eligiblePlayers = activeSlot ? getEligiblePlayers(players, assignments, activeSlot) : [];
 
   return (
@@ -120,6 +128,7 @@ const CreateLineupSlotsPanel: FC = () => {
             },
           ]}
           onSlotClick={(slot) => setActiveSlot(slot)}
+          onRemovePlayer={(slot) => handleRemovePlayer(slot.id)}
         />
       </div>
 
