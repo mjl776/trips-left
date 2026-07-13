@@ -36,9 +36,10 @@ type LineupSlotsListProps = {
   sections: LineupSlotSection[];
   onSlotClick?: (slot: LineupSlot) => void;
   onViewPlayer?: (slot: LineupSlot) => void;
+  onRemovePlayer?: (slot: LineupSlot) => void;
 };
 
-const LineupSlotsList: FC<LineupSlotsListProps> = ({ sections, onSlotClick, onViewPlayer }) => {
+const LineupSlotsList: FC<LineupSlotsListProps> = ({ sections, onSlotClick, onViewPlayer, onRemovePlayer }) => {
   return (
     <div className={styles.panel}>
       {sections.map((section) => (
@@ -50,6 +51,7 @@ const LineupSlotsList: FC<LineupSlotsListProps> = ({ sections, onSlotClick, onVi
               slot={slot}
               onClick={onSlotClick}
               onViewPlayer={onViewPlayer}
+              onRemove={onRemovePlayer}
             />
           ))}
         </Fragment>

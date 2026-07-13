@@ -10,9 +10,10 @@ type LineupSlotProps = {
   slot: LineupSlotType;
   onClick?: (slot: LineupSlotType) => void;
   onViewPlayer?: (slot: LineupSlotType) => void;
+  onRemove?: (slot: LineupSlotType) => void;
 };
 
-const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer }) => {
+const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer, onRemove }) => {
   return (
     <div className={styles.slot}>
       <button
@@ -41,6 +42,16 @@ const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer }) => {
           {slot.isWorstPlayer && <SquareLabel labelText="Worst Player"/>}
           <SquareLabel labelText="Proj. Points"/>
           <ProjectPointsBox stats={slot.assignedPlayerStats} />
+          {onRemove && (
+            <button
+              type="button"
+              className={styles.addCircle}
+              aria-label={`Remove player from ${slot.label}`}
+              onClick={() => onRemove(slot)}
+            >
+              <span className={styles.minus}>&minus;</span>
+            </button>
+          )}
         </>
       )}
 
