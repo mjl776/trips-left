@@ -150,6 +150,19 @@ model PlayerStats {
   defSafety  Decimal? @map("def_safety")   @db.Decimal(5, 2)
   defPaAllow Decimal? @map("def_pa_allow") @db.Decimal(5, 2)
 
+  // Kicking (realized). Makes are tracked by distance to match ScoringSettings'
+  // fgm_0_19...fgm_60p tiers; misses/XPs are scored at a single flat rate
+  // (fgmiss/xpm/xpmiss), so those stay as simple totals.
+  fgMade0_19  Decimal? @map("fg_made_0_19")  @db.Decimal(5, 2)
+  fgMade20_29 Decimal? @map("fg_made_20_29") @db.Decimal(5, 2)
+  fgMade30_39 Decimal? @map("fg_made_30_39") @db.Decimal(5, 2)
+  fgMade40_49 Decimal? @map("fg_made_40_49") @db.Decimal(5, 2)
+  fgMade50_59 Decimal? @map("fg_made_50_59") @db.Decimal(5, 2)
+  fgMade60p   Decimal? @map("fg_made_60p")   @db.Decimal(5, 2)
+  fgMiss      Decimal? @map("fg_miss")       @db.Decimal(5, 2)
+  xpMade      Decimal? @map("xp_made")       @db.Decimal(5, 2)
+  xpMiss      Decimal? @map("xp_miss")       @db.Decimal(5, 2)
+
   // Volume / opportunity (advanced analytics inputs)
   attempts                    Decimal? @map("attempts")                      @db.Decimal(5, 2)
   carries                     Decimal? @map("carries")                       @db.Decimal(5, 2)

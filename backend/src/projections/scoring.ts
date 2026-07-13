@@ -13,9 +13,18 @@ export type StatLine = {
   recTd?: number | null;
   rec2pt?: number | null;
   fumLost?: number | null;
+  // Flat fgMade total — used by Projection data, which isn't tracked by
+  // distance. Realized stats populate the distance buckets below instead.
   fgMade?: number | null;
+  fgMade0_19?: number | null;
+  fgMade20_29?: number | null;
+  fgMade30_39?: number | null;
+  fgMade40_49?: number | null;
+  fgMade50_59?: number | null;
+  fgMade60p?: number | null;
   fgMiss?: number | null;
   xpMade?: number | null;
+  xpMiss?: number | null;
   defSack?: number | null;
   defInt?: number | null;
   defFumRec?: number | null;
@@ -39,6 +48,7 @@ const FLAT_RATE_FIELDS: Array<[keyof StatLine, keyof ScoringSettings]> = [
   ['rec2pt', 'rec_2pt'],
   ['fumLost', 'fum_lost'],
   ['xpMade', 'xpm'],
+  ['xpMiss', 'xpmiss'],
   ['fgMiss', 'fgmiss'],
   ['defSack', 'sack'],
   ['defInt', 'int'],
@@ -54,6 +64,17 @@ const FG_MADE_TIER_KEYS: Array<keyof ScoringSettings> = [
   'fgm_40_49',
   'fgm_50_59',
   'fgm_60p',
+];
+
+// Distance-bucketed fgMade fields (realized stats only) paired with their
+// exact ScoringSettings tier rate.
+const FG_MADE_TIER_FIELDS: Array<[keyof StatLine, keyof ScoringSettings]> = [
+  ['fgMade0_19', 'fgm_0_19'],
+  ['fgMade20_29', 'fgm_20_29'],
+  ['fgMade30_39', 'fgm_30_39'],
+  ['fgMade40_49', 'fgm_40_49'],
+  ['fgMade50_59', 'fgm_50_59'],
+  ['fgMade60p', 'fgm_60p'],
 ];
 
 const POINTS_ALLOWED_TIERS: Array<{ max: number; key: keyof ScoringSettings }> = [
@@ -80,9 +101,20 @@ export function calculateFantasyPoints(
     }
   }
 
-  // fgMade isn't tracked by distance, so the league's per-distance tiers can't be
-  // applied exactly here — approximate with the average make rate across tiers.
-  if (stat.fgMade) {
+  const hasFgTierData = FG_MADE_TIER_FIELDS.some(([statKey]) => stat[statKey] != null);
+  if (hasFgTierData) {
+    // Realized stats: exact per-distance scoring.
+    for (const [statKey, scoringKey] of FG_MADE_TIER_FIELDS) {
+      const value = stat[statKey];
+      const rate = scoring[scoringKey];
+      if (value && rate) {
+        points += value * rate;
+      }
+    }
+  } else if (stat.fgMade) {
+    // Projection data: fgMade isn't tracked by distance, so the league's
+    // per-distance tiers can't be applied exactly — approximate with the
+    // average make rate across tiers.
     const tierRates = FG_MADE_TIER_KEYS.map((key) => scoring[key]).filter(
       (rate): rate is number => rate != null,
     );
@@ -115,7 +147,7 @@ export function decimalToNumber(value: DecimalLike | null | undefined): number |
   return value == null ? null : value.toNumber();
 }
 
-// player_stats carries these fields (no INT/2pt/fumbles/FG realized data yet)
+// player_stats carries these fields (no INT/2pt/fumbles realized data yet)
 // — see pull_stats.py's STAT_COLUMNS and build_def_rows.
 export type RealizedStatLine = {
   passYd: DecimalLike | null;
@@ -131,6 +163,15 @@ export type RealizedStatLine = {
   defTd: DecimalLike | null;
   defSafety: DecimalLike | null;
   defPaAllow: DecimalLike | null;
+  fgMade0_19: DecimalLike | null;
+  fgMade20_29: DecimalLike | null;
+  fgMade30_39: DecimalLike | null;
+  fgMade40_49: DecimalLike | null;
+  fgMade50_59: DecimalLike | null;
+  fgMade60p: DecimalLike | null;
+  fgMiss: DecimalLike | null;
+  xpMade: DecimalLike | null;
+  xpMiss: DecimalLike | null;
 };
 
 export function realizedToStatLine(stat: RealizedStatLine): StatLine {
@@ -148,5 +189,14 @@ export function realizedToStatLine(stat: RealizedStatLine): StatLine {
     defTd: decimalToNumber(stat.defTd),
     defSafety: decimalToNumber(stat.defSafety),
     defPaAllow: decimalToNumber(stat.defPaAllow),
+    fgMade0_19: decimalToNumber(stat.fgMade0_19),
+    fgMade20_29: decimalToNumber(stat.fgMade20_29),
+    fgMade30_39: decimalToNumber(stat.fgMade30_39),
+    fgMade40_49: decimalToNumber(stat.fgMade40_49),
+    fgMade50_59: decimalToNumber(stat.fgMade50_59),
+    fgMade60p: decimalToNumber(stat.fgMade60p),
+    fgMiss: decimalToNumber(stat.fgMiss),
+    xpMade: decimalToNumber(stat.xpMade),
+    xpMiss: decimalToNumber(stat.xpMiss),
   };
 }
