@@ -15,5 +15,14 @@ export function getSavedLineups(): SavedLineup[] {
 
 export function saveLineup(lineup: SavedLineup) {
   const existing = getSavedLineups();
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, lineup]));
+  const index = existing.findIndex((entry) => entry.rosterId === lineup.rosterId);
+
+  if (index === -1) {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify([...existing, lineup]));
+    return;
+  }
+
+  const next = [...existing];
+  next[index] = { ...lineup, createdAt: next[index].createdAt };
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 }
