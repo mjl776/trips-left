@@ -1,11 +1,8 @@
-.box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    font-size: 0.6rem;
-    border-radius: 1.5rem;
-    border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
-    background: color-mix(in srgb, #228B22 20%, transparent);
+.value {
+    font-family: var(--font-orbitan);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--foreground);
+    min-width: 3.5rem;
+    text-align: right;
 }

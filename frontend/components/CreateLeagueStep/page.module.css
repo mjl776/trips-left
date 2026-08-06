@@ -1,0 +1,144 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: 1rem;
+  width: 100%;
+  align-items: start;
+}
+
+.card {
+  padding: 1.75rem;
+  border-radius: 1.125rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: -0.02em;
+  color: var(--secondary-text-color);
+}
+
+.endpointTag {
+  flex-shrink: 0;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+  white-space: nowrap;
+}
+
+.cardBody {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--secondary-text-color) 58%, transparent);
+}
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 1.25rem;
+}
+
+.chip {
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.04em;
+  color: var(--foreground);
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+}
+
+.chipMuted {
+  color: color-mix(in srgb, var(--secondary-text-color) 55%, transparent);
+  border-color: color-mix(in srgb, var(--secondary-text-color) 18%, transparent);
+}
+
+.primaryButton {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.9rem;
+  border-radius: 0.8rem;
+  border: none;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 0.9375rem;
+  font-weight: var(--medium-bold);
+  cursor: pointer;
+}
+
+.primaryButton:hover {
+  opacity: 0.9;
+}
+
+.primaryButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.importRow {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.importInput {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  font-size: 0.9375rem;
+  color: var(--secondary-text-color);
+}
+
+.importInput:focus {
+  outline: none;
+  border-color: var(--foreground);
+}
+
+.importButton {
+  padding: 0.85rem 1.375rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--foreground) 14%, transparent);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  font-weight: var(--medium-bold);
+  cursor: pointer;
+}
+
+.importButton:hover {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.importButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.importHint {
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--secondary-text-color) 40%, transparent);
+}
+
+.importHintError {
+  color: var(--tertiary-color);
+}

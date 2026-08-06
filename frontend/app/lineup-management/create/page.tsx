@@ -1,13 +1,5 @@
-"use client";
-
-import CreateLineupSlotsPanel from '@/components/CreateLineupSlotsPanel'
-import styles from './page.module.css'
+import CreateLineupFlow from '@/components/CreateLineupFlow'
 
 export default function CreateLineupPage() {
-
-    return (
-        <div className={styles.container}>
-            <CreateLineupSlotsPanel />
-        </div>
-    )
+    return <CreateLineupFlow />
 }

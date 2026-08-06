@@ -5,17 +5,12 @@ type RosterPlayer = {
   player: AddPlayerOverlayPlayer;
 };
 
-export function splitRosterPositions(rosterPositions: string[]) {
-  console.log('roster-positions', rosterPositions);
-  return {
-    starterLabels: rosterPositions.filter((slot) => slot !== "BN"),
-    benchLabels: rosterPositions.filter((slot) => slot === "BN"),
-  };
+export function getStarterLabels(rosterPositions: string[]): string[] {
+  return rosterPositions.filter((slot) => slot !== "BN");
 }
 
-export function buildAssignments(
+export function buildStarterAssignments(
   starterLabels: string[],
-  benchLabels: string[],
   rosterPlayers: RosterPlayer[],
 ): Record<string, AddPlayerOverlayPlayer> {
   const playersBySlot: Record<string, AddPlayerOverlayPlayer[]> = {};
@@ -26,16 +21,14 @@ export function buildAssignments(
   }
 
   const assignments: Record<string, AddPlayerOverlayPlayer> = {};
-
   starterLabels.forEach((label, index) => {
     const player = playersBySlot[label]?.shift();
     if (player) assignments[`starter-${index}`] = player;
   });
 
-  benchLabels.forEach((label, index) => {
-    const player = playersBySlot[label]?.shift();
-    if (player) assignments[`bench-${index}`] = player;
-  });
-
   return assignments;
+}
+
+export function getBenchPlayers(rosterPlayers: RosterPlayer[]): AddPlayerOverlayPlayer[] {
+  return rosterPlayers.filter((rosterPlayer) => rosterPlayer.slot === "BN").map((rosterPlayer) => rosterPlayer.player);
 }

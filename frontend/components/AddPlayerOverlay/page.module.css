@@ -24,14 +24,25 @@
 
 .header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 1rem;
   padding: 1.25rem 1.5rem 0.75rem;
 }
 
-.title {
-  font-size: 1rem;
+.tag {
+  font-size: 0.6875rem;
   font-weight: var(--medium-bold);
+  letter-spacing: 0.14em;
+  color: var(--foreground);
+}
+
+.title {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: var(--medium-bold);
+  color: var(--secondary-text-color);
 }
 
 .closeButton {
@@ -117,7 +128,7 @@
 .resultName {
   font-size: 0.9rem;
   font-weight: 500;
-  color: var(--foreground);
+  color: var(--secondary-text-color);
 }
 
 .resultTeam {

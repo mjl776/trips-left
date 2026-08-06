@@ -1,47 +1,108 @@
-.stack {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.375rem;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.main {
+  flex: 1 1 34rem;
+  min-width: 0;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.leagueLabel {
+  font-size: 0.75rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.18em;
+  color: var(--foreground);
 }
 
 .title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-}
-
-.footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-  background: var(--background);
-  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
-}
-
-.saveButton {
-  width: 100%;
-  max-width: 28rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 1rem;
-  border: none;
-  background: var(--foreground);
-  color: var(--background);
-  font-size: 0.95rem;
+  margin-top: 0.75rem;
+  font-size: 2rem;
   font-weight: var(--medium-bold);
+  letter-spacing: -0.03em;
+  color: var(--secondary-text-color);
+}
+
+.totalBlock {
+  text-align: right;
+}
+
+.totalValue {
+  font-family: var(--font-orbitan);
+  font-size: 2rem;
+  color: var(--foreground);
+}
+
+.totalLabel {
+  margin-top: 0.375rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+}
+
+.swapBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--tertiary-color) 40%, transparent);
+  background: color-mix(in srgb, var(--tertiary-color) 10%, transparent);
+  font-size: 0.875rem;
+  color: var(--secondary-text-color);
+}
+
+.cancelButton {
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--secondary-text-color) 20%, transparent);
+  background: none;
+  color: var(--secondary-text-color);
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
-.saveButton:hover {
-  opacity: 0.9;
+.cancelButton:hover {
+  border-color: var(--tertiary-color);
+  color: var(--tertiary-color);
 }
 
-.saveButton:disabled {
-  opacity: 0.6;
-  cursor: default;
+.benchHeader {
+  margin: 1.875rem 0 0.875rem;
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+}
+
+.benchGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-bottom: 3rem;
+}
+
+.benchEmpty {
+  padding: 1.25rem;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--foreground) 2%, transparent);
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+  margin-bottom: 3rem;
 }

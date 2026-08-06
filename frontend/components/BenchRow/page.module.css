@@ -1,0 +1,95 @@
+.row {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 13%, transparent);
+  background: color-mix(in srgb, var(--foreground) 2%, transparent);
+}
+
+.position {
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.info:disabled {
+  cursor: default;
+}
+
+.name {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--secondary-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  font-size: 0.75rem;
+  color: color-mix(in srgb, var(--secondary-text-color) 42%, transparent);
+}
+
+.trailing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.swapButton {
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 30%, transparent);
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: var(--foreground);
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.swapButton:hover:not(:disabled) {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.dropButton {
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--secondary-text-color) 15%, transparent);
+  background: none;
+  color: color-mix(in srgb, var(--secondary-text-color) 50%, transparent);
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.dropButton:hover:not(:disabled) {
+  color: var(--tertiary-color);
+  border-color: color-mix(in srgb, var(--tertiary-color) 45%, transparent);
+}
+
+.swapButton:disabled,
+.dropButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
