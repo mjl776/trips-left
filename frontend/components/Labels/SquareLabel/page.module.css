@@ -1,14 +1,23 @@
-
 .squareLabel {
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
-    font-size: 0.3rem;
-    width: 3rem;
-    height: 3rem;
     flex-shrink: 0;
-    font-size: 0.6rem;
+    white-space: nowrap;
+    padding: 0.4rem 0.65rem;
     border-radius: 0.75rem;
-    border: 1px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+    font-size: 0.75rem;
+    font-weight: var(--medium-bold);
+    letter-spacing: 0.02em;
+    border: 1px solid;
+}
+
+.cyan {
+    color: var(--foreground);
+    border-color: color-mix(in srgb, var(--foreground) 45%, transparent);
+}
+
+.magenta {
+    color: var(--tertiary-color);
+    border-color: color-mix(in srgb, var(--tertiary-color) 45%, transparent);
 }

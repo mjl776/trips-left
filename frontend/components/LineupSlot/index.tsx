@@ -11,11 +11,31 @@ type LineupSlotProps = {
   onClick?: (slot: LineupSlotType) => void;
   onViewPlayer?: (slot: LineupSlotType) => void;
   onRemove?: (slot: LineupSlotType) => void;
+  onSwapTarget?: (slot: LineupSlotType) => void;
 };
 
-const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer, onRemove }) => {
+const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer, onRemove, onSwapTarget }) => {
+  const rowClassName = `${styles.slot} ${slot.isWorstPlayer ? styles.worstRail : ""} ${
+    slot.swapTarget ? styles.swapTarget : ""
+  }`;
+
+  if (slot.swapTarget && onSwapTarget) {
+    return (
+      <button type="button" className={rowClassName} onClick={() => onSwapTarget(slot)}>
+        <span className={styles.position}>{slot.label}</span>
+        <span className={styles.info}>
+          <span className={styles.name}>{slot.assignedPlayerName}</span>
+          {slot.meta && <span className={styles.meta}>{slot.meta}</span>}
+        </span>
+        <span className={styles.actions}>
+          <ProjectPointsBox stats={slot.assignedPlayerStats} />
+        </span>
+      </button>
+    );
+  }
+
   return (
-    <div className={styles.slot}>
+    <div className={rowClassName}>
       <button
         type="button"
         className={styles.playerInfo}
@@ -23,7 +43,10 @@ const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer, onRemove
         onClick={() => onViewPlayer?.(slot)}
       >
         <span className={styles.position}>{slot.label}</span>
-        <span className={styles.placeholder}>{slot.assignedPlayerName ?? "Empty"}</span>
+        <span className={styles.info}>
+          <span className={styles.name}>{slot.assignedPlayerName ?? "Empty"}</span>
+          {slot.assignedPlayerName && slot.meta && <span className={styles.meta}>{slot.meta}</span>}
+        </span>
       </button>
       {onClick && !slot.assignedPlayerName && (
         <button
@@ -35,26 +58,24 @@ const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer, onRemove
           <span className={styles.plus}>+</span>
         </button>
       )}
-      {onClick && slot.assignedPlayerName && (
-        <>
-          {slot.isBestPlayer && <SquareLabel labelText="Best Player"/>}
-          {slot.isDarkHorse && <SquareLabel labelText="Dark Horse"/>}
-          {slot.isWorstPlayer && <SquareLabel labelText="Worst Player"/>}
-          <SquareLabel labelText="Proj. Points"/>
+      {slot.assignedPlayerName && (
+        <span className={styles.actions}>
+          {slot.isBestPlayer && <SquareLabel labelText="Best Player" tone="cyan" />}
+          {slot.isDarkHorse && <SquareLabel labelText="Dark Horse" tone="cyan" />}
+          {slot.isWorstPlayer && <SquareLabel labelText="Worst Player" tone="magenta" />}
           <ProjectPointsBox stats={slot.assignedPlayerStats} />
           {onRemove && (
             <button
               type="button"
-              className={styles.addCircle}
+              className={styles.removeCircle}
               aria-label={`Remove player from ${slot.label}`}
               onClick={() => onRemove(slot)}
             >
               <span className={styles.minus}>&minus;</span>
             </button>
           )}
-        </>
+        </span>
       )}
-
     </div>
   );
 };

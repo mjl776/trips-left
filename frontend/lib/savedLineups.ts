@@ -4,6 +4,7 @@ export type SavedLineup = {
   rosterId: string;
   leagueId: string;
   name: string;
+  isMock: boolean;
   createdAt: string;
 };
 

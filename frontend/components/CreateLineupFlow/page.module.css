@@ -1,0 +1,33 @@
+.container {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 5rem;
+}
+
+.microLabel {
+  font-size: 0.75rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.18em;
+  color: var(--foreground);
+}
+
+.heading {
+  margin-top: 0.875rem;
+  font-size: 2rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: -0.035em;
+  color: var(--secondary-text-color);
+}
+
+.blurb {
+  max-width: 40rem;
+  margin: 0.875rem 0 0;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--secondary-text-color) 58%, transparent);
+}
+
+.body {
+  margin-top: 2.25rem;
+}

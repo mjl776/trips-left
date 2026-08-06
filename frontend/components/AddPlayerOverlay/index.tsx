@@ -15,11 +15,12 @@ type AddPlayerOverlayProps = {
   players: AddPlayerOverlayPlayer[];
   onSelect: (player: AddPlayerOverlayPlayer) => void;
   onClose: () => void;
+  occupantName?: string;
 };
 
 const MAX_RESULTS = 25;
 
-const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSelect, onClose }) => {
+const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSelect, onClose, occupantName }) => {
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(MAX_RESULTS);
 
@@ -32,7 +33,7 @@ const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSel
   }, [onClose]);
 
   useEffect(() => {
-    setVisibleCount(MAX_RESULTS);
+    Promise.resolve().then(() => setVisibleCount(MAX_RESULTS));
   }, [query]);
 
   const trimmedQuery = query.trim().toLowerCase();
@@ -45,7 +46,10 @@ const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSel
     <div className={styles.backdrop} onClick={onClose}>
       <div className={styles.card} onClick={(event) => event.stopPropagation()}>
         <div className={styles.header}>
-          <span className={styles.title}>Add {slotLabel}</span>
+          <div>
+            <div className={styles.tag}>{occupantName ? "ADD & DROP" : "ADD PLAYER"}</div>
+            <span className={styles.title}>{occupantName ? `Replace ${occupantName}` : `Add ${slotLabel}`}</span>
+          </div>
           <button type="button" className={styles.closeButton} aria-label="Close" onClick={onClose}>
             ×
           </button>

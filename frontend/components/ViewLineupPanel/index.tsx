@@ -3,26 +3,28 @@
 import LineupSlotsList from "../LineupSlotsList";
 import type { PlayerStats } from "../LineupSlotsList";
 import { FC, useEffect, useState } from "react";
-import AddPlayerOverlay, {
-  AddPlayerOverlayPlayer,
-} from "@/components/AddPlayerOverlay";
+import AddPlayerOverlay, { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { ActiveSlot, getEligiblePlayers } from "@/lib/playerEligibility";
-import { splitRosterPositions, buildAssignments } from "@/lib/lineupSections";
-import { saveLineup } from "@/lib/savedLineups";
+import { getStarterLabels, buildStarterAssignments, getBenchPlayers } from "@/lib/lineupSections";
+import { computeStarterPointsTotal } from "@/lib/lineupTotals";
 import styles from "./page.module.css";
 import { useSearchParams } from "next/navigation";
-import {
-  fetchPlayerStatsByPlayerId,
-  PROJECTION_BASE_SEASON,
-} from "@/lib/playerStats";
+import { fetchPlayerStatsByPlayerId, PROJECTION_BASE_SEASON } from "@/lib/playerStats";
 import IndividualPlayerCardOverlay from "@/components/IndividualPlayerCardOverlay";
+import BenchRow from "@/components/BenchRow";
+import LineupInsightsPanel from "@/components/LineupInsightsPanel";
 import { LineupInsights } from "@/types/PlayerTypes";
+import { SLOT_ELIGIBILITY } from "@/constants";
 import { API_BASE_URL } from "@/lib/api";
 
-type ActivePlayerViewSlot = {
-  id: string;
-  playerId: string;
-};
+const NO_SCORE_POSITIONS = ["K", "DEF"];
+
+function buildPlayerMeta(player: AddPlayerOverlayPlayer, stats?: PlayerStats): string {
+  const team = player.team ?? "FA";
+  if (NO_SCORE_POSITIONS.includes(player.position)) return `${team} · ${player.position} · no scoring data`;
+  if (stats?.positionRank) return `${team} · ${player.position} · ${player.position}${stats.positionRank}`;
+  return `${team} · ${player.position} · unranked`;
+}
 
 const ViewLineupPanel: FC = () => {
   const searchParams = useSearchParams();
@@ -31,153 +33,55 @@ const ViewLineupPanel: FC = () => {
 
   const [players, setPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
-  const [activePlayerViewSlot, setActivePlayerViewSlot] =
-    useState<ActivePlayerViewSlot | null>(null);
-  const [assignments, setAssignments] = useState<
-    Record<string, AddPlayerOverlayPlayer>
-  >({});
+  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  const [assignments, setAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
+  const [benchPlayers, setBenchPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
   const [starterLabels, setStarterLabels] = useState<string[]>([]);
-  const [benchLabels, setBenchLabels] = useState<string[]>([]);
-  const [playerStatsByPlayerId, setPlayerStatsByPlayerId] = useState<
-    Record<string, PlayerStats>
-  >({});
-  const [lineupInsights, setLineupInsights] = useState<LineupInsights | null>(
-    null,
-  );
+  const [playerStatsByPlayerId, setPlayerStatsByPlayerId] = useState<Record<string, PlayerStats>>({});
+  const [lineupInsights, setLineupInsights] = useState<LineupInsights | null>(null);
   const [lineupName, setLineupName] = useState("");
-  const [originalAssignments, setOriginalAssignments] = useState<
-    Record<string, AddPlayerOverlayPlayer>
-  >({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [leagueName, setLeagueName] = useState("");
+  const [swapFromPlayerId, setSwapFromPlayerId] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
 
+  const isSwapping = !!swapFromPlayerId;
+  const swapFromPlayer = swapFromPlayerId
+    ? (benchPlayers.find((player) => player.playerId === swapFromPlayerId) ?? null)
+    : null;
+
+  const benchPlayerIds = new Set(benchPlayers.map((player) => player.playerId));
   const eligiblePlayers = activeSlot
-    ? getEligiblePlayers(players, assignments, activeSlot)
+    ? getEligiblePlayers(
+        players.filter((player) => !benchPlayerIds.has(player.playerId)),
+        assignments,
+        activeSlot,
+      )
     : [];
 
-  const hasUnsavedChanges = Object.keys({ ...assignments, ...originalAssignments }).some(
-    (slotId) => assignments[slotId]?.playerId !== originalAssignments[slotId]?.playerId,
-  );
-
-  const handleRemovePlayer = (slotId: string) => {
-    setAssignments((prev) => {
-      const next = { ...prev };
-      delete next[slotId];
-      return next;
-    });
-  };
-
   const loadLineup = async () => {
+    if (!rosterId || !leagueId) return;
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}`,
-      );
+      const response = await fetch(`${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}`);
       const roster = await response.json();
-      const { starterLabels, benchLabels } = splitRosterPositions(
-        roster.league.rosterPositions,
-      );
-      setStarterLabels(starterLabels);
-      setBenchLabels(benchLabels);
-      const loadedAssignments = buildAssignments(
-        starterLabels,
-        benchLabels,
-        roster.rosterPlayers,
-      );
-      setAssignments(loadedAssignments);
-      setOriginalAssignments(loadedAssignments);
+      const labels = getStarterLabels(roster.league.rosterPositions);
+      setStarterLabels(labels);
+      setAssignments(buildStarterAssignments(labels, roster.rosterPlayers));
+      setBenchPlayers(getBenchPlayers(roster.rosterPlayers));
       setLineupName(roster.name);
+      setLeagueName(roster.league.name ?? "League");
     } catch (error) {
       console.error(error);
     }
   };
 
   useEffect(() => {
-    loadLineup();
+    Promise.resolve().then(loadLineup);
   }, [rosterId, leagueId]);
-
-  const handleSaveLineup = async () => {
-    if (!rosterId || !leagueId) return;
-
-    const slotLabel = (slotId: string) => {
-      const [section, indexStr] = slotId.split("-");
-      const index = Number(indexStr);
-      return section === "starter" ? starterLabels[index] : benchLabels[index];
-    };
-
-    const slotIds = new Set([
-      ...Object.keys(originalAssignments),
-      ...Object.keys(assignments),
-    ]);
-
-    const removals: string[] = [];
-    const additions: { playerId: string; slot: string }[] = [];
-
-    slotIds.forEach((slotId) => {
-      const before = originalAssignments[slotId];
-      const after = assignments[slotId];
-
-      if (before && !after) {
-        removals.push(before.playerId);
-      } else if (!before && after) {
-        additions.push({ playerId: after.playerId, slot: slotLabel(slotId) });
-      } else if (before && after && before.playerId !== after.playerId) {
-        // Same slot, different player (e.g. removed then re-filled before saving) —
-        // needs both: freeing the old player's spot and adding the new one.
-        removals.push(before.playerId);
-        additions.push({ playerId: after.playerId, slot: slotLabel(slotId) });
-      }
-    });
-
-    setIsSaving(true);
-    try {
-      // Removals must land before additions: a same-slot replacement adds a player
-      // into a slot the backend still considers occupied until the old one is removed.
-      const removalResults = await Promise.allSettled(
-        removals.map((playerId) =>
-          fetch(`${API_BASE_URL}/remove-player`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rosterId, leagueId, playerId }),
-          }).then((response) => {
-            if (!response.ok) throw new Error("Failed to remove player");
-          }),
-        ),
-      );
-      const additionResults = await Promise.allSettled(
-        additions.map(({ playerId, slot }) =>
-          fetch(`${API_BASE_URL}/add-player`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ rosterId, leagueId, playerId, slot }),
-          }).then((response) => {
-            if (!response.ok) throw new Error("Failed to add player");
-          }),
-        ),
-      );
-
-      const results = [...removalResults, ...additionResults];
-      const failures = results.filter((result) => result.status === "rejected");
-      if (failures.length > 0) {
-        alert(`${failures.length} change(s) failed to save. Reloading lineup.`);
-      } else {
-        saveLineup({
-          rosterId,
-          leagueId,
-          name: lineupName,
-          createdAt: new Date().toISOString(),
-        });
-      }
-    } finally {
-      await loadLineup();
-      setIsSaving(false);
-    }
-  };
 
   useEffect(() => {
     const loadPlayers = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/players`,
-        );
+        const response = await fetch(`${API_BASE_URL}/players`);
         const data = await response.json();
         setPlayers(data);
       } catch (error) {
@@ -185,161 +89,199 @@ const ViewLineupPanel: FC = () => {
       }
     };
     loadPlayers();
-  }, [rosterId, leagueId]);
+  }, []);
 
   useEffect(() => {
     const loadPlayerStats = async () => {
       try {
-        const playerIds = Object.values(assignments).map(
-          (player) => player.playerId,
-        );
+        const playerIds = [...Object.values(assignments), ...benchPlayers].map((player) => player.playerId);
         if (playerIds.length === 0) return;
-        const data = await fetchPlayerStatsByPlayerId(
-          playerIds,
-          PROJECTION_BASE_SEASON,
-          leagueId,
-        );
+        const data = await fetchPlayerStatsByPlayerId(playerIds, PROJECTION_BASE_SEASON, leagueId);
         setPlayerStatsByPlayerId(data);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     };
     loadPlayerStats();
-  }, [assignments, leagueId]);
+  }, [assignments, benchPlayers, leagueId]);
 
   useEffect(() => {
-    const loadPlayerInsights = async () => {
+    const loadInsights = async () => {
+      if (!rosterId || !leagueId) return;
       try {
-        const params = new URLSearchParams({
-          leagueId: String(leagueId),
-          rosterId: String(rosterId),
-          season: String(2025),
-        });
-        const response = await fetch(
-          `${API_BASE_URL}/lineup-insights?${params}`,
-        );
-        if (!response.ok) {
-          throw Error("Could not fetch player lineup insights");
-        }
+        const params = new URLSearchParams({ rosterId, leagueId, season: String(PROJECTION_BASE_SEASON) });
+        const response = await fetch(`${API_BASE_URL}/lineup-insights?${params}`);
+        if (!response.ok) throw new Error("Could not fetch lineup insights");
         const data = await response.json();
-        console.log(data);
         setLineupInsights(data);
       } catch (error) {
-        console.log(error);
+        console.error(error);
       }
     };
-    loadPlayerInsights();
-  }, [assignments, rosterId, leagueId]);
+    loadInsights();
+  }, [assignments, benchPlayers, rosterId, leagueId]);
+
+  const handleAddPlayer = async (player: AddPlayerOverlayPlayer) => {
+    if (!activeSlot || !rosterId || !leagueId) return;
+    setIsMutating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/add-player`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rosterId, leagueId, playerId: player.playerId, slot: activeSlot.label }),
+      });
+      if (!response.ok) throw new Error("Failed to add player");
+      setActiveSlot(null);
+      await loadLineup();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const handleRemovePlayer = async (playerId: string) => {
+    if (!rosterId || !leagueId) return;
+    setIsMutating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/remove-player`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rosterId, leagueId, playerId }),
+      });
+      if (!response.ok) throw new Error("Failed to remove player");
+      await loadLineup();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const handleSwapComplete = async (targetPlayerId: string) => {
+    if (!swapFromPlayerId || !rosterId || !leagueId) return;
+    setIsMutating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/swap-players`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rosterId, leagueId, playerAId: swapFromPlayerId, playerBId: targetPlayerId }),
+      });
+      if (!response.ok) throw new Error("Failed to swap players");
+      setSwapFromPlayerId(null);
+      await loadLineup();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const starterSlots = starterLabels.map((label, index) => {
+    const slotId = `starter-${index}`;
+    const player = assignments[slotId];
+    const isEligibleTarget =
+      isSwapping &&
+      !!player &&
+      !!swapFromPlayer &&
+      (SLOT_ELIGIBILITY[label]?.includes(swapFromPlayer.position) ?? true);
+    return {
+      id: slotId,
+      label,
+      assignedPlayerId: player?.playerId,
+      assignedPlayerName: player?.fullName,
+      assignedPlayerStats: player ? playerStatsByPlayerId[player.playerId] : undefined,
+      meta: player ? buildPlayerMeta(player, playerStatsByPlayerId[player.playerId]) : undefined,
+      isBestPlayer: player ? player.playerId === lineupInsights?.bestPlayer?.playerId : undefined,
+      isWorstPlayer: player ? player.playerId === lineupInsights?.worstPlayer?.playerId : undefined,
+      isDarkHorse: player ? player.playerId === lineupInsights?.darkHorse?.playerId : undefined,
+      swapTarget: isEligibleTarget,
+    };
+  });
+
+  const starterTotal = computeStarterPointsTotal(assignments, playerStatsByPlayerId);
 
   return (
-    <>
-      <div className={styles.stack}>
-        <h1 className={styles.title}>{lineupName || "Untitled Lineup"}</h1>
+    <div className={styles.layout}>
+      <div className={styles.main}>
+        <div className={styles.header}>
+          <div>
+            <div className={styles.leagueLabel}>{leagueName}</div>
+            <h2 className={styles.title}>{lineupName || "Untitled Lineup"}</h2>
+          </div>
+          <div className={styles.totalBlock}>
+            <div className={styles.totalValue}>{starterTotal.toFixed(1)}</div>
+            <div className={styles.totalLabel}>{PROJECTION_BASE_SEASON} SEASON TOTALS</div>
+          </div>
+        </div>
+
+        {isSwapping && swapFromPlayer && (
+          <div className={styles.swapBanner}>
+            <span>Swapping {swapFromPlayer.fullName} — pick a starter to swap him with.</span>
+            <button type="button" className={styles.cancelButton} onClick={() => setSwapFromPlayerId(null)}>
+              Cancel
+            </button>
+          </div>
+        )}
+
         <LineupSlotsList
-          sections={[
-            {
-              title: "Starters",
-              slots: starterLabels.map((label, index) => {
-                const slotId = `starter-${index}`;
-                const player = assignments[slotId];
-                return {
-                  id: slotId,
-                  label,
-                  assignedPlayerId: player?.playerId,
-                  assignedPlayerName: player?.fullName,
-                  assignedPlayerStats: player
-                    ? playerStatsByPlayerId[player.playerId]
-                    : undefined,
-                  isBestPlayer: player
-                    ? player.playerId === lineupInsights?.bestPlayer?.playerId
-                    : undefined,
-                  isWorstPlayer: player
-                    ? player.playerId === lineupInsights?.worstPlayer?.playerId
-                    : undefined,
-                  isDarkHorse: player
-                    ? player.playerId === lineupInsights?.darkHorse?.playerId
-                    : undefined,
-                };
-              }),
-            },
-            {
-              title: "Bench",
-              slots: benchLabels.map((label, index) => {
-                const slotId = `bench-${index}`;
-                const player = assignments[slotId];
-                return {
-                  id: slotId,
-                  label,
-                  assignedPlayerId: player?.playerId,
-                  assignedPlayerName: player?.fullName,
-                  assignedPlayerStats: player
-                    ? playerStatsByPlayerId[player.playerId]
-                    : undefined,
-                  isBestPlayer: player
-                    ? player.playerId === lineupInsights?.bestPlayer?.playerId
-                    : undefined,
-                  isWorstPlayer: player
-                    ? player.playerId === lineupInsights?.worstPlayer?.playerId
-                    : undefined,
-                  isDarkHorse: player
-                    ? player.playerId === lineupInsights?.darkHorse?.playerId
-                    : undefined,
-                };
-              }),
-            },
-          ]}
-          onSlotClick={(slot) => setActiveSlot(slot)}
-          onViewPlayer={(slot) => {
-            if (!slot.assignedPlayerId) return;
-            setActivePlayerViewSlot({
-              id: slot.id,
-              playerId: slot.assignedPlayerId,
-            });
-          }}
-          onRemovePlayer={(slot) => handleRemovePlayer(slot.id)}
+          sections={[{ title: "Starters", slots: starterSlots }]}
+          onSlotClick={isSwapping || isMutating ? undefined : (slot) => setActiveSlot(slot)}
+          onViewPlayer={
+            isSwapping || isMutating
+              ? undefined
+              : (slot) => slot.assignedPlayerId && setActivePlayerId(slot.assignedPlayerId)
+          }
+          onRemovePlayer={
+            isSwapping || isMutating
+              ? undefined
+              : (slot) => slot.assignedPlayerId && handleRemovePlayer(slot.assignedPlayerId)
+          }
+          onSwapTarget={
+            isSwapping ? (slot) => slot.assignedPlayerId && handleSwapComplete(slot.assignedPlayerId) : undefined
+          }
         />
+
+        <div className={styles.benchHeader}>BENCH</div>
+        {benchPlayers.length > 0 ? (
+          <div className={styles.benchGrid}>
+            {benchPlayers.map((player) => (
+              <BenchRow
+                key={player.playerId}
+                player={player}
+                stats={playerStatsByPlayerId[player.playerId]}
+                onView={() => setActivePlayerId(player.playerId)}
+                onSwap={() => setSwapFromPlayerId(player.playerId)}
+                onDrop={() => handleRemovePlayer(player.playerId)}
+                disabled={isSwapping || isMutating}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.benchEmpty}>No players on the bench.</div>
+        )}
 
         {activeSlot && (
           <AddPlayerOverlay
             slotLabel={activeSlot.label}
             players={eligiblePlayers}
-            onSelect={(player) => {
-              setAssignments((prev) => ({ ...prev, [activeSlot.id]: player }));
-              setActiveSlot(null);
-            }}
+            onSelect={handleAddPlayer}
             onClose={() => setActiveSlot(null)}
           />
         )}
 
-        {activePlayerViewSlot && (
+        {activePlayerId && (
           <IndividualPlayerCardOverlay
-            playerId={activePlayerViewSlot.playerId}
+            playerId={activePlayerId}
             leagueId={leagueId}
-            isDarkHorse={
-              activePlayerViewSlot.playerId ===
-              lineupInsights?.darkHorse?.playerId
-            }
-            darkHorse={lineupInsights?.darkHorse}
-            rosterId={rosterId}
-            season={2025}
-            onClose={() => setActivePlayerViewSlot(null)}
+            season={PROJECTION_BASE_SEASON}
+            onClose={() => setActivePlayerId(null)}
           />
         )}
       </div>
 
-      {hasUnsavedChanges && (
-        <div className={styles.footer}>
-          <button
-            type="button"
-            className={styles.saveButton}
-            onClick={handleSaveLineup}
-            disabled={isSaving}
-          >
-            {isSaving ? "Saving..." : "Save Lineup"}
-          </button>
-        </div>
-      )}
-    </>
+      <LineupInsightsPanel insights={lineupInsights} season={PROJECTION_BASE_SEASON} />
+    </div>
   );
 };
 

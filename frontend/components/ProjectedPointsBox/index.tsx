@@ -8,10 +8,8 @@ type ProjectPointsBoxProps = {
 
 const ProjectPointsBox: FC<ProjectPointsBoxProps> = ({ stats }) => {
   return (
-    <div className={styles.box}>
-        <div>
-            {stats ? stats.totalPoints.toFixed(1) : "—"}
-        </div>
+    <div className={styles.value}>
+        {stats ? stats.totalPoints.toFixed(1) : "—"}
     </div>
   );
 }

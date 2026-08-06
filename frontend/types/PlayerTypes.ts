@@ -28,3 +28,19 @@ export type RosterPlayerScore = {
   team: string | null;
   totalPoints: number;
 };
+
+// Mirrors RANKABLE_STATS / PlayerStatRank in backend/src/player/player.models.ts
+export type RankableStat = "passingAirYards" | "receivingAirYards" | "targetShare" | "wopr" | "passingCpoe";
+
+export type PlayerStatRank = {
+  playerId: string;
+  fullName: string;
+  position: string;
+  team: string | null;
+  season: number;
+  stat: RankableStat;
+  value: number | null;
+  gamesCounted: number;
+  positionRank: number | null;
+  positionPlayerCount: number;
+};

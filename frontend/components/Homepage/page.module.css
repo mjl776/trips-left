@@ -1,15 +1,108 @@
-.container {
+.hero {
   display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--background);
-  padding: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 4rem;
 }
 
 .heading {
-  font-size: 2.25rem;
-  font-weight: 700;
+  max-width: 40rem;
+  font-size: clamp(2.25rem, 5vw, 3.25rem);
+  font-weight: var(--medium-bold);
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--secondary-text-color);
+}
+
+.subtext {
+  max-width: 35rem;
+  margin-top: 1.5rem;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--secondary-text-color) 62%, transparent);
+}
+
+.ctaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.primaryButton {
+  padding: 0.9rem 1.75rem;
+  border-radius: 0.875rem;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 1rem;
+  font-weight: var(--medium-bold);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.primaryButton:hover {
+  opacity: 0.9;
+}
+
+.secondaryButton {
+  padding: 0.9rem 1.6rem;
+  border-radius: 0.875rem;
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 22%, transparent);
+  color: var(--secondary-text-color);
+  font-size: 1rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.15s ease;
+}
+
+.secondaryButton:hover {
+  border-color: var(--foreground);
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.875rem;
+  width: 100%;
+  margin-top: 5rem;
+}
+
+.card {
+  padding: 1.625rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
+}
+
+.cardTag {
+  font-size: 0.75rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.14em;
+}
+
+.cyan {
   color: var(--foreground);
-  text-align: center;
+}
+
+.magenta {
+  color: var(--tertiary-color);
+}
+
+.cardTitle {
+  margin-top: 0.875rem;
+  font-size: 1.25rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: -0.02em;
+  color: var(--secondary-text-color);
+}
+
+.cardBody {
+  margin-top: 0.5625rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--secondary-text-color) 58%, transparent);
 }

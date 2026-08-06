@@ -1,22 +1,41 @@
 .container {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 3.5rem 1.5rem 4rem;
 }
 
-.card {
-  width: 80%;
-  height: 40rem;
-  border-radius: 1.5rem;
-  background: color-mix(in srgb, var(--tertiary-color) 5%, transparent);
-  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.microLabel {
+  font-size: 0.75rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.18em;
+  color: var(--foreground);
+}
+
+.heading {
+  margin-top: 0.875rem;
+  font-size: 2rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: -0.035em;
+  color: var(--secondary-text-color);
+}
+
+.countLabel {
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+}
+
+.grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 12rem);
-  grid-auto-rows: 12rem;
-  justify-content: center;
-  align-content: start;
-  gap: 1.5rem;
-  padding: 1.5rem;
-  overflow-y: auto;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.875rem;
+  margin-top: 2rem;
 }

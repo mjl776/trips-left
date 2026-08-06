@@ -1,53 +1,138 @@
-.stack {
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.375rem;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.main {
+  flex: 1 1 32rem;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 100%;
 }
 
 .nameInput {
   width: 100%;
-  max-width: 28rem;
   margin-bottom: 1rem;
   padding: 0.75rem 1.25rem;
-  border-radius: 1.5rem;
-  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
-  background: color-mix(in srgb, var(--foreground) 4%, transparent);
-  font-size: 0.95rem;
-  color: var(--foreground);
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  font-size: 1.125rem;
+  font-weight: var(--medium-bold);
+  color: var(--secondary-text-color);
 }
 
 .nameInput:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  border-color: var(--foreground);
 }
 
-.footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
+.sidebar {
+  flex: 1 1 18rem;
+  min-width: 0;
+  max-width: 24rem;
+  position: sticky;
+  top: 6rem;
+  padding: 1.625rem;
+  border-radius: 1.125rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.microLabel {
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+}
+
+.leagueName {
+  margin-top: 0.75rem;
+  font-size: 1.375rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: -0.02em;
+  color: var(--secondary-text-color);
+}
+
+.leagueRows {
   display: flex;
-  justify-content: center;
-  padding: 1rem;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 1.25rem;
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  border-radius: 0.8rem;
+  overflow: hidden;
+}
+
+.leagueRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.875rem;
+  padding: 0.8rem 0.9rem;
   background: var(--background);
-  border-top: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+.leagueRowLabel {
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+}
+
+.leagueRowValue {
+  font-size: 0.8125rem;
+  color: var(--secondary-text-color);
+  text-align: right;
+}
+
+.leagueHint {
+  margin: 1rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
 }
 
 .createButton {
   width: 100%;
-  max-width: 28rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 1rem;
+  margin-top: 1.25rem;
+  padding: 0.9rem;
+  border-radius: 0.8rem;
   border: none;
   background: var(--foreground);
   color: var(--background);
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   font-weight: var(--medium-bold);
   cursor: pointer;
 }
 
-.createButton:hover {
+.createButton:hover:not(:disabled) {
   opacity: 0.9;
+}
+
+.createButton:disabled {
+  background: color-mix(in srgb, var(--secondary-text-color) 8%, transparent);
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+  cursor: default;
+}
+
+.changeLeagueButton {
+  width: 100%;
+  margin-top: 0.5625rem;
+  padding: 0.8rem;
+  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--secondary-text-color) 12%, transparent);
+  background: none;
+  color: color-mix(in srgb, var(--secondary-text-color) 55%, transparent);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.changeLeagueButton:hover {
+  color: var(--foreground);
+  border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
 }

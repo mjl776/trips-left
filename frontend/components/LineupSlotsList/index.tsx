@@ -10,14 +10,16 @@ export type LineupSlot = {
   assignedPlayerId?: string | null;
   assignedPlayerName?: string | null;
   assignedPlayerStats?: PlayerStats;
+  meta?: string;
   isDarkHorse?: boolean;
   isBestPlayer?: boolean;
   isWorstPlayer?: boolean;
+  swapTarget?: boolean;
 };
 
 // Mirrors PlayerSeasonOverview in backend/src/player/player.models.ts
 export type PlayerStats = {
-  fullName: number;
+  fullName: string;
   gamesPlayed: number | null;
   position: string;
   season: number;
@@ -37,9 +39,16 @@ type LineupSlotsListProps = {
   onSlotClick?: (slot: LineupSlot) => void;
   onViewPlayer?: (slot: LineupSlot) => void;
   onRemovePlayer?: (slot: LineupSlot) => void;
+  onSwapTarget?: (slot: LineupSlot) => void;
 };
 
-const LineupSlotsList: FC<LineupSlotsListProps> = ({ sections, onSlotClick, onViewPlayer, onRemovePlayer }) => {
+const LineupSlotsList: FC<LineupSlotsListProps> = ({
+  sections,
+  onSlotClick,
+  onViewPlayer,
+  onRemovePlayer,
+  onSwapTarget,
+}) => {
   return (
     <div className={styles.panel}>
       {sections.map((section) => (
@@ -52,6 +61,7 @@ const LineupSlotsList: FC<LineupSlotsListProps> = ({ sections, onSlotClick, onVi
               onClick={onSlotClick}
               onViewPlayer={onViewPlayer}
               onRemove={onRemovePlayer}
+              onSwapTarget={onSwapTarget}
             />
           ))}
         </Fragment>
