@@ -88,6 +88,14 @@ Numerals render via `var(--font-orbitan)`: point totals (`ProjectedPointsBox`, l
 
 ---
 
+## Testing
+
+Each frontend component has a react component test that renders the expected behavior of each component based on the component state, it should sit within each component folder
+
+For lib fucntions, they should be placed within the tests folder 
+
+---
+
 ## Endpoint → screen map
 
 Base URL: `API_BASE_URL` from `lib/api.ts`. No auth of any kind — every route is public and identity is just `rosterId` + `leagueId` held in `localStorage`.
