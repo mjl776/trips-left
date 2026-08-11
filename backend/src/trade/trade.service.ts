@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { ScoringSettings } from '../league/league.models';
+import { DEFAULT_SCORING_SETTINGS, ScoringSettings } from '../league/league.models';
 import {
   SimulateTradeRequest,
   SimulateTradeResponse,
@@ -41,12 +41,7 @@ export class TradeService {
     playerOutId,
     playerInId,
   }: SimulateTradeRequest): Promise<SimulateTradeResponse> {
-    const league = await this.prisma.league.findUnique({ where: { leagueId } });
-    if (!league) {
-      throw new NotFoundException(`League ${leagueId} not found`);
-    }
-    const scoringSettings =
-      league.scoringSettings as unknown as ScoringSettings;
+    const scoringSettings = await this.getScoringSettings(leagueId);
 
     const [playerOut, playerIn] = await Promise.all([
       this.buildPlayerSide(playerOutId, season, scoringSettings),
@@ -67,6 +62,17 @@ export class TradeService {
       simulation: simulation.result,
       ...(simulation.error ? { error: simulation.error } : {}),
     };
+  }
+
+  private async getScoringSettings(leagueId?: string): Promise<ScoringSettings> {
+    if (!leagueId) {
+      return DEFAULT_SCORING_SETTINGS;
+    }
+    const league = await this.prisma.league.findUnique({ where: { leagueId } });
+    if (!league) {
+      throw new NotFoundException(`League ${leagueId} not found`);
+    }
+    return league.scoringSettings as unknown as ScoringSettings;
   }
 
   private async buildPlayerSide(

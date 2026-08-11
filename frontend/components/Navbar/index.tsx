@@ -9,6 +9,7 @@ import { LogoIcon } from "../Icons/LogoIcon";
 const NAV_LINKS = [
   { href: "/", label: "Home" },
   { href: "/lineup-management", label: "Lineup" },
+  { href: "/trade-simulator", label: "Trade Simulator" },
   { href: "/about", label: "About" },
 ];
 

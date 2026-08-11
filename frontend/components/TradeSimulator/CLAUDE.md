@@ -39,12 +39,17 @@ Follow the existing inline-`fetch` + `API_BASE_URL` convention (see
 API-client module on this branch yet, so match current style rather than
 introducing a new one.
 
-`leagueId`/`season` come from wherever this page is entered from (query
-param or a league picker — check how `lineup-management/view-lineup`
-resolves `leagueId` today and mirror it) — `season` should default to the
-same baseline season the rest of the app uses for "last completed season"
-data (see `PROJECTION_BASE_SEASON` in `frontend/lib/playerStats.ts`; don't
-hardcode a second copy of that year — import or mirror it).
+**v1: `leagueId` is not required.** The page is linked from the global Navbar
+with no query params, so there's no guaranteed league context on entry. Read
+`leagueId` from `searchParams.get("leagueId")` (same pattern as
+`lineup-management/view-lineup`) and pass it through to the request only when
+present (`...(leagueId ? { leagueId } : {})`) — omit it otherwise and let the
+backend fall back to `DEFAULT_SCORING_SETTINGS` (see `backend/src/trade/CLAUDE.md`).
+Don't gate the simulate-trade request or render a "missing leagueId" error on
+its absence. `season` should default to the same baseline season the rest of
+the app uses for "last completed season" data (see `PROJECTION_BASE_SEASON` in
+`frontend/lib/playerStats.ts`; don't hardcode a second copy of that year —
+import or mirror it).
 
 ## Response shape to render
 

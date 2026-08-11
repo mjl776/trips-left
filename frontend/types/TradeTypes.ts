@@ -1,10 +1,4 @@
-export type SimulateTradeRequest = {
-  leagueId?: string;
-  season: number;
-  playerOutId: string;
-  playerInId: string;
-};
-
+// Mirrors backend/src/trade/trade.models.ts
 export type TradePlayer = {
   playerId: string;
   fullName: string;
