@@ -167,6 +167,27 @@ describe('TradeService', () => {
     expect(result.playerOut.efficiency).toBeNull();
   });
 
+  it('uses DEFAULT_SCORING_SETTINGS and skips the league lookup when leagueId is omitted', async () => {
+    prisma.player.findUnique.mockResolvedValue({
+      playerId: 'p',
+      fullName: 'P',
+      position: 'RB',
+      team: 'X',
+    });
+    prisma.playerStats.findMany.mockResolvedValue([
+      statsRow({ rushYd: dec(100), rushTd: dec(1), carries: dec(20) }),
+    ]);
+
+    const result = await service.simulateTrade({
+      season: 2025,
+      playerOutId: 'p',
+      playerInId: 'p',
+    });
+
+    expect(prisma.league.findUnique).not.toHaveBeenCalled();
+    expect(result.playerOut.value).toBe(16);
+  });
+
   it('returns roi:null when playerOut has zero value', async () => {
     prisma.player.findUnique.mockResolvedValue({
       playerId: 'p',

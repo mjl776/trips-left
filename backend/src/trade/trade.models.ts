@@ -1,5 +1,5 @@
 export type SimulateTradeRequest = {
-  leagueId: string;
+  leagueId?: string;
   season: number;
   playerOutId: string;
   playerInId: string;

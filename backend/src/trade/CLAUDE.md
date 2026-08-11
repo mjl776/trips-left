@@ -28,7 +28,7 @@ invent a second constant for the same idea; import or match it.
 Request body (`SimulateTradeRequest`):
 ```ts
 {
-  leagueId: string;
+  leagueId?: string;     // v1: optional — omitted falls back to DEFAULT_SCORING_SETTINGS
   season: number;        // baseline season for realized stats, e.g. 2025
   playerOutId: string;   // player given up
   playerInId: string;    // player received
@@ -45,9 +45,14 @@ modules for a magic number).
 
 Reuse `calculateFantasyPoints`/`realizedToStatLine` from
 `../projections/scoring.ts` exactly as `projections.service.ts` does — do not
-reimplement scoring math here. Fetch the league's `scoringSettings` via
-`prisma.league.findUnique({ where: { leagueId } })` the same way
-`getProjections` does.
+reimplement scoring math here. Scoring settings come from a private
+`getScoringSettings(leagueId?: string)`, mirroring the precedent in
+`player.service.ts`: an omitted `leagueId` skips the DB lookup entirely and
+returns `DEFAULT_SCORING_SETTINGS` from `league.models.ts`; a `leagueId` that
+*is* provided but doesn't resolve to a real league still throws
+`NotFoundException` — only omission falls back, a bad ID is still an error.
+There is no per-league roster/ownership check here — v1 doesn't require the
+caller to be in a league at all (see `TradeSimulator`'s frontend CLAUDE.md).
 
 Per player, per week: `weeklyPoints[i] = calculateFantasyPoints(realizedToStatLine(row), scoringSettings)`.
 
