@@ -48,7 +48,10 @@ backend/
 │   │   └── projections.module.ts
 │   │
 │   └── trade/                   # 1-for-1 trade evaluator (see src/trade/CLAUDE.md)
-│       └── CLAUDE.md              # spec only — controller/service/models/module not yet implemented, not registered in app.module.ts
+│       ├── trade.controller.ts    # POST simulate-trade
+│       ├── trade.service.ts
+│       ├── trade.models.ts
+│       └── trade.module.ts
 │
 ├── prisma/
 │   ├── schema.prisma             # models: Player, League, Roster, RosterPlayer, Projection, PlayerStats
@@ -93,7 +96,7 @@ Every `*.controller.ts` and `*.service.ts` has a matching `*.controller.test.ts`
 - **Controller tests** mock the service (plain `{ methodName: jest.fn() }` object via `useValue`) and assert each controller method delegates to the right service method with the right args and returns its result — no business logic lives in controllers, so that's all there is to check.
 - **Service tests** mock `PrismaService` via `src/test/prisma-mock.ts`'s `createMockPrismaService()` — a `jest.fn()` stub per Prisma model method actually used across the services (`league`, `player`, `roster`, `rosterPlayer`, `playerStats`, `projection`). Its `$transaction` mock handles both call forms used in the codebase: an array of already-invoked promises (`lineup.service.ts`'s `swapSlots`), and a callback receiving the transaction client (`addDropPlayer`) — in both cases it just runs against the same mock. Reuse this factory rather than hand-rolling Prisma mocks per test file. `dec(n)` builds a Prisma-`Decimal`-like value (`{ toNumber: () => n }`) for stat fields.
 - Cover the success path plus every thrown `NotFoundException`/`BadRequestException` branch — services here are mostly validation chains (roster/league existence, slot capacity, position eligibility, duplicate assignments), so each branch is a real behavior worth pinning down, not incidental coverage.
-- `prisma.service.ts` (bare `PrismaClient` wrapper, no logic) and `src/trade/` (spec-only, not implemented yet) intentionally have no test files — add one for `trade` once it's built, following the same pattern.
+- `prisma.service.ts` (bare `PrismaClient` wrapper, no logic) intentionally has no test file.
 
 ## Notes
 
