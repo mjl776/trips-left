@@ -6,6 +6,11 @@ from simulation import simulate_trade
 app = FastAPI()
 
 
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok"}
+
+
 class PlayerSamples(BaseModel):
     player_id: str
     weekly_points: list[float]
