@@ -173,9 +173,9 @@ Railway (or equivalent) deployment alongside the existing NestJS backend.
    - `backend/src/trade/CLAUDE.md`
    - `simulation-service/CLAUDE.md`
    - `frontend/components/TradeSimulator/CLAUDE.md`
-2. Implement `simulation-service` (FastAPI + numpy). Verify standalone via
+2. ✅ Implement `simulation-service` (FastAPI + numpy). Verify standalone via
    curl/pytest with fixture inputs before wiring it to the backend.
-3. Implement `backend/src/trade` NestJS module. Verify via curl against real
+3. ✅ Implement `backend/src/trade` NestJS module. Verify via curl against real
    `playerId`s from the dev DB.
 4. Implement the frontend `TradeSimulator` page. Verify via a manual browser
    walkthrough (golden path + a no-data-player edge case).

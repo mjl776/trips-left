@@ -6,6 +6,7 @@ import { LeagueModule } from './league/league.module';
 import { LineupModule } from './lineup/lineup.module';
 import { PlayerModule } from './player/player.module';
 import { ProjectionsModule } from './projections/projections.module';
+import { TradeModule } from './trade/trade.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { ProjectionsModule } from './projections/projections.module';
     LineupModule,
     PlayerModule,
     ProjectionsModule,
+    TradeModule,
   ],
   controllers: [AppController],
   providers: [AppService],
