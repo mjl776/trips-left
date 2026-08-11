@@ -1,4 +1,4 @@
-fastapi
-uvicorn
-numpy
-pydantic
+fastapi==0.141.1
+uvicorn==0.52.1
+numpy==2.4.6
+pydantic==2.13.4
