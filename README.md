@@ -4,8 +4,10 @@ This application is a fantasy football optimizer that uses advanced metrics the 
 
 ## Features
 
-- **Create your own lineup** — creates a mock fantasy lineup with default settings.
-- **View your own lineup** — view your lineup, including which players are considered dark horses, best players, and worst players.
+- **Create your own lineup** — start from a mock league with a default roster, or import a real Sleeper league, then fill starter slots from the full player pool with server-validated slot eligibility.
+- **Manage your lineup** — view starters and bench, and add, remove, or swap players with live roster updates.
+- **Lineup insights** — surfaces your roster's best and worst scorers, plus a "dark horse" pick: a rostered player whose season EPA clears the top-20% threshold for their position, shown with percentile and position rank.
+- **Trade simulator** — compare two players for value, efficiency, and ROI, backed by a Monte Carlo bootstrap simulation that resamples 10,000 iterations of real weekly scoring history to estimate expected point delta, win probability, and a p10/p50/p90 outcome range.
 
 ## System Design
 
