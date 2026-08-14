@@ -22,19 +22,30 @@ This application is a fantasy football optimizer that uses advanced metrics the 
 │      NestJS (Node.js)       │
 │ trips-left-production.up.   │
 │    railway.app (Railway)    │
-└──────────────┬──────────────┘
-               │  SQL via Prisma ORM
-               ▼
+└──────────┬───────────┬──────┘
+           │           │  REST / JSON (SIMULATION_SERVICE_URL)
+           │           ▼
+           │  ┌─────────────────────────────┐
+           │  │      Simulation Service      │
+           │  │      FastAPI (Python)        │
+           │  │  stateless Monte Carlo trade │
+           │  │   simulator (Railway)        │
+           │  └─────────────────────────────┘
+           │  SQL via Prisma ORM
+           ▼
 ┌─────────────────────────────┐
 │           Database          │
 │    PostgreSQL (Supabase)    │
 └─────────────────────────────┘
 ```
 
+The simulation service is stateless, has no database access or credentials, and is only reachable from the backend (`backend/src/trade`) — never directly from the frontend. It powers the trade simulator by running a bootstrap-resampling Monte Carlo simulation over two players' weekly fantasy-point histories. See [`simulation-service/README.md`](./simulation-service/README.md) for details.
+
 ## Deployment
 
 - **Frontend** — hosted on [Vercel](https://vercel.com): [https://www.tripsleft.com](https://www.tripsleft.com)
 - **Backend** — hosted on [Railway](https://railway.app): [https://trips-left-production.up.railway.app](https://trips-left-production.up.railway.app)
+- **Simulation Service** — hosted on [Railway](https://railway.app), deployed via Dockerfile; reached by the backend through the `SIMULATION_SERVICE_URL` env var
 
 ## Inspiration Behind the App
 
