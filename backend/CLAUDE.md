@@ -89,6 +89,22 @@ backend/
 
 Every feature module follows the same four-file layout: `*.module.ts` (registers controller/service, imports `PrismaModule`), `*.controller.ts` (routes only), `*.service.ts` (all logic), `*.models.ts` (DTOs). New modules should mirror this and get registered in `app.module.ts`.
 
+## Workflow for new features
+
+1. Before writing code, propose a short plan: which module (new or existing), any `schema.prisma` changes, and the DTO shapes in `*.models.ts`. Wait for confirmation before implementing anything beyond a one-line fix.
+2. Build in reviewable chunks: Prisma schema/migration first (if the feature needs one), then `*.service.ts`, then `*.controller.ts` wiring, then tests — not as one large diff. New modules follow the module pattern above and get registered in `app.module.ts` in the same PR.
+3. Handle the failure branches, not just the happy path — `NotFoundException`/`BadRequestException` for missing rosters/leagues/players, invalid slot capacity, position ineligibility, etc. Controllers stay routing-only; validation and error branches belong in the service (see "Module pattern").
+4. After implementation, run `npm run lint` and `npm run test` in `backend/` and fix any failures before returning. Run `npx prisma migrate dev` if you changed `schema.prisma`.
+5. Write or update `*.controller.test.ts` / `*.service.test.ts` next to the files you touched, per the conventions in "Unit testing" below — including the new error branches.
+
+## Don'ts
+
+- Don't introduce new dependencies without flagging it first.
+- Don't put business logic in a controller — controllers only delegate to a service method (see "Module pattern" and the controller-test convention below).
+- Don't invent a Prisma field/relation — check `prisma/schema.prisma` first.
+- Don't reimplement fantasy-scoring math — reuse `calculateFantasyPoints`/`realizedToStatLine` from `src/projections/scoring.ts` (see `src/trade/` for the precedent).
+- Don't add a forward-looking `Projection`-based code path — that table has 0 rows; realized `PlayerStats` is the source of truth until a projection pipeline exists.
+
 ## Unit testing
 
 Every `*.controller.ts` and `*.service.ts` has a matching `*.controller.test.ts` / `*.service.test.ts` next to it (e.g. `league/league.service.test.ts`). Jest's `testRegex` (in `package.json`) is `.*\.test\.ts$` — unit tests use the `.test.ts` suffix, not `.spec.ts`. (`test/*.e2e-spec.ts` is a separate, unrelated jest config/suffix for e2e — leave that one alone.)

@@ -73,6 +73,21 @@ there's nothing to differentiate the two sides.
 - `requirements.txt` — `fastapi`, `uvicorn`, `numpy`, `pydantic`. (No `scipy` — bootstrap resampling only needs `numpy`.)
 - `tests/test_simulation.py` — at minimum: identical inputs on both sides → `win_probability` ≈ 50; a side with a strictly higher-scoring sample set → `win_probability` > 50 and `expected_delta` > 0; empty arrays on both sides → the all-zero fallback above.
 
+## Workflow for new features
+
+1. Before writing code, propose a short plan: the request/response Pydantic models and whether the change belongs in the pure `simulation.py` function or the FastAPI route in `main.py`. Wait for confirmation before implementing anything beyond a one-line fix.
+2. Build in reviewable chunks: the pure numpy function in `simulation.py` first (unit-testable without FastAPI), then the route wiring in `main.py`, then tests — not as one diff.
+3. Handle edge cases explicitly, not just the golden path: empty `weekly_points` on one or both sides (see the all-zero/50% fallback above), and keep the vectorized-numpy requirement (no Python-level loop over `trials`).
+4. After implementation, run `pytest` from `simulation-service/` (with `venv` activated) and fix any failures before returning.
+5. Add or update a case in `tests/test_simulation.py` for the scenario you changed, following the existing three-case pattern (identical inputs, one-sided-higher, both-empty).
+
+## Don'ts
+
+- Don't introduce new dependencies without flagging it first — no `scipy`; bootstrap resampling only needs `numpy`.
+- Don't add database access or credentials to this service — it must stay stateless and DB-free; all Postgres access stays in `backend/src/trade`.
+- Don't fit/assume a parametric distribution (normal, truncated-normal) — resample with replacement from the player's own realized weekly totals, per "Why bootstrap resampling" above.
+- Don't add auth for v1 — this service is only reachable from the backend, not exposed to the frontend/browser directly.
+
 ## Running locally
 
 ```bash

@@ -151,6 +151,14 @@ If a task seems to need one of these, stop and ask rather than inventing an endp
 - `backend/src/lineup/lineup.service.ts` still has `console.log` calls. Remove them if you're editing that file; don't add more.
 - `frontend/lib/usePlayerPicker.tsx` is dead code — a duplicate of `playerEligibility.ts`'s eligibility filter that nothing imports. Don't build on it; either delete it or fold it into `playerEligibility.ts` next time you're in this area.
 
+## Workflow for new features
+
+1. Before writing code, propose a short plan: which route/component(s), the prop interfaces, and whether new shared logic belongs in `frontend/lib/`. Wait for confirmation before implementing anything beyond a one-file fix.
+2. Build in reviewable chunks: `lib/` data/helper function first (if needed), then the presentational component, then wiring it into the route/page. Don't land data layer + UI + route wiring as one undifferentiated diff.
+3. Every screen that fetches must handle loading, empty, and error states explicitly — see `ViewLineupPanel`/`LineupInsightsPanel` for the null-state pattern (neutral muted card, never magenta/alert-styled). Overlay components (`AddPlayerOverlay`) need `Escape`-to-close and focus handling; don't skip keyboard/ARIA because "it's just an internal tool."
+4. After implementation, run `npm run lint` and `npm run test:run` in `frontend/` and fix any failures before returning.
+5. Add or update a component test in the same component folder (see "Testing" above) covering the loading/empty/error states you just added.
+
 ## PR checklist
 
 1. `npm run lint` in `frontend/` passes.
@@ -159,3 +167,5 @@ If a task seems to need one of these, stop and ask rather than inventing an endp
 4. No new hex colors, no Tailwind utility classes, no new dependencies.
 5. Null states handled for `bestPlayer` / `worstPlayer` / `darkHorse`.
 6. Route docs updated if a controller changed.
+7. Didn't restyle an existing component as a side effect of an unrelated change.
+8. Didn't assume a backend contract — checked the controller/`*.models.ts` in `backend/src/` (or the relevant `CLAUDE.md`) rather than guessing a request/response shape.
