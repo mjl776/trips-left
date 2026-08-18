@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildStarterAssignments, getBenchPlayers, getStarterLabels } from "../lineupSections";
+import {
+  buildBenchAssignments,
+  buildStarterAssignments,
+  getBenchLabels,
+  getBenchPlayers,
+  getStarterLabels,
+} from "../lineupSections";
 import type { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 
 const rosterPositions = ["QB", "RB", "RB", "WR", "WR", "TE", "FLEX", "FLEX", "K", "DEF", "BN", "BN"];
@@ -73,5 +79,44 @@ describe("getBenchPlayers", () => {
 
   it("returns an empty array when nobody is benched", () => {
     expect(getBenchPlayers([{ slot: "QB", player: qb }])).toEqual([]);
+  });
+});
+
+describe("getBenchLabels", () => {
+  it("keeps only the BN slots, in order", () => {
+    expect(getBenchLabels(rosterPositions)).toEqual(["BN", "BN"]);
+  });
+
+  it("returns an empty array when there are no BN slots", () => {
+    expect(getBenchLabels(["QB", "RB"])).toEqual([]);
+  });
+});
+
+describe("buildBenchAssignments", () => {
+  it("fills bench slot keys in occupant order", () => {
+    const benchLabels = ["BN", "BN"];
+    const rosterPlayers = [
+      { slot: "QB", player: qb },
+      { slot: "BN", player: bench1 },
+      { slot: "BN", player: bench2 },
+    ];
+
+    expect(buildBenchAssignments(benchLabels, rosterPlayers)).toEqual({
+      "bench-0": bench1,
+      "bench-1": bench2,
+    });
+  });
+
+  it("leaves trailing slot keys absent when occupants are fewer than capacity", () => {
+    const benchLabels = ["BN", "BN", "BN"];
+    const rosterPlayers = [{ slot: "BN", player: bench1 }];
+
+    expect(buildBenchAssignments(benchLabels, rosterPlayers)).toEqual({
+      "bench-0": bench1,
+    });
+  });
+
+  it("returns an empty object when there is no bench capacity", () => {
+    expect(buildBenchAssignments([], [{ slot: "BN", player: bench1 }])).toEqual({});
   });
 });

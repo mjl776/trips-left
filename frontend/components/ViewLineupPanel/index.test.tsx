@@ -285,6 +285,38 @@ describe("ViewLineupPanel", () => {
         await waitFor(() => expect(screen.getByText("Free Agent Receiver")).toBeInTheDocument());
     });
 
+    it("opens the add-player overlay for an empty bench slot and adds the selection via POST /add-player with slot BN", async () => {
+        const roster = makeRoster();
+        roster.rosterPlayers = roster.rosterPlayers.filter((rosterPlayer) => rosterPlayer.player.playerId !== "bn2");
+        const fetchMock = createFetchMock({ roster, insights: populatedInsights, statsById, playersList: freeAgents });
+        vi.stubGlobal("fetch", fetchMock);
+
+        render(<ViewLineupPanel />);
+        await waitFor(() => expect(screen.getByText("Empty bench slot")).toBeInTheDocument());
+
+        fireEvent.click(screen.getByRole("button", { name: "Add player to bench" }));
+        expect(screen.getByText("Add Bench")).toBeInTheDocument();
+
+        fireEvent.change(screen.getByPlaceholderText("Search players..."), { target: { value: "Free Agent" } });
+        fireEvent.click(screen.getByText("Free Agent Kicker"));
+
+        await waitFor(() => {
+            expect(screen.queryByPlaceholderText("Search players...")).not.toBeInTheDocument();
+        });
+
+        const addCall = fetchMock.mock.calls.find(([input]) => String(input).includes("/add-player"))!;
+        expect(addCall[1]?.method).toBe("POST");
+        expect(JSON.parse(String(addCall[1]?.body))).toEqual({
+            rosterId: "test-roster",
+            leagueId: "test-league",
+            playerId: "fa-k",
+            slot: "BN",
+        });
+
+        await waitFor(() => expect(screen.getByText("Free Agent Kicker")).toBeInTheDocument());
+        expect(screen.queryByText("Empty bench slot")).not.toBeInTheDocument();
+    });
+
     it("removes a starter player via the remove button, sending a JSON body to DELETE /remove-player and reloading the lineup", async () => {
         const roster = makeRoster();
         // Use the empty-insights fixture so the removed player's name isn't also pinned

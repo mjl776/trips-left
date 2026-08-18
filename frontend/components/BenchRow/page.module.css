@@ -93,3 +93,37 @@
   opacity: 0.5;
   cursor: default;
 }
+
+.empty .info {
+  cursor: default;
+}
+
+.addCircle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--foreground) 40%, transparent);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.addCircle:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  border-color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+.addCircle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.plus {
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--foreground);
+}
