@@ -90,4 +90,34 @@ describe("BenchRow", () => {
         expect(screen.getByRole("button", { name: "SWAP" })).toBeDisabled();
         expect(screen.getByRole("button", { name: "DROP" })).toBeDisabled();
     });
+
+    describe("empty slot", () => {
+        it("renders the empty placeholder copy instead of a player", () => {
+            render(<BenchRow player={null} />);
+
+            expect(screen.getByText("Empty bench slot")).toBeInTheDocument();
+            expect(screen.getByText("Add a player to fill this spot")).toBeInTheDocument();
+            expect(screen.getByText("BN")).toBeInTheDocument();
+        });
+
+        it("does not render an add button when onAdd is not supplied", () => {
+            render(<BenchRow player={null} />);
+
+            expect(screen.queryByRole("button", { name: "Add player to bench" })).not.toBeInTheDocument();
+        });
+
+        it("fires onAdd when the add button is clicked", () => {
+            const onAdd = vi.fn();
+            render(<BenchRow player={null} onAdd={onAdd} />);
+
+            screen.getByRole("button", { name: "Add player to bench" }).click();
+            expect(onAdd).toHaveBeenCalledTimes(1);
+        });
+
+        it("disables the add button when disabled is true", () => {
+            render(<BenchRow player={null} onAdd={() => {}} disabled />);
+
+            expect(screen.getByRole("button", { name: "Add player to bench" })).toBeDisabled();
+        });
+    });
 });

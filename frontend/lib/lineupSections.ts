@@ -32,3 +32,20 @@ export function buildStarterAssignments(
 export function getBenchPlayers(rosterPlayers: RosterPlayer[]): AddPlayerOverlayPlayer[] {
   return rosterPlayers.filter((rosterPlayer) => rosterPlayer.slot === "BN").map((rosterPlayer) => rosterPlayer.player);
 }
+
+export function getBenchLabels(rosterPositions: string[]): string[] {
+  return rosterPositions.filter((slot) => slot === "BN");
+}
+
+export function buildBenchAssignments(
+  benchLabels: string[],
+  rosterPlayers: RosterPlayer[],
+): Record<string, AddPlayerOverlayPlayer> {
+  const occupants = getBenchPlayers(rosterPlayers);
+  const assignments: Record<string, AddPlayerOverlayPlayer> = {};
+  benchLabels.forEach((_, index) => {
+    const player = occupants[index];
+    if (player) assignments[`bench-${index}`] = player;
+  });
+  return assignments;
+}

@@ -5,7 +5,7 @@ import type { PlayerStats } from "../LineupSlotsList";
 import { FC, useEffect, useState } from "react";
 import AddPlayerOverlay, { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { ActiveSlot, getEligiblePlayers } from "@/lib/playerEligibility";
-import { getStarterLabels, buildStarterAssignments, getBenchPlayers } from "@/lib/lineupSections";
+import { getStarterLabels, buildStarterAssignments, getBenchLabels, buildBenchAssignments } from "@/lib/lineupSections";
 import { computeStarterPointsTotal } from "@/lib/lineupTotals";
 import styles from "./page.module.css";
 import { useSearchParams } from "next/navigation";
@@ -35,7 +35,8 @@ const ViewLineupPanel: FC = () => {
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
-  const [benchPlayers, setBenchPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
+  const [benchLabels, setBenchLabels] = useState<string[]>([]);
+  const [benchAssignments, setBenchAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
   const [starterLabels, setStarterLabels] = useState<string[]>([]);
   const [playerStatsByPlayerId, setPlayerStatsByPlayerId] = useState<Record<string, PlayerStats>>({});
   const [lineupInsights, setLineupInsights] = useState<LineupInsights | null>(null);
@@ -46,17 +47,11 @@ const ViewLineupPanel: FC = () => {
 
   const isSwapping = !!swapFromPlayerId;
   const swapFromPlayer = swapFromPlayerId
-    ? (benchPlayers.find((player) => player.playerId === swapFromPlayerId) ?? null)
+    ? (Object.values(benchAssignments).find((player) => player.playerId === swapFromPlayerId) ?? null)
     : null;
 
-  const benchPlayerIds = new Set(benchPlayers.map((player) => player.playerId));
-  const eligiblePlayers = activeSlot
-    ? getEligiblePlayers(
-        players.filter((player) => !benchPlayerIds.has(player.playerId)),
-        assignments,
-        activeSlot,
-      )
-    : [];
+  const allAssignments = { ...assignments, ...benchAssignments };
+  const eligiblePlayers = activeSlot ? getEligiblePlayers(players, allAssignments, activeSlot) : [];
 
   const loadLineup = async () => {
     if (!rosterId || !leagueId) return;
@@ -66,7 +61,9 @@ const ViewLineupPanel: FC = () => {
       const labels = getStarterLabels(roster.league.rosterPositions);
       setStarterLabels(labels);
       setAssignments(buildStarterAssignments(labels, roster.rosterPlayers));
-      setBenchPlayers(getBenchPlayers(roster.rosterPlayers));
+      const benchLabelList = getBenchLabels(roster.league.rosterPositions);
+      setBenchLabels(benchLabelList);
+      setBenchAssignments(buildBenchAssignments(benchLabelList, roster.rosterPlayers));
       setLineupName(roster.name);
       setLeagueName(roster.league.name ?? "League");
     } catch (error) {
@@ -94,7 +91,9 @@ const ViewLineupPanel: FC = () => {
   useEffect(() => {
     const loadPlayerStats = async () => {
       try {
-        const playerIds = [...Object.values(assignments), ...benchPlayers].map((player) => player.playerId);
+        const playerIds = [...Object.values(assignments), ...Object.values(benchAssignments)].map(
+          (player) => player.playerId,
+        );
         if (playerIds.length === 0) return;
         const data = await fetchPlayerStatsByPlayerId(playerIds, PROJECTION_BASE_SEASON, leagueId);
         setPlayerStatsByPlayerId(data);
@@ -103,7 +102,7 @@ const ViewLineupPanel: FC = () => {
       }
     };
     loadPlayerStats();
-  }, [assignments, benchPlayers, leagueId]);
+  }, [assignments, benchAssignments, leagueId]);
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -119,7 +118,7 @@ const ViewLineupPanel: FC = () => {
       }
     };
     loadInsights();
-  }, [assignments, benchPlayers, rosterId, leagueId]);
+  }, [assignments, benchAssignments, rosterId, leagueId]);
 
   const handleAddPlayer = async (player: AddPlayerOverlayPlayer) => {
     if (!activeSlot || !rosterId || !leagueId) return;
@@ -243,19 +242,24 @@ const ViewLineupPanel: FC = () => {
         />
 
         <div className={styles.benchHeader}>BENCH</div>
-        {benchPlayers.length > 0 ? (
+        {benchLabels.length > 0 ? (
           <div className={styles.benchGrid}>
-            {benchPlayers.map((player) => (
-              <BenchRow
-                key={player.playerId}
-                player={player}
-                stats={playerStatsByPlayerId[player.playerId]}
-                onView={() => setActivePlayerId(player.playerId)}
-                onSwap={() => setSwapFromPlayerId(player.playerId)}
-                onDrop={() => handleRemovePlayer(player.playerId)}
-                disabled={isSwapping || isMutating}
-              />
-            ))}
+            {benchLabels.map((_, index) => {
+              const slotId = `bench-${index}`;
+              const player = benchAssignments[slotId] ?? null;
+              return (
+                <BenchRow
+                  key={slotId}
+                  player={player}
+                  stats={player ? playerStatsByPlayerId[player.playerId] : undefined}
+                  onView={player ? () => setActivePlayerId(player.playerId) : undefined}
+                  onSwap={player ? () => setSwapFromPlayerId(player.playerId) : undefined}
+                  onDrop={player ? () => handleRemovePlayer(player.playerId) : undefined}
+                  onAdd={!player ? () => setActiveSlot({ id: slotId, label: "BN" }) : undefined}
+                  disabled={isSwapping || isMutating}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className={styles.benchEmpty}>No players on the bench.</div>
@@ -263,7 +267,7 @@ const ViewLineupPanel: FC = () => {
 
         {activeSlot && (
           <AddPlayerOverlay
-            slotLabel={activeSlot.label}
+            slotLabel={activeSlot.label === "BN" ? "Bench" : activeSlot.label}
             players={eligiblePlayers}
             onSelect={handleAddPlayer}
             onClose={() => setActiveSlot(null)}
