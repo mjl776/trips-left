@@ -131,7 +131,15 @@ function createFetchMock({
         const method = (init?.method ?? "GET").toUpperCase();
 
         if (url.includes("/view-lineup")) {
-            return Promise.resolve(jsonResponse(clone(roster)));
+            // Mirrors the backend: view-lineup embeds each rostered player's season
+            // stats server-side (when `season` is passed) instead of the frontend
+            // fanning out one GET /view-player per rostered player.
+            const rosterWithStats = clone(roster);
+            rosterWithStats.rosterPlayers = rosterWithStats.rosterPlayers.map((rosterPlayer: RosterPlayerFixture) => ({
+                ...rosterPlayer,
+                stats: statsMap[rosterPlayer.player.playerId],
+            }));
+            return Promise.resolve(jsonResponse(rosterWithStats));
         }
         if (url.includes("/lineup-insights")) {
             return Promise.resolve(jsonResponse(insights));
@@ -261,10 +269,14 @@ describe("ViewLineupPanel", () => {
         await waitFor(() => expect(screen.getByText("Empty")).toBeInTheDocument());
 
         fireEvent.click(screen.getByRole("button", { name: "Add player to FLEX" }));
-        expect(screen.getByText("Add FLEX")).toBeInTheDocument();
+        // AddPlayerOverlay is now code-split via next/dynamic (Phase 4), so it
+        // mounts asynchronously after the click.
+        await waitFor(() => expect(screen.getByText("Add FLEX")).toBeInTheDocument());
 
+        // GET /players is deferred until a slot is opened (Phase 4), so the
+        // eligible list populates asynchronously after this click.
         fireEvent.change(screen.getByPlaceholderText("Search players..."), { target: { value: "Free Agent" } });
-        expect(screen.getByText("Free Agent Receiver")).toBeInTheDocument();
+        await waitFor(() => expect(screen.getByText("Free Agent Receiver")).toBeInTheDocument());
         expect(screen.queryByText("Free Agent Kicker")).not.toBeInTheDocument();
 
         fireEvent.click(screen.getByText("Free Agent Receiver"));
@@ -295,9 +307,12 @@ describe("ViewLineupPanel", () => {
         await waitFor(() => expect(screen.getByText("Empty bench slot")).toBeInTheDocument());
 
         fireEvent.click(screen.getByRole("button", { name: "Add player to bench" }));
-        expect(screen.getByText("Add Bench")).toBeInTheDocument();
+        // AddPlayerOverlay is now code-split via next/dynamic (Phase 4), so it
+        // mounts asynchronously after the click.
+        await waitFor(() => expect(screen.getByText("Add Bench")).toBeInTheDocument());
 
         fireEvent.change(screen.getByPlaceholderText("Search players..."), { target: { value: "Free Agent" } });
+        await waitFor(() => expect(screen.getByText("Free Agent Kicker")).toBeInTheDocument());
         fireEvent.click(screen.getByText("Free Agent Kicker"));
 
         await waitFor(() => {
@@ -435,7 +450,7 @@ describe("ViewLineupPanel", () => {
         expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/view-lineup"))).toHaveLength(1);
     });
 
-    it("skips the lineup and insights requests and renders the default empty state when rosterId or leagueId is missing", async () => {
+    it("skips the lineup, insights, and players requests and renders the default empty state when rosterId or leagueId is missing", async () => {
         vi.mocked(useSearchParams).mockReturnValue(new URLSearchParams() as ReturnType<typeof useSearchParams>);
         const fetchMock = createFetchMock({
             roster: makeRoster(),
@@ -447,14 +462,14 @@ describe("ViewLineupPanel", () => {
 
         render(<ViewLineupPanel />);
 
-        await waitFor(() => {
-            expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/players"))).toBe(true);
-        });
-
         expect(screen.getByRole("heading", { level: 2, name: "Untitled Lineup" })).toBeInTheDocument();
         expect(screen.getByText("No players on the bench.")).toBeInTheDocument();
         expect(screen.getByText("0.0")).toBeInTheDocument();
+        expect(fetchMock).not.toHaveBeenCalled();
         expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/view-lineup"))).toBe(false);
         expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/lineup-insights"))).toBe(false);
+        // GET /players is now deferred until a slot is actually opened (Phase 4)
+        // — nothing here opens one, so it should never fire.
+        expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/players"))).toBe(false);
     });
 });

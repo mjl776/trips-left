@@ -40,7 +40,16 @@ export type SwapPlayersInput = {
 export type GetLineupInput = {
   rosterId: string;
   leagueId: string;
-}
+};
+
+export type ViewLineupQuery = GetLineupInput & {
+  // Optional for backward compatibility with callers that only need the raw
+  // roster shape (e.g. lib/lineupTotals.ts's own separate stats fetch). When
+  // present, each rosterPlayers[] entry gets a `stats` field computed
+  // server-side instead of the frontend fanning out one GET /view-player per
+  // rostered player.
+  season?: string;
+};
 
 export type RosterPlayer = {
   rosterId: string;

@@ -2,8 +2,23 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { ProjectionsService } from './projections.service';
 import { PrismaService } from '../prisma.service';
-import { createMockPrismaService, dec, MockPrismaService } from '../test/prisma-mock';
+import { PositionStatsService } from '../stats/position-stats.service';
+import {
+  createMockPrismaService,
+  dec,
+  MockPrismaService,
+} from '../test/prisma-mock';
 import { DEFAULT_SCORING_SETTINGS } from '../league/league.models';
+
+// Shape of a Prisma `playerStats.groupBy` row for a single column.
+function groupByRow(playerId: string, column: string, value: number) {
+  return {
+    playerId,
+    _sum: { [column]: dec(value) },
+    _avg: { [column]: dec(value) },
+    _count: { [column]: 1 },
+  };
+}
 
 function projectionRow(overrides: Record<string, unknown>) {
   return {
@@ -82,6 +97,7 @@ describe('ProjectionsService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProjectionsService,
+        PositionStatsService,
         { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
@@ -99,13 +115,19 @@ describe('ProjectionsService', () => {
     });
 
     it('computes points from the stat line when present, and sorts descending', async () => {
-      prisma.league.findUnique.mockResolvedValue({ scoringSettings: DEFAULT_SCORING_SETTINGS });
+      prisma.league.findUnique.mockResolvedValue({
+        scoringSettings: DEFAULT_SCORING_SETTINGS,
+      });
       prisma.projection.findMany.mockResolvedValue([
         projectionRow({ playerId: 'low', rushYd: dec(10) }), // 1 pt
         projectionRow({ playerId: 'high', rushYd: dec(100), rushTd: dec(1) }), // 16 pts
       ]);
 
-      const result = await service.getProjections({ leagueId: 'l1', season: '2025', week: '1' });
+      const result = await service.getProjections({
+        leagueId: 'l1',
+        season: '2025',
+        week: '1',
+      });
 
       expect(prisma.projection.findMany).toHaveBeenCalledWith({
         where: { season: 2025, week: 1, source: undefined, player: undefined },
@@ -116,18 +138,26 @@ describe('ProjectionsService', () => {
     });
 
     it('falls back to projPoints when there is no stat line', async () => {
-      prisma.league.findUnique.mockResolvedValue({ scoringSettings: DEFAULT_SCORING_SETTINGS });
+      prisma.league.findUnique.mockResolvedValue({
+        scoringSettings: DEFAULT_SCORING_SETTINGS,
+      });
       prisma.projection.findMany.mockResolvedValue([
         projectionRow({ playerId: 'p1', projPoints: dec(12.5) }),
       ]);
 
-      const result = await service.getProjections({ leagueId: 'l1', season: '2025', week: '1' });
+      const result = await service.getProjections({
+        leagueId: 'l1',
+        season: '2025',
+        week: '1',
+      });
 
       expect(result[0].projectedPoints).toBe(12.5);
     });
 
     it('filters by position when provided', async () => {
-      prisma.league.findUnique.mockResolvedValue({ scoringSettings: DEFAULT_SCORING_SETTINGS });
+      prisma.league.findUnique.mockResolvedValue({
+        scoringSettings: DEFAULT_SCORING_SETTINGS,
+      });
       prisma.projection.findMany.mockResolvedValue([]);
 
       await service.getProjections({
@@ -139,7 +169,12 @@ describe('ProjectionsService', () => {
       });
 
       expect(prisma.projection.findMany).toHaveBeenCalledWith({
-        where: { season: 2025, week: 1, source: 'mock', player: { position: 'RB' } },
+        where: {
+          season: 2025,
+          week: 1,
+          source: 'mock',
+          player: { position: 'RB' },
+        },
         include: { player: true },
       });
     });
@@ -150,14 +185,26 @@ describe('ProjectionsService', () => {
       prisma.roster.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.getLineupInsights({ rosterId: 'r1', leagueId: 'l1', season: '2025' }),
+        service.getLineupInsights({
+          rosterId: 'r1',
+          leagueId: 'l1',
+          season: '2025',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
     it('picks a best player and skips worst/dark horse when there is only one candidate', async () => {
       prisma.roster.findUnique.mockResolvedValue({
         rosterPlayers: [
-          { playerId: 'p1', player: { playerId: 'p1', fullName: 'Solo', position: 'RB', team: 'X' } },
+          {
+            playerId: 'p1',
+            player: {
+              playerId: 'p1',
+              fullName: 'Solo',
+              position: 'RB',
+              team: 'X',
+            },
+          },
         ],
         league: { scoringSettings: DEFAULT_SCORING_SETTINGS },
       });
@@ -179,29 +226,58 @@ describe('ProjectionsService', () => {
     it('excludes K/DEF from worst player and surfaces a dark horse over the league EPA threshold', async () => {
       prisma.roster.findUnique.mockResolvedValue({
         rosterPlayers: [
-          { playerId: 'rb1', player: { playerId: 'rb1', fullName: 'Best RB', position: 'RB', team: 'X' } },
-          { playerId: 'wr1', player: { playerId: 'wr1', fullName: 'Dark Horse WR', position: 'WR', team: 'X' } },
-          { playerId: 'def1', player: { playerId: 'def1', fullName: 'Some DEF', position: 'DEF', team: 'X' } },
+          {
+            playerId: 'rb1',
+            player: {
+              playerId: 'rb1',
+              fullName: 'Best RB',
+              position: 'RB',
+              team: 'X',
+            },
+          },
+          {
+            playerId: 'wr1',
+            player: {
+              playerId: 'wr1',
+              fullName: 'Dark Horse WR',
+              position: 'WR',
+              team: 'X',
+            },
+          },
+          {
+            playerId: 'def1',
+            player: {
+              playerId: 'def1',
+              fullName: 'Some DEF',
+              position: 'DEF',
+              team: 'X',
+            },
+          },
         ],
         league: { scoringSettings: DEFAULT_SCORING_SETTINGS },
       });
 
-      prisma.playerStats.findMany.mockImplementation(({ where }) => {
-        if (where.playerId?.in) {
-          // Roster players' own realized stats.
-          return Promise.resolve([
-            statsRow({ playerId: 'rb1', rushYd: dec(100), rushTd: dec(1) }), // 16 pts
-            statsRow({ playerId: 'wr1', rec: dec(5), recYd: dec(50), receiving_epa: dec(10) }), // 10 pts
-          ]);
-        }
-        // League-wide distribution for the dark-horse candidate's position/stat.
+      // Roster players' own realized stats (unchanged — filtered to the roster's own playerIds).
+      prisma.playerStats.findMany.mockResolvedValue([
+        statsRow({ playerId: 'rb1', rushYd: dec(100), rushTd: dec(1) }), // 16 pts
+        statsRow({
+          playerId: 'wr1',
+          rec: dec(5),
+          recYd: dec(50),
+          receiving_epa: dec(10),
+        }), // 10 pts
+      ]);
+
+      // League-wide distribution for the dark-horse candidate's position/stat,
+      // now pushed into SQL via groupBy instead of a full-table findMany.
+      prisma.playerStats.groupBy.mockImplementation(({ where }) => {
         if (where.player.position === 'WR') {
           return Promise.resolve([
-            statsRow({ playerId: 'wr1', receiving_epa: dec(10) }),
-            statsRow({ playerId: 'other1', receiving_epa: dec(5) }),
-            statsRow({ playerId: 'other2', receiving_epa: dec(3) }),
-            statsRow({ playerId: 'other3', receiving_epa: dec(2) }),
-            statsRow({ playerId: 'other4', receiving_epa: dec(1) }),
+            groupByRow('wr1', 'receiving_epa', 10),
+            groupByRow('other1', 'receiving_epa', 5),
+            groupByRow('other2', 'receiving_epa', 3),
+            groupByRow('other3', 'receiving_epa', 2),
+            groupByRow('other4', 'receiving_epa', 1),
           ]);
         }
         return Promise.resolve([]);
