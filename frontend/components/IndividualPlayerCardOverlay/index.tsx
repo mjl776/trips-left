@@ -12,6 +12,9 @@ type IndividualPlayerCardOverlayProps = {
     leagueId: string | null;
     season: number;
     onClose: () => void;
+    // When the caller already has this player's season stats (e.g. a rostered
+    // player on the view-lineup page), skip the redundant GET /view-player.
+    initialStats?: PlayerStats;
 }
 
 // Raw units per RANKABLE_STAT from the backend — spot-check against real data once wired up.
@@ -31,9 +34,9 @@ function formatStatValue(stat: string, value: number): string {
     }
 }
 
-const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ playerId, leagueId, season, onClose }) => {
+const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ playerId, leagueId, season, onClose, initialStats }) => {
 
-    const [playerStats, setPlayerStats] = useState<PlayerStats>();
+    const [playerStats, setPlayerStats] = useState<PlayerStats | undefined>(initialStats);
     const [statRanks, setStatRanks] = useState<PlayerStatRank[]>([]);
 
     useEffect(() => {
@@ -45,6 +48,7 @@ const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ pla
     }, [onClose]);
 
     useEffect(() => {
+        if (initialStats) return;
         const fetchViewPlayer = async () => {
             try {
                 const params = new URLSearchParams({ playerId, season: String(season) });
@@ -58,7 +62,7 @@ const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ pla
             }
         }
         fetchViewPlayer();
-    }, [playerId, leagueId, season])
+    }, [playerId, leagueId, season, initialStats])
 
     useEffect(() => {
         if (!playerStats) return;

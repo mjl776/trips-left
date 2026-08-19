@@ -18,6 +18,10 @@ import {
   StatLine,
 } from './scoring';
 import { Prisma } from '../../generated/prisma/client';
+import {
+  ColumnDistributionEntry,
+  PositionStatsService,
+} from '../stats/position-stats.service';
 
 type ProjectionWithPlayer = Prisma.ProjectionGetPayload<{
   include: { player: true };
@@ -41,32 +45,11 @@ const EPA_STAT_BY_POSITION: Record<string, EpaStat> = {
   TE: 'receiving_epa',
 };
 
-// This position's league-wide EPA totals for the season, best-to-worst.
-async function getLeagueEpaDistribution(
-  prisma: PrismaService,
-  position: string,
-  stat: EpaStat,
-  season: number,
-): Promise<Array<{ playerId: string; value: number }>> {
-  const rows = await prisma.playerStats.findMany({
-    where: { season, week: { lte: REGULAR_SEASON_WEEKS }, player: { position } },
-  });
-
-  const totalsByPlayer = new Map<string, number>();
-  for (const row of rows) {
-    const value = decimalToNumber(row[stat]);
-    if (value == null) continue;
-    totalsByPlayer.set(row.playerId, (totalsByPlayer.get(row.playerId) ?? 0) + value);
-  }
-
-  return [...totalsByPlayer.entries()]
-    .map(([playerId, value]) => ({ playerId, value }))
-    .sort((a, b) => b.value - a.value);
-}
-
 // Top 20% cutoff value of a best-to-worst distribution.
 // Infinity (nobody qualifies) if there's no data to compare against.
-function getTopPercentileThreshold(distribution: Array<{ value: number }>): number {
+function getTopPercentileThreshold(
+  distribution: Array<{ value: number }>,
+): number {
   if (distribution.length === 0) {
     return Infinity;
   }
@@ -106,7 +89,10 @@ function toStatLine(projection: ProjectionWithPlayer): StatLine {
 
 @Injectable()
 export class ProjectionsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly positionStats: PositionStatsService,
+  ) {}
 
   async getProjections({
     leagueId,
@@ -119,7 +105,8 @@ export class ProjectionsService {
     if (!league) {
       throw new NotFoundException(`League ${leagueId} not found`);
     }
-    const scoringSettings = league.scoringSettings as unknown as ScoringSettings;
+    const scoringSettings =
+      league.scoringSettings as unknown as ScoringSettings;
 
     const projections = await this.prisma.projection.findMany({
       where: {
@@ -136,7 +123,7 @@ export class ProjectionsService {
         const statLine = toStatLine(projection);
         const projectedPoints = hasStatLine(statLine)
           ? calculateFantasyPoints(statLine, scoringSettings)
-          : toNum(projection.projPoints) ?? 0;
+          : (toNum(projection.projPoints) ?? 0);
 
         return {
           playerId: projection.playerId,
@@ -169,7 +156,8 @@ export class ProjectionsService {
       throw new NotFoundException(`Roster ${rosterId} not found`);
     }
 
-    const scoringSettings = roster.league.scoringSettings as unknown as ScoringSettings;
+    const scoringSettings = roster.league
+      .scoringSettings as unknown as ScoringSettings;
     const seasonNum = Number(season);
     const playerIds = roster.rosterPlayers.map((rp) => rp.playerId);
 
@@ -191,7 +179,9 @@ export class ProjectionsService {
     const scored: RosterPlayerScore[] = roster.rosterPlayers.map((rp) => {
       const rows = statsByPlayer.get(rp.playerId) ?? [];
       const totalPoints = rows.reduce(
-        (sum, row) => sum + calculateFantasyPoints(realizedToStatLine(row), scoringSettings),
+        (sum, row) =>
+          sum +
+          calculateFantasyPoints(realizedToStatLine(row), scoringSettings),
         0,
       );
       return {
@@ -246,7 +236,9 @@ export class ProjectionsService {
         EPA_STAT_BY_POSITION[rp.player.position] != null,
     );
 
-    const distributionCache = new Map<string, Array<{ playerId: string; value: number }>>();
+    // Avoids repeating the same position+stat aggregation across candidates
+    // who share a position within this one findDarkHorse call.
+    const distributionCache = new Map<string, ColumnDistributionEntry[]>();
     let darkHorse: DarkHorsePlayer | null = null;
     let bestMargin = -Infinity;
 
@@ -256,17 +248,18 @@ export class ProjectionsService {
       if (rows.length === 0) continue;
 
       const value = rows.reduce(
-        (sum, row) => sum + (decimalToNumber(row[stat] as Prisma.Decimal | null) ?? 0),
+        (sum, row) =>
+          sum + (decimalToNumber(row[stat] as Prisma.Decimal | null) ?? 0),
         0,
       );
 
       const cacheKey = `${candidate.player.position}:${stat}`;
       let distribution = distributionCache.get(cacheKey);
       if (distribution === undefined) {
-        distribution = await getLeagueEpaDistribution(
-          this.prisma,
+        distribution = await this.positionStats.getColumnDistribution(
           candidate.player.position,
           stat,
+          'sum',
           season,
         );
         distributionCache.set(cacheKey, distribution);
@@ -276,13 +269,16 @@ export class ProjectionsService {
       const margin = value - threshold;
       if (margin >= 0 && margin > bestMargin) {
         bestMargin = margin;
-        const rankIndex = distribution.findIndex((d) => d.playerId === candidate.playerId);
+        const rankIndex = distribution.findIndex(
+          (d) => d.playerId === candidate.playerId,
+        );
         const positionRank = rankIndex === -1 ? null : rankIndex + 1;
         const positionPlayerCount = distribution.length;
         const percentile =
           positionRank == null
             ? null
-            : ((positionPlayerCount - positionRank + 1) / positionPlayerCount) * 100;
+            : ((positionPlayerCount - positionRank + 1) / positionPlayerCount) *
+              100;
 
         darkHorse = {
           playerId: candidate.playerId,

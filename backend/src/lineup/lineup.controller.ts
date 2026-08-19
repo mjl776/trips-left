@@ -7,6 +7,7 @@ import {
   GetLineupInput,
   RemovePlayerInput,
   SwapPlayersInput,
+  ViewLineupQuery,
 } from './lineup.models';
 
 @Controller()
@@ -39,13 +40,12 @@ export class LineupController {
   }
 
   @Get('view-lineup')
-  viewLineup(@Query() input: GetLineupInput) {
-    return this.lineupService.viewLineup(input)
+  viewLineup(@Query() input: ViewLineupQuery) {
+    return this.lineupService.viewLineup(input);
   }
 
   @Delete('delete-lineup')
   deleteRoster(@Body() input: GetLineupInput) {
     return this.lineupService.deleteRoster(input);
   }
-
 }

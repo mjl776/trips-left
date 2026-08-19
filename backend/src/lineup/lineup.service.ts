@@ -14,8 +14,12 @@ import {
   RemovePlayerInput,
   SLOT_ELIGIBILITY,
   SwapPlayersInput,
+  ViewLineupQuery,
 } from './lineup.models';
 import { Prisma, RosterPlayer } from '../../generated/prisma/client';
+import { PositionStatsService } from '../stats/position-stats.service';
+import { ScoringSettings } from '../league/league.models';
+import { PlayerSeasonOverview } from '../player/player.models';
 
 type RosterWithLeagueAndPlayers = Prisma.RosterGetPayload<{
   include: { rosterPlayers: true; league: true };
@@ -23,7 +27,10 @@ type RosterWithLeagueAndPlayers = Prisma.RosterGetPayload<{
 
 @Injectable()
 export class LineupService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly positionStats: PositionStatsService,
+  ) {}
 
   async createLineup({ leagueId, name, assignments }: CreateLineupInput) {
     const league = await this.prisma.league.findUnique({ where: { leagueId } });
@@ -168,7 +175,6 @@ export class LineupService {
     const availableSlots = [...rosterPositions];
     for (const { slot } of assignments) {
       const index = availableSlots.indexOf(slot);
-      console.log('index', slot);
       if (index === -1) {
         throw new BadRequestException(
           `Slot "${slot}" is not available in this league's roster, or has no remaining openings`,
@@ -244,7 +250,7 @@ export class LineupService {
     ]);
   }
 
-  async viewLineup({ rosterId, leagueId }) {
+  async viewLineup({ rosterId, leagueId, season }: ViewLineupQuery) {
     const roster = await this.prisma.roster.findUnique({
       where: { rosterId_leagueId: { rosterId, leagueId } },
       include: {
@@ -259,7 +265,56 @@ export class LineupService {
       throw new NotFoundException(`Roster ${rosterId} not found`);
     }
 
-    return roster;
+    if (!season) {
+      return roster;
+    }
+
+    const seasonNum = Number(season);
+    const scoringSettings = roster.league
+      .scoringSettings as unknown as ScoringSettings;
+
+    // One position-wide fantasy-points scan per distinct position on the
+    // roster, shared across every player at that position — replaces the
+    // frontend's previous one-GET-/view-player-per-rostered-player fan-out.
+    const positions = [
+      ...new Set(roster.rosterPlayers.map((rp) => rp.player.position)),
+    ];
+    const distributionEntries = await Promise.all(
+      positions.map(
+        async (position) =>
+          [
+            position,
+            await this.positionStats.getFantasyPointsDistribution(
+              position,
+              seasonNum,
+              scoringSettings,
+            ),
+          ] as const,
+      ),
+    );
+    const distributionByPosition = new Map(distributionEntries);
+
+    const rosterPlayers = roster.rosterPlayers.map((rp) => {
+      const distribution = distributionByPosition.get(rp.player.position) ?? [];
+      const rankIndex = distribution.findIndex(
+        (entry) => entry.playerId === rp.playerId,
+      );
+      const entry = rankIndex === -1 ? null : distribution[rankIndex];
+      const stats: PlayerSeasonOverview = {
+        playerId: rp.player.playerId,
+        fullName: rp.player.fullName,
+        position: rp.player.position,
+        team: rp.player.team,
+        season: seasonNum,
+        gamesPlayed: entry?.gamesPlayed ?? 0,
+        totalPoints: entry?.value ?? 0,
+        positionRank: rankIndex === -1 ? null : rankIndex + 1,
+        positionPlayerCount: distribution.length,
+      };
+      return { ...rp, stats };
+    });
+
+    return { ...roster, rosterPlayers };
   }
 
   async deleteRoster({ rosterId, leagueId }: GetLineupInput) {
@@ -298,5 +353,4 @@ export class LineupService {
 
     return roster;
   }
-
 }

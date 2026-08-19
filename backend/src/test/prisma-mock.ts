@@ -23,6 +23,7 @@ export function createMockPrismaService() {
     },
     playerStats: {
       findMany: jest.fn(),
+      groupBy: jest.fn(),
     },
     projection: {
       findMany: jest.fn(),

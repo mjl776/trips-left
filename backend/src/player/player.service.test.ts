@@ -2,7 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PlayerService } from './player.service';
 import { PrismaService } from '../prisma.service';
-import { createMockPrismaService, dec, MockPrismaService } from '../test/prisma-mock';
+import { PositionStatsService } from '../stats/position-stats.service';
+import {
+  createMockPrismaService,
+  dec,
+  MockPrismaService,
+} from '../test/prisma-mock';
 import { DEFAULT_SCORING_SETTINGS } from '../league/league.models';
 
 // Fills in the RealizedStatLine fields realizedToStatLine() reads, plus the
@@ -38,6 +43,22 @@ function statRow(overrides: Record<string, unknown>) {
   };
 }
 
+// Shape of a Prisma `playerStats.groupBy` row for a single rankable column.
+function groupByRow(
+  playerId: string,
+  column: string,
+  sum: number,
+  avg: number,
+  count: number,
+) {
+  return {
+    playerId,
+    _sum: { [column]: dec(sum) },
+    _avg: { [column]: dec(avg) },
+    _count: { [column]: count },
+  };
+}
+
 describe('PlayerService', () => {
   let service: PlayerService;
   let prisma: MockPrismaService;
@@ -48,6 +69,7 @@ describe('PlayerService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PlayerService,
+        PositionStatsService,
         { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
@@ -57,7 +79,9 @@ describe('PlayerService', () => {
 
   describe('getPlayers', () => {
     it('returns the player list', async () => {
-      const players = [{ playerId: 'p1', fullName: 'A', position: 'QB', team: 'X' }];
+      const players = [
+        { playerId: 'p1', fullName: 'A', position: 'QB', team: 'X' },
+      ];
       prisma.player.findMany.mockResolvedValue(players);
 
       const result = await service.getPlayers();
@@ -79,11 +103,18 @@ describe('PlayerService', () => {
     });
 
     it('throws NotFoundException when the given league does not exist', async () => {
-      prisma.player.findUnique.mockResolvedValue({ playerId: 'p1', position: 'QB' });
+      prisma.player.findUnique.mockResolvedValue({
+        playerId: 'p1',
+        position: 'QB',
+      });
       prisma.league.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.viewPlayer({ playerId: 'p1', season: '2025', leagueId: 'bad-league' }),
+        service.viewPlayer({
+          playerId: 'p1',
+          season: '2025',
+          leagueId: 'bad-league',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -100,12 +131,21 @@ describe('PlayerService', () => {
         statRow({ playerId: 'p2', week: 1, rushYd: dec(200), rushTd: dec(2) }), // 32 pts
       ]);
 
-      const result = await service.viewPlayer({ playerId: 'p1', season: '2025' });
+      const result = await service.viewPlayer({
+        playerId: 'p1',
+        season: '2025',
+      });
 
       expect(prisma.league.findUnique).not.toHaveBeenCalled();
-      expect(prisma.playerStats.findMany).toHaveBeenCalledWith({
-        where: { season: 2025, week: { lte: 18 }, player: { position: 'RB' } },
-      });
+      expect(prisma.playerStats.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            season: 2025,
+            week: { lte: 18 },
+            player: { position: 'RB' },
+          },
+        }),
+      );
       expect(result).toEqual({
         playerId: 'p1',
         fullName: 'Player One',
@@ -120,7 +160,10 @@ describe('PlayerService', () => {
     });
 
     it('includes postseason weeks when requested', async () => {
-      prisma.player.findUnique.mockResolvedValue({ playerId: 'p1', position: 'QB' });
+      prisma.player.findUnique.mockResolvedValue({
+        playerId: 'p1',
+        position: 'QB',
+      });
       prisma.playerStats.findMany.mockResolvedValue([]);
 
       await service.viewPlayer({
@@ -129,13 +172,18 @@ describe('PlayerService', () => {
         includePostseason: 'true',
       });
 
-      expect(prisma.playerStats.findMany).toHaveBeenCalledWith({
-        where: { season: 2025, week: undefined, player: { position: 'QB' } },
-      });
+      expect(prisma.playerStats.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { season: 2025, week: undefined, player: { position: 'QB' } },
+        }),
+      );
     });
 
     it('uses the league scoring settings when a leagueId is given', async () => {
-      prisma.player.findUnique.mockResolvedValue({ playerId: 'p1', position: 'RB' });
+      prisma.player.findUnique.mockResolvedValue({
+        playerId: 'p1',
+        position: 'RB',
+      });
       prisma.league.findUnique.mockResolvedValue({
         scoringSettings: { ...DEFAULT_SCORING_SETTINGS, rush_yd: 1 },
       });
@@ -156,7 +204,11 @@ describe('PlayerService', () => {
   describe('getPlayerStatRank', () => {
     it('throws BadRequestException for an unsupported stat', async () => {
       await expect(
-        service.getPlayerStatRank({ playerId: 'p1', season: '2025', stat: 'not_a_stat' }),
+        service.getPlayerStatRank({
+          playerId: 'p1',
+          season: '2025',
+          stat: 'not_a_stat',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -164,21 +216,24 @@ describe('PlayerService', () => {
       prisma.player.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.getPlayerStatRank({ playerId: 'p1', season: '2025', stat: 'wopr' }),
+        service.getPlayerStatRank({
+          playerId: 'p1',
+          season: '2025',
+          stat: 'wopr',
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('sums a counting stat across games and ranks players', async () => {
+    it('sums a counting stat across games and ranks players, pushing the aggregation into SQL via groupBy', async () => {
       prisma.player.findUnique.mockResolvedValue({
         playerId: 'p1',
         fullName: 'Player One',
         position: 'WR',
         team: 'X',
       });
-      prisma.playerStats.findMany.mockResolvedValue([
-        { playerId: 'p1', receivingAirYards: dec(50) },
-        { playerId: 'p1', receivingAirYards: dec(25) },
-        { playerId: 'p2', receivingAirYards: dec(100) },
+      prisma.playerStats.groupBy.mockResolvedValue([
+        groupByRow('p1', 'receivingAirYards', 75, 37.5, 2),
+        groupByRow('p2', 'receivingAirYards', 100, 100, 1),
       ]);
 
       const result = await service.getPlayerStatRank({
@@ -187,6 +242,16 @@ describe('PlayerService', () => {
         stat: 'receivingAirYards',
       });
 
+      expect(prisma.playerStats.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          by: ['playerId'],
+          where: {
+            season: 2025,
+            week: { lte: 18 },
+            player: { position: 'WR' },
+          },
+        }),
+      );
       expect(result).toEqual({
         playerId: 'p1',
         fullName: 'Player One',
@@ -208,9 +273,8 @@ describe('PlayerService', () => {
         position: 'WR',
         team: 'X',
       });
-      prisma.playerStats.findMany.mockResolvedValue([
-        { playerId: 'p1', targetShare: dec(0.2) },
-        { playerId: 'p1', targetShare: dec(0.4) },
+      prisma.playerStats.groupBy.mockResolvedValue([
+        groupByRow('p1', 'targetShare', 0.6, 0.3, 2),
       ]);
 
       const result = await service.getPlayerStatRank({
@@ -230,8 +294,8 @@ describe('PlayerService', () => {
         position: 'WR',
         team: 'X',
       });
-      prisma.playerStats.findMany.mockResolvedValue([
-        { playerId: 'p2', wopr: dec(0.5) },
+      prisma.playerStats.groupBy.mockResolvedValue([
+        groupByRow('p2', 'wopr', 0.5, 0.5, 1),
       ]);
 
       const result = await service.getPlayerStatRank({

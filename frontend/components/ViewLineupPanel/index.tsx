@@ -3,21 +3,31 @@
 import LineupSlotsList from "../LineupSlotsList";
 import type { PlayerStats } from "../LineupSlotsList";
 import { FC, useEffect, useState } from "react";
-import AddPlayerOverlay, { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
+import dynamic from "next/dynamic";
+import type { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { ActiveSlot, getEligiblePlayers } from "@/lib/playerEligibility";
 import { getStarterLabels, buildStarterAssignments, getBenchLabels, buildBenchAssignments } from "@/lib/lineupSections";
 import { computeStarterPointsTotal } from "@/lib/lineupTotals";
 import styles from "./page.module.css";
 import { useSearchParams } from "next/navigation";
-import { fetchPlayerStatsByPlayerId, PROJECTION_BASE_SEASON } from "@/lib/playerStats";
-import IndividualPlayerCardOverlay from "@/components/IndividualPlayerCardOverlay";
+import { PROJECTION_BASE_SEASON } from "@/lib/playerStats";
 import BenchRow from "@/components/BenchRow";
 import LineupInsightsPanel from "@/components/LineupInsightsPanel";
 import { LineupInsights } from "@/types/PlayerTypes";
 import { SLOT_ELIGIBILITY } from "@/constants";
 import { API_BASE_URL } from "@/lib/api";
 
+// Only rendered once a slot/card is actually opened — code-split out of the
+// initial route bundle instead of shipping unconditionally.
+const AddPlayerOverlay = dynamic(() => import("@/components/AddPlayerOverlay"));
+const IndividualPlayerCardOverlay = dynamic(() => import("@/components/IndividualPlayerCardOverlay"));
+
 const NO_SCORE_POSITIONS = ["K", "DEF"];
+
+type RosterPlayerWithStats = {
+  player: { playerId: string };
+  stats?: PlayerStats;
+};
 
 function buildPlayerMeta(player: AddPlayerOverlayPlayer, stats?: PlayerStats): string {
   const team = player.team ?? "FA";
@@ -32,6 +42,7 @@ const ViewLineupPanel: FC = () => {
   const rosterId = searchParams.get("rosterId");
 
   const [players, setPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
+  const [playersLoaded, setPlayersLoaded] = useState(false);
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
   const [assignments, setAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
@@ -53,10 +64,16 @@ const ViewLineupPanel: FC = () => {
   const allAssignments = { ...assignments, ...benchAssignments };
   const eligiblePlayers = activeSlot ? getEligiblePlayers(players, allAssignments, activeSlot) : [];
 
+  // view-lineup embeds each rostered player's season stats server-side (when
+  // `season` is passed) — this replaces what used to be a separate
+  // fetchPlayerStatsByPlayerId fan-out of one GET /view-player per rostered
+  // player.
   const loadLineup = async () => {
     if (!rosterId || !leagueId) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}`);
+      const response = await fetch(
+        `${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}&season=${PROJECTION_BASE_SEASON}`,
+      );
       const roster = await response.json();
       const labels = getStarterLabels(roster.league.rosterPositions);
       setStarterLabels(labels);
@@ -66,6 +83,13 @@ const ViewLineupPanel: FC = () => {
       setBenchAssignments(buildBenchAssignments(benchLabelList, roster.rosterPlayers));
       setLineupName(roster.name);
       setLeagueName(roster.league.name ?? "League");
+      setPlayerStatsByPlayerId(
+        Object.fromEntries(
+          (roster.rosterPlayers as RosterPlayerWithStats[])
+            .filter((rp) => rp.stats)
+            .map((rp) => [rp.player.playerId, rp.stats as PlayerStats]),
+        ),
+      );
     } catch (error) {
       console.error(error);
     }
@@ -75,35 +99,26 @@ const ViewLineupPanel: FC = () => {
     Promise.resolve().then(loadLineup);
   }, [rosterId, leagueId]);
 
+  // Deferred until a slot is actually opened — GET /players returns the
+  // entire player list and is only needed for the add-player search.
   useEffect(() => {
+    if (!activeSlot || playersLoaded) return;
     const loadPlayers = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/players`);
         const data = await response.json();
         setPlayers(data);
+        setPlayersLoaded(true);
       } catch (error) {
         console.error(error);
       }
     };
     loadPlayers();
-  }, []);
+  }, [activeSlot, playersLoaded]);
 
-  useEffect(() => {
-    const loadPlayerStats = async () => {
-      try {
-        const playerIds = [...Object.values(assignments), ...Object.values(benchAssignments)].map(
-          (player) => player.playerId,
-        );
-        if (playerIds.length === 0) return;
-        const data = await fetchPlayerStatsByPlayerId(playerIds, PROJECTION_BASE_SEASON, leagueId);
-        setPlayerStatsByPlayerId(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    loadPlayerStats();
-  }, [assignments, benchAssignments, leagueId]);
-
+  // Only depends on rosterId/leagueId (the body never reads assignments/
+  // benchAssignments), so it fires in parallel with loadLineup on mount
+  // instead of waiting for the roster to load first.
   useEffect(() => {
     const loadInsights = async () => {
       if (!rosterId || !leagueId) return;
@@ -118,7 +133,7 @@ const ViewLineupPanel: FC = () => {
       }
     };
     loadInsights();
-  }, [assignments, benchAssignments, rosterId, leagueId]);
+  }, [rosterId, leagueId]);
 
   const handleAddPlayer = async (player: AddPlayerOverlayPlayer) => {
     if (!activeSlot || !rosterId || !leagueId) return;
@@ -279,6 +294,7 @@ const ViewLineupPanel: FC = () => {
             playerId={activePlayerId}
             leagueId={leagueId}
             season={PROJECTION_BASE_SEASON}
+            initialStats={playerStatsByPlayerId[activePlayerId]}
             onClose={() => setActivePlayerId(null)}
           />
         )}
