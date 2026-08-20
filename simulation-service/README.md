@@ -70,7 +70,19 @@ Requires Python 3.10+ (the request model uses `int | None` union syntax). NestJS
 
 ```bash
 source venv/bin/activate
+pip install -r requirements-dev.txt
 python -m pytest tests/ -v
 ```
 
 Covers: identical inputs on both sides (~50% win probability), a strictly higher-scoring side (>90% win probability, positive expected delta), and the all-zero fallback when both sides have no data.
+
+## CI/CD
+
+Every pull request targeting `main` runs [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) on GitHub Actions. The `simulation-service` job only runs when a PR touches files under this directory — a shared `changes` job path-filters the three service jobs, so a PR that only changes `frontend/` or `backend/` skips this one entirely (shows as "skipped," not "failed").
+
+The job:
+1. Sets up Python 3.11 (matching the [Dockerfile](./Dockerfile)'s `python:3.11-slim`).
+2. `pip install -r requirements-dev.txt` — installs `requirements.txt` plus `pytest`, which isn't needed in the production image so it's kept out of `requirements.txt` itself.
+3. `python -m pytest tests/ -v`.
+
+No secrets or external services are needed — this service is stateless (see [CLAUDE.md](./CLAUDE.md)), so the job only ever exercises the pure-numpy `simulate_trade` function. See [documentation/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline-plan.md) for the full pipeline design and rollout notes.

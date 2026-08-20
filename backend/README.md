@@ -19,3 +19,16 @@ npm run start:dev
 ```
 
 Runs on port `8080` by default (override with `PORT`). Needs `DATABASE_URL` (pooled, for the app) and `DIRECT_URL` (unpooled, for Prisma migrations/scripts) set in `.env`.
+
+## CI/CD
+
+Every pull request targeting `main` runs [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) on GitHub Actions. The `backend` job only runs when a PR touches files under this directory — a shared `changes` job path-filters the three service jobs, so a PR that only changes `frontend/` or `simulation-service/` skips this one entirely (shows as "skipped," not "failed").
+
+The job:
+1. Sets up Node 22 with npm dependency caching (keyed on `package-lock.json`).
+2. `npm ci`
+3. `npx prisma generate` — required before lint/test since `PrismaService` imports the generated client from `generated/prisma/` (gitignored). The job sets dummy `DATABASE_URL`/`DIRECT_URL` values purely to satisfy `prisma.config.ts`'s config-load validation; no real database connection is ever made.
+4. `npm run lint`
+5. `npm run test` — unit tests only. Every unit test mocks `PrismaService` (see "Unit testing" in [CLAUDE.md](./CLAUDE.md)), so this job never touches a real database.
+
+`npm run test:e2e` is intentionally not part of CI yet — it would need a real Postgres service container. See [documentation/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline-plan.md) for the full pipeline design, rollout notes, and that deferral's rationale.

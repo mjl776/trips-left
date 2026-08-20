@@ -93,10 +93,10 @@ No separate deploy-status reporting is in scope — this plan only covers test/l
 Grounded in what was actually found — **minimal secrets needed for this scope:**
 
 - **`frontend` job:** none identified. No `.env`-consumed secrets found in `frontend/package.json` scripts for lint/test.
-- **`backend` job:** none needed for `prisma generate` + unit tests, since unit tests mock `PrismaService` entirely. (If e2e tests are added later, that job would need `DATABASE_URL`/`DIRECT_URL` — currently blank placeholders in `backend/.env` — likely pointing at a CI-only ephemeral Postgres service container, not the real Supabase instance.)
+- **`backend` job:** no real secret needed, but **dummy `DATABASE_URL`/`DIRECT_URL` env vars are required** — discovered during rollout validation, not anticipated in the original plan. `backend/prisma.config.ts` uses Prisma's config-file format (`env()` from `prisma/config`), which eagerly validates these vars exist at *config-load* time, before any command runs — so even `prisma generate` (which never opens a DB connection) fails immediately without them. Since unit tests mock `PrismaService` entirely, hardcoded placeholder values (`postgresql://user:password@localhost:5432/db`) set directly in the workflow's `env:` block satisfy this without needing a GitHub Actions secret or a real database. (If e2e tests are added later, that job would need real `DATABASE_URL`/`DIRECT_URL` values — currently blank placeholders in `backend/.env` — likely pointing at a CI-only ephemeral Postgres service container, not the real Supabase instance.)
 - **`simulation-service` job:** none — stateless service, no credentials per its own `CLAUDE.md`.
 
-No GitHub Actions secrets need to be created for this initial pipeline. This is worth flagging explicitly since it's a favorable, low-risk starting point — nothing sensitive touches CI yet.
+No GitHub Actions *secrets* need to be created for this initial pipeline — the backend job's dummy DB URLs are non-sensitive placeholders, safe to commit directly in the workflow file.
 
 ## Rollout order
 
