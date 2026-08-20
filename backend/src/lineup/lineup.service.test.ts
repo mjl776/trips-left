@@ -115,8 +115,10 @@ describe('LineupService', () => {
         assignments: [{ playerId: 'p1', slot: 'QB' }],
       });
 
+      // expect.any is typed `any` in @types/jest.
       expect(prisma.roster.create).toHaveBeenCalledWith({
         data: {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           rosterId: expect.any(String),
           leagueId: 'l1',
           name: 'Team',
@@ -525,22 +527,24 @@ describe('LineupService', () => {
         league: { scoringSettings: DEFAULT_SCORING_SETTINGS },
       });
 
-      prisma.playerStats.findMany.mockImplementation(({ where }) => {
-        if (where.player.position === 'QB') {
-          return Promise.resolve([
-            { playerId: 'qb1', passYd: dec(300), passTd: dec(3) },
-          ]);
-        }
-        if (where.player.position === 'RB') {
-          return Promise.resolve([
-            { playerId: 'rb1', rushYd: dec(100), rushTd: dec(1) }, // 16 pts
-            { playerId: 'rb2', rushYd: dec(50) }, // 5 pts
-          ]);
-        }
-        return Promise.resolve([]);
-      });
+      prisma.playerStats.findMany.mockImplementation(
+        ({ where }: { where: { player: { position: string } } }) => {
+          if (where.player.position === 'QB') {
+            return Promise.resolve([
+              { playerId: 'qb1', passYd: dec(300), passTd: dec(3) },
+            ]);
+          }
+          if (where.player.position === 'RB') {
+            return Promise.resolve([
+              { playerId: 'rb1', rushYd: dec(100), rushTd: dec(1) }, // 16 pts
+              { playerId: 'rb2', rushYd: dec(50) }, // 5 pts
+            ]);
+          }
+          return Promise.resolve([]);
+        },
+      );
 
-      const result: any = await service.viewLineup({
+      const result = await service.viewLineup({
         rosterId: 'r1',
         leagueId: 'l1',
         season: '2025',
@@ -548,12 +552,13 @@ describe('LineupService', () => {
 
       // One findMany call per distinct position (QB, RB) — not once per rostered player.
       expect(prisma.playerStats.findMany).toHaveBeenCalledTimes(2);
-      const rb1 = result.rosterPlayers.find(
-        (rp: { playerId: string }) => rp.playerId === 'rb1',
-      );
-      const rb2 = result.rosterPlayers.find(
-        (rp: { playerId: string }) => rp.playerId === 'rb2',
-      );
+      // `season` was given, so `rosterPlayers` is the stats-enriched branch.
+      const rosterPlayers = result.rosterPlayers as unknown as {
+        playerId: string;
+        stats: unknown;
+      }[];
+      const rb1 = rosterPlayers.find((rp) => rp.playerId === 'rb1')!;
+      const rb2 = rosterPlayers.find((rp) => rp.playerId === 'rb2')!;
       expect(rb1.stats).toEqual({
         playerId: 'rb1',
         fullName: 'RB One',

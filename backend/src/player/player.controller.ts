@@ -23,7 +23,9 @@ export class PlayerController {
   }
 
   @Get('player-stat-rank')
-  getPlayerStatRank(@Query() query: PlayerStatRankQuery): Promise<PlayerStatRank> {
+  getPlayerStatRank(
+    @Query() query: PlayerStatRankQuery,
+  ): Promise<PlayerStatRank> {
     return this.playerService.getPlayerStatRank(query);
   }
 }

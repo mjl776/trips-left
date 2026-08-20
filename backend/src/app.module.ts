@@ -20,5 +20,4 @@ import { TradeModule } from './trade/trade.module';
   controllers: [AppController],
   providers: [AppService],
 })
-
 export class AppModule {}

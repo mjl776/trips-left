@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { LeagueService } from './league.service';
 import { PrismaService } from '../prisma.service';
-import { createMockPrismaService, MockPrismaService } from '../test/prisma-mock';
+import {
+  createMockPrismaService,
+  MockPrismaService,
+} from '../test/prisma-mock';
 import { DEFAULT_SCORING_SETTINGS } from './league.models';
 
 describe('LeagueService', () => {
@@ -14,10 +17,7 @@ describe('LeagueService', () => {
     prisma = createMockPrismaService();
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        LeagueService,
-        { provide: PrismaService, useValue: prisma },
-      ],
+      providers: [LeagueService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     service = module.get(LeagueService);
@@ -30,10 +30,14 @@ describe('LeagueService', () => {
 
   describe('postMockLeague', () => {
     it('creates a mock league with default scoring settings', async () => {
-      prisma.league.create.mockImplementation(({ data }) => Promise.resolve(data));
+      prisma.league.create.mockImplementation(({ data }) =>
+        Promise.resolve(data),
+      );
 
       const result = await service.postMockLeague();
 
+      // expect.objectContaining/any/arrayContaining are typed `any` in @types/jest.
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment */
       expect(prisma.league.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           leagueId: expect.any(String),
@@ -42,9 +46,19 @@ describe('LeagueService', () => {
           scoringSettings: DEFAULT_SCORING_SETTINGS,
           numTeams: 1,
           isMock: true,
-          rosterPositions: expect.arrayContaining(['QB', 'RB', 'WR', 'TE', 'FLEX', 'K', 'DEF', 'BN']),
+          rosterPositions: expect.arrayContaining([
+            'QB',
+            'RB',
+            'WR',
+            'TE',
+            'FLEX',
+            'K',
+            'DEF',
+            'BN',
+          ]),
         }),
       });
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment */
       expect(result.isMock).toBe(true);
       expect(result.scoringSettings).toEqual(DEFAULT_SCORING_SETTINGS);
     });
@@ -54,15 +68,18 @@ describe('LeagueService', () => {
     it('creates a league from a valid Sleeper response', async () => {
       fetchSpy.mockResolvedValue({
         ok: true,
-        json: async () => ({
-          name: 'Sleeper League',
-          season: '2025',
-          scoring_settings: { pass_td: 4 },
-          roster_positions: ['QB', 'RB', 'BN'],
-          total_rosters: 12,
-        }),
-      } as Response);
-      prisma.league.create.mockImplementation(({ data }) => Promise.resolve(data));
+        json: () =>
+          Promise.resolve({
+            name: 'Sleeper League',
+            season: '2025',
+            scoring_settings: { pass_td: 4 },
+            roster_positions: ['QB', 'RB', 'BN'],
+            total_rosters: 12,
+          }),
+      });
+      prisma.league.create.mockImplementation(({ data }) =>
+        Promise.resolve(data),
+      );
 
       const result = await service.importSleeperLeague('sleeper-1');
 
@@ -85,7 +102,7 @@ describe('LeagueService', () => {
     });
 
     it('throws NotFoundException when the Sleeper request fails', async () => {
-      fetchSpy.mockResolvedValue({ ok: false } as Response);
+      fetchSpy.mockResolvedValue({ ok: false });
 
       await expect(service.importSleeperLeague('missing')).rejects.toThrow(
         NotFoundException,
@@ -94,7 +111,10 @@ describe('LeagueService', () => {
     });
 
     it('throws NotFoundException when Sleeper returns no data', async () => {
-      fetchSpy.mockResolvedValue({ ok: true, json: async () => null } as unknown as Response);
+      fetchSpy.mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve(null),
+      });
 
       await expect(service.importSleeperLeague('empty')).rejects.toThrow(
         NotFoundException,

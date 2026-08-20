@@ -270,18 +270,20 @@ describe('ProjectionsService', () => {
 
       // League-wide distribution for the dark-horse candidate's position/stat,
       // now pushed into SQL via groupBy instead of a full-table findMany.
-      prisma.playerStats.groupBy.mockImplementation(({ where }) => {
-        if (where.player.position === 'WR') {
-          return Promise.resolve([
-            groupByRow('wr1', 'receiving_epa', 10),
-            groupByRow('other1', 'receiving_epa', 5),
-            groupByRow('other2', 'receiving_epa', 3),
-            groupByRow('other3', 'receiving_epa', 2),
-            groupByRow('other4', 'receiving_epa', 1),
-          ]);
-        }
-        return Promise.resolve([]);
-      });
+      prisma.playerStats.groupBy.mockImplementation(
+        ({ where }: { where: { player: { position: string } } }) => {
+          if (where.player.position === 'WR') {
+            return Promise.resolve([
+              groupByRow('wr1', 'receiving_epa', 10),
+              groupByRow('other1', 'receiving_epa', 5),
+              groupByRow('other2', 'receiving_epa', 3),
+              groupByRow('other3', 'receiving_epa', 2),
+              groupByRow('other4', 'receiving_epa', 1),
+            ]);
+          }
+          return Promise.resolve([]);
+        },
+      );
 
       const result = await service.getLineupInsights({
         rosterId: 'r1',

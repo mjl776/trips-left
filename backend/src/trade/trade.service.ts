@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
-import { DEFAULT_SCORING_SETTINGS, ScoringSettings } from '../league/league.models';
+import {
+  DEFAULT_SCORING_SETTINGS,
+  ScoringSettings,
+} from '../league/league.models';
 import {
   SimulateTradeRequest,
   SimulateTradeResponse,
@@ -18,6 +21,12 @@ import {
 const REGULAR_SEASON_WEEKS = 18;
 
 type PlayerSide = TradePlayer & { weeklyPoints: number[] };
+
+interface SimulationServiceResponse {
+  expected_delta: number;
+  win_probability: number;
+  percentiles: { p10: number; p50: number; p90: number };
+}
 
 function toTradePlayer(side: PlayerSide): TradePlayer {
   return {
@@ -64,7 +73,9 @@ export class TradeService {
     };
   }
 
-  private async getScoringSettings(leagueId?: string): Promise<ScoringSettings> {
+  private async getScoringSettings(
+    leagueId?: string,
+  ): Promise<ScoringSettings> {
     if (!leagueId) {
       return DEFAULT_SCORING_SETTINGS;
     }
@@ -148,7 +159,7 @@ export class TradeService {
         return { result: null, error: 'simulation_unavailable' };
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as SimulationServiceResponse;
       return {
         result: {
           expectedDelta: data.expected_delta,

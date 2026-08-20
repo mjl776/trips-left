@@ -77,15 +77,16 @@ const FG_MADE_TIER_FIELDS: Array<[keyof StatLine, keyof ScoringSettings]> = [
   ['fgMade60p', 'fgm_60p'],
 ];
 
-const POINTS_ALLOWED_TIERS: Array<{ max: number; key: keyof ScoringSettings }> = [
-  { max: 0, key: 'pts_allow_0' },
-  { max: 6, key: 'pts_allow_1_6' },
-  { max: 13, key: 'pts_allow_7_13' },
-  { max: 20, key: 'pts_allow_14_20' },
-  { max: 27, key: 'pts_allow_21_27' },
-  { max: 34, key: 'pts_allow_28_34' },
-  { max: Infinity, key: 'pts_allow_35p' },
-];
+const POINTS_ALLOWED_TIERS: Array<{ max: number; key: keyof ScoringSettings }> =
+  [
+    { max: 0, key: 'pts_allow_0' },
+    { max: 6, key: 'pts_allow_1_6' },
+    { max: 13, key: 'pts_allow_7_13' },
+    { max: 20, key: 'pts_allow_14_20' },
+    { max: 27, key: 'pts_allow_21_27' },
+    { max: 34, key: 'pts_allow_28_34' },
+    { max: Infinity, key: 'pts_allow_35p' },
+  ];
 
 export function calculateFantasyPoints(
   stat: StatLine,
@@ -101,7 +102,9 @@ export function calculateFantasyPoints(
     }
   }
 
-  const hasFgTierData = FG_MADE_TIER_FIELDS.some(([statKey]) => stat[statKey] != null);
+  const hasFgTierData = FG_MADE_TIER_FIELDS.some(
+    ([statKey]) => stat[statKey] != null,
+  );
   if (hasFgTierData) {
     // Realized stats: exact per-distance scoring.
     for (const [statKey, scoringKey] of FG_MADE_TIER_FIELDS) {
@@ -119,7 +122,8 @@ export function calculateFantasyPoints(
       (rate): rate is number => rate != null,
     );
     if (tierRates.length > 0) {
-      const avgRate = tierRates.reduce((sum, r) => sum + r, 0) / tierRates.length;
+      const avgRate =
+        tierRates.reduce((sum, r) => sum + r, 0) / tierRates.length;
       points += stat.fgMade * avgRate;
     }
   }
@@ -143,7 +147,9 @@ export function hasStatLine(stat: StatLine): boolean {
 // Duck-typed so this module doesn't need to import Prisma directly.
 type DecimalLike = { toNumber(): number };
 
-export function decimalToNumber(value: DecimalLike | null | undefined): number | null {
+export function decimalToNumber(
+  value: DecimalLike | null | undefined,
+): number | null {
   return value == null ? null : value.toNumber();
 }
 

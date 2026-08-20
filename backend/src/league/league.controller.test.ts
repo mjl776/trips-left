@@ -39,9 +39,9 @@ describe('LeagueController', () => {
     const league = { leagueId: 'l1' };
     service.importSleeperLeague.mockResolvedValue(league);
 
-    await expect(
-      controller.postImportSleeperLeague('l1'),
-    ).resolves.toBe(league);
+    await expect(controller.postImportSleeperLeague('l1')).resolves.toBe(
+      league,
+    );
     expect(service.importSleeperLeague).toHaveBeenCalledWith('l1');
   });
 
