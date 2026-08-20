@@ -19,3 +19,4 @@ npm run start:dev
 ```
 
 Runs on port `8080` by default (override with `PORT`). Needs `DATABASE_URL` (pooled, for the app) and `DIRECT_URL` (unpooled, for Prisma migrations/scripts) set in `.env`.
+

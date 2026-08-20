@@ -74,3 +74,4 @@ python -m pytest tests/ -v
 ```
 
 Covers: identical inputs on both sides (~50% win probability), a strictly higher-scoring side (>90% win probability, positive expected delta), and the all-zero fallback when both sides have no data.
+
