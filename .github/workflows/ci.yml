@@ -42,8 +42,8 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
-          cache-dependency-path: simulation-service/requirements.txt
-      - run: pip install -r requirements.txt
+          cache-dependency-path: simulation-service/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
       - run: python -m pytest tests/ -v
 
   frontend:
@@ -71,6 +71,12 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      # Dummy values: prisma.config.ts validates these exist at config-load
+      # time (even for `prisma generate`), but unit tests mock PrismaService
+      # entirely, so no real database connection is ever made in this job.
+      DATABASE_URL: postgresql://user:password@localhost:5432/db
+      DIRECT_URL: postgresql://user:password@localhost:5432/db
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
