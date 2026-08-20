@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { Prisma } from '../../generated/prisma';
 import { PrismaService } from '../prisma.service';
 import {
   DEFAULT_SCORING_SETTINGS,
@@ -10,6 +11,14 @@ import {
 
 function toScoringSettings(json: unknown): ScoringSettings {
   return json as ScoringSettings;
+}
+
+interface SleeperLeagueResponse {
+  name: string;
+  season: string;
+  scoring_settings: unknown;
+  roster_positions: string[];
+  total_rosters: number;
 }
 
 function toLeague(
@@ -67,14 +76,14 @@ export class LeagueService {
       `https://api.sleeper.app/v1/league/${leagueId}`,
     );
     if (response.ok) {
-      const data = await response.json();
+      const data = (await response.json()) as SleeperLeagueResponse | null;
       if (data) {
         const created = await this.prisma.league.create({
           data: {
             leagueId: leagueId,
             name: data.name,
             season: Number(data.season),
-            scoringSettings: data.scoring_settings,
+            scoringSettings: data.scoring_settings as Prisma.InputJsonValue,
             rosterPositions: data.roster_positions,
             numTeams: data.total_rosters,
             isMock: false,
@@ -102,7 +111,8 @@ export class LeagueService {
   }
 
   // Differed: Not critical to current core functionality
-  async modifyMockLeagueSettings(leagueId: string): Promise<void> {
-    return;
+  modifyMockLeagueSettings(leagueId: string): Promise<void> {
+    void leagueId;
+    return Promise.resolve();
   }
 }

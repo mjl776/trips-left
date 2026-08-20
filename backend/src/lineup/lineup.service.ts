@@ -229,22 +229,41 @@ export class LineupService {
     return true;
   }
 
-  async swapSlots({ rosterId, leagueId, playerAId, playerBId }: SwapPlayersInput) {
+  async swapSlots({
+    rosterId,
+    leagueId,
+    playerAId,
+    playerBId,
+  }: SwapPlayersInput) {
     const roster = await this.getRoster(rosterId, leagueId);
     const playerA = this.findRosteredPlayer(roster.rosterPlayers, playerAId);
     const playerB = this.findRosteredPlayer(roster.rosterPlayers, playerBId);
 
     if (!playerA || !playerB) {
-      throw new BadRequestException('Both players must already be on this roster to swap slots');
+      throw new BadRequestException(
+        'Both players must already be on this roster to swap slots',
+      );
     }
 
     return await this.prisma.$transaction([
       this.prisma.rosterPlayer.update({
-        where: { rosterId_leagueId_playerId: { rosterId, leagueId, playerId: playerAId } },
+        where: {
+          rosterId_leagueId_playerId: {
+            rosterId,
+            leagueId,
+            playerId: playerAId,
+          },
+        },
         data: { slot: playerB.slot },
       }),
       this.prisma.rosterPlayer.update({
-        where: { rosterId_leagueId_playerId: { rosterId, leagueId, playerId: playerBId } },
+        where: {
+          rosterId_leagueId_playerId: {
+            rosterId,
+            leagueId,
+            playerId: playerBId,
+          },
+        },
         data: { slot: playerA.slot },
       }),
     ]);
@@ -336,7 +355,10 @@ export class LineupService {
     });
   }
 
-  private findRosteredPlayer(rosterPlayers: RosterPlayer[], playerId: string): RosterPlayer | undefined {
+  private findRosteredPlayer(
+    rosterPlayers: RosterPlayer[],
+    playerId: string,
+  ): RosterPlayer | undefined {
     return rosterPlayers.find((rp) => rp.playerId === playerId);
   }
 

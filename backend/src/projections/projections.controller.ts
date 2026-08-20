@@ -17,7 +17,9 @@ export class ProjectionsController {
   }
 
   @Get('lineup-insights')
-  getLineupInsights(@Query() query: LineupInsightsQuery): Promise<LineupInsights> {
+  getLineupInsights(
+    @Query() query: LineupInsightsQuery,
+  ): Promise<LineupInsights> {
     return this.projectionsService.getLineupInsights(query);
   }
 }

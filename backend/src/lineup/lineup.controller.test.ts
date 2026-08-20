@@ -43,7 +43,12 @@ describe('LineupController', () => {
   });
 
   it('addPlayer delegates to the service', async () => {
-    const input = { rosterId: 'r1', leagueId: 'l1', playerId: 'p1', slot: 'QB' };
+    const input = {
+      rosterId: 'r1',
+      leagueId: 'l1',
+      playerId: 'p1',
+      slot: 'QB',
+    };
     const added = { playerId: 'p1' };
     service.addPlayer.mockResolvedValue(added);
 
@@ -76,7 +81,12 @@ describe('LineupController', () => {
   });
 
   it('swapPlayers delegates to swapSlots', async () => {
-    const input = { rosterId: 'r1', leagueId: 'l1', playerAId: 'a', playerBId: 'b' };
+    const input = {
+      rosterId: 'r1',
+      leagueId: 'l1',
+      playerAId: 'a',
+      playerBId: 'b',
+    };
     const swapped = [{}, {}];
     service.swapSlots.mockResolvedValue(swapped);
 
