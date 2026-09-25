@@ -53,8 +53,11 @@ broken while it loads:
 ### A1. `Skeleton` primitive: `frontend/components/Skeleton/`
 - `index.tsx` + `page.module.css`, following the one-folder-per-component
   convention. Props: `width?: string`, `height?: string`,
-  `radius?: "card" | "badge" | "round"` (maps to `1rem` / `0.75rem` / `50%`),
-  `className?`.
+  `radius?: "card" | "badge" | "round"` (maps to `1rem` / `0.75rem` / `999px`),
+  `className?`. `round` is `999px`, not `50%`: every round skeleton stands in
+  for a pill (the dark horse bar track, bench SWAP/DROP buttons), which already
+  use `999px`. `50%` would render wide bars as ovals and the shape would jump
+  when content loads. `999px` still renders a circle when width equals height.
 - Renders a `<span aria-hidden="true">` block. Fill is
   `color-mix(in srgb, var(--foreground) 6%, transparent)` with a subtle
   shimmer: an animated `background-position` on a linear-gradient of

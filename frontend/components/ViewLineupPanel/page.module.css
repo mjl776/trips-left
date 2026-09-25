@@ -106,3 +106,135 @@
   color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
   margin-bottom: 3rem;
 }
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Skeleton shells mirror the real containers (LineupSlotsList .panel,
+   LineupSlot .slot, BenchRow .row) so the swap to real content doesn't jump. */
+.skeletonStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.skeletonStackEnd {
+  align-items: flex-end;
+  gap: 0.625rem;
+}
+
+.skeletonStarters {
+  width: 100%;
+  max-width: 50rem;
+  margin-bottom: 5rem;
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skeletonDivider {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.skeletonSlot {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  min-height: 4.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+  background: color-mix(in srgb, var(--foreground) 3%, transparent);
+}
+
+.skeletonLines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.skeletonBenchRow {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 13%, transparent);
+  background: color-mix(in srgb, var(--foreground) 2%, transparent);
+}
+
+.skeletonTrailing {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Neutral muted card — a failed load is not a "weak spot", so never magenta. */
+.errorCard {
+  max-width: 50rem;
+  padding: 1.75rem;
+  border-radius: 1.5rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--foreground) 2%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.errorEyebrow {
+  font-size: 0.6875rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--secondary-text-color) 45%, transparent);
+}
+
+.errorTitle {
+  font-size: 1.25rem;
+  font-weight: var(--medium-bold);
+  letter-spacing: -0.02em;
+  color: var(--secondary-text-color);
+}
+
+.errorBody {
+  max-width: 32rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--secondary-text-color) 55%, transparent);
+}
+
+.retryButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--foreground) 45%, transparent);
+  background: none;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: var(--medium-bold);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.retryButton:hover {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  border-color: var(--foreground);
+}

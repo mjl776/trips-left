@@ -1,0 +1,44 @@
+/* Neutral fill (6%) with a 12% highlight band sweeping across it. Only
+   background-position animates — no layout animation. */
+.skeleton {
+  display: block;
+  flex-shrink: 0;
+  max-width: 100%;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--secondary-text-color) 6%, transparent) 0%,
+    color-mix(in srgb, var(--secondary-text-color) 6%, transparent) 40%,
+    color-mix(in srgb, var(--secondary-text-color) 12%, transparent) 50%,
+    color-mix(in srgb, var(--secondary-text-color) 6%, transparent) 60%,
+    color-mix(in srgb, var(--secondary-text-color) 6%, transparent) 100%
+  );
+  background-size: 300% 100%;
+  animation: shimmer 1.6s ease infinite;
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+.badge {
+  border-radius: 0.75rem;
+}
+
+.round {
+  border-radius: 999px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

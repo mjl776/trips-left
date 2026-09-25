@@ -2,6 +2,8 @@
 
 NestJS + Prisma (PostgreSQL/Supabase) API for the fantasy football optimizer. Owns all logic — league/roster data, fantasy scoring, player analytics — the frontend is a thin client. Runs on port `8080` (override with `PORT`); needs `DATABASE_URL` (pooled) and `DIRECT_URL` (unpooled, migrations/scripts) in `.env`.
 
+Stats cache env (all optional): `STATS_CACHE_TTL_MS` (default `43200000`, 12h), `STATS_CACHE_ENABLED` (`false` bypasses the cache — kill switch), `CACHE_FLUSH_TOKEN` (enables `POST /admin/cache/flush`; unset → the endpoint 404s). `ingestions/pull_stats.py` flushes after an upsert when `CACHE_FLUSH_URL` + `CACHE_FLUSH_TOKEN` are set in its env.
+
 ```
 backend/
 ├── src/
@@ -9,6 +11,18 @@ backend/
 │   ├── app.module.ts            # root module — registers Prisma + feature modules
 │   ├── app.controller.ts / .service.ts
 │   ├── prisma.module.ts / prisma.service.ts   # global PrismaClient provider
+│   │
+│   ├── cache/                   # @Global in-process cache (Redis upgrade seam: CacheStore)
+│   │   ├── cache.controller.ts    # POST admin/cache/flush (x-admin-token header)
+│   │   ├── cache.service.ts       # wrap (single-flight, TTL) / get / set / flush
+│   │   ├── cache.models.ts        # CacheStore interface, CACHE_STORE token, DTOs
+│   │   ├── cache.module.ts
+│   │   ├── in-memory-cache.store.ts  # Map-backed CacheStore, 500-entry soft cap
+│   │   └── stable-hash.ts         # key-order-independent SHA-1 for cache keys
+│   │
+│   ├── stats/                   # position-wide distributions, cached via CacheService
+│   │   ├── position-stats.service.ts
+│   │   └── position-stats.module.ts
 │   │
 │   ├── league/                  # create/import leagues + scoring settings
 │   │   ├── league.controller.ts   # POST create-mock-league
@@ -113,8 +127,10 @@ Every `*.controller.ts` and `*.service.ts` has a matching `*.controller.test.ts`
 - **Service tests** mock `PrismaService` via `src/test/prisma-mock.ts`'s `createMockPrismaService()` — a `jest.fn()` stub per Prisma model method actually used across the services (`league`, `player`, `roster`, `rosterPlayer`, `playerStats`, `projection`). Its `$transaction` mock handles both call forms used in the codebase: an array of already-invoked promises (`lineup.service.ts`'s `swapSlots`), and a callback receiving the transaction client (`addDropPlayer`) — in both cases it just runs against the same mock. Reuse this factory rather than hand-rolling Prisma mocks per test file. `dec(n)` builds a Prisma-`Decimal`-like value (`{ toNumber: () => n }`) for stat fields.
 - Cover the success path plus every thrown `NotFoundException`/`BadRequestException` branch — services here are mostly validation chains (roster/league existence, slot capacity, position eligibility, duplicate assignments), so each branch is a real behavior worth pinning down, not incidental coverage.
 - `prisma.service.ts` (bare `PrismaClient` wrapper, no logic) intentionally has no test file.
+- Service tests that build the real `PositionStatsService` also add `createPassThroughCacheProvider()` from `src/test/cache-mock.ts` (a `CacheService` whose `wrap` just runs the loader), so each call still hits the Prisma mock. `position-stats.service.test.ts` uses the real `CacheService` + `InMemoryCacheStore` instead, since caching is what it tests.
 
 ## Notes
 
 - `Projection` table has 0 rows in the live DB — no forward-projection pipeline exists yet. Realized `PlayerStats` (2024/2025) is the source of truth for anything that needs per-player numbers; see `src/trade/CLAUDE.md` for the precedent.
+- `PositionStatsService`'s two distributions are cached per position/season/scoring (TTL + manual flush) and shared across requests — they're typed `readonly`; never sort or mutate them in place, copy first. The flush only clears the instance that receives it, which is fine while Railway runs one backend instance; with more, the TTL is the backstop and that's the trigger to move to Redis.
 - `REGULAR_SEASON_WEEKS = 18` is redefined as a local constant per-module rather than imported — intentional, not an oversight.

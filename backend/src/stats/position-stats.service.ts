@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { Prisma } from '../../generated/prisma/client';
 import { ScoringSettings } from '../league/league.models';
+import { CacheService } from '../cache/cache.service';
+import { stableHash } from '../cache/stable-hash';
 import {
   calculateFantasyPoints,
   realizedToStatLine,
@@ -71,19 +73,46 @@ const SCORING_STAT_SELECT = {
 // which each independently ranked a player against everyone else at their
 // position for a season — previously by fetching every stat row for the
 // position and reducing in Node, once per call.
+//
+// Both distributions depend only on position/season/scoring (never on a
+// roster) and 2025 stats change only when ingestions/pull_stats.py runs, so
+// results are cached (TTL + manual flush, see cache/). Cached arrays are shared
+// across requests — they're returned readonly and callers must not mutate them.
 @Injectable()
 export class PositionStatsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService,
+  ) {}
 
   // League-wide sum/avg of a single PlayerStats column for a position+season,
   // best-to-worst. Pushes the aggregation into SQL via Prisma groupBy instead
   // of fetching every row for the position and reducing in Node.
-  async getColumnDistribution(
+  getColumnDistribution(
     position: string,
     column: AggregatableColumn,
     aggregation: StatAggregation,
     season: number,
     includePostseason = false,
+  ): Promise<readonly ColumnDistributionEntry[]> {
+    const key = `stats:col:${position}:${column}:${aggregation}:${season}:${includePostseason ? 1 : 0}`;
+    return this.cache.wrap(key, this.cache.statsTtlMs, () =>
+      this.loadColumnDistribution(
+        position,
+        column,
+        aggregation,
+        season,
+        includePostseason,
+      ),
+    );
+  }
+
+  private async loadColumnDistribution(
+    position: string,
+    column: AggregatableColumn,
+    aggregation: StatAggregation,
+    season: number,
+    includePostseason: boolean,
   ): Promise<ColumnDistributionEntry[]> {
     const week = includePostseason ? undefined : { lte: REGULAR_SEASON_WEEKS };
     const aggregateSelector = {
@@ -120,11 +149,28 @@ export class PositionStatsService {
   // (calculateFantasyPoints), so it can't be pushed into a single SQL SUM —
   // this fetches each position's rows once and reduces in Node, but the
   // caller is expected to call it once per *position*, not once per player.
-  async getFantasyPointsDistribution(
+  getFantasyPointsDistribution(
     position: string,
     season: number,
     scoringSettings: ScoringSettings,
     includePostseason = false,
+  ): Promise<readonly PointsDistributionEntry[]> {
+    const key = `stats:pts:${position}:${season}:${includePostseason ? 1 : 0}:${stableHash(scoringSettings)}`;
+    return this.cache.wrap(key, this.cache.statsTtlMs, () =>
+      this.loadFantasyPointsDistribution(
+        position,
+        season,
+        scoringSettings,
+        includePostseason,
+      ),
+    );
+  }
+
+  private async loadFantasyPointsDistribution(
+    position: string,
+    season: number,
+    scoringSettings: ScoringSettings,
+    includePostseason: boolean,
   ): Promise<PointsDistributionEntry[]> {
     const week = includePostseason ? undefined : { lte: REGULAR_SEASON_WEEKS };
     const rows = await this.prisma.playerStats.findMany({
