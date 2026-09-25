@@ -10,6 +10,7 @@ Real historical NFL stats are ingested separately via Python scripts in `ingesti
 - **`lineup`** — roster construction: create a lineup and assign/swap/drop players into slots (`create-lineup`, `add-player`, `add-drop-player`, `swap-players`, `view-lineup`).
 - **`player`** — player lookups and season-level analytics (`players`, `view-player`, `player-stat-rank`).
 - **`projections`** — fantasy scoring math: forward projections (`projections`) and per-roster insights — best/worst player and a dark-horse pick based on advanced metrics (`lineup-insights`).
+- **`cache`** — in-process cache for the position-wide stat distributions behind `view-lineup`, `view-player` and `lineup-insights`, plus an admin flush endpoint (`POST admin/cache/flush`).
 
 ## Running locally
 
@@ -19,6 +20,16 @@ npm run start:dev
 ```
 
 Runs on port `8080` by default (override with `PORT`). Needs `DATABASE_URL` (pooled, for the app) and `DIRECT_URL` (unpooled, for Prisma migrations/scripts) set in `.env`.
+
+Optional cache settings:
+
+| Env | Default | Purpose |
+|---|---|---|
+| `STATS_CACHE_TTL_MS` | `43200000` (12h) | How long a cached stat distribution lives. |
+| `STATS_CACHE_ENABLED` | `true` | Set to `false` to bypass the cache entirely (kill switch). |
+| `CACHE_FLUSH_TOKEN` | unset | Enables `POST /admin/cache/flush`. Unset → the endpoint returns 404. |
+
+Flush manually with `curl -X POST -H "x-admin-token: $CACHE_FLUSH_TOKEN" localhost:8080/admin/cache/flush` (optional JSON body `{ "prefix": "stats:" }`). `ingestions/pull_stats.py` calls it automatically after an upsert when `CACHE_FLUSH_URL` and `CACHE_FLUSH_TOKEN` are set in its environment.
 
 ## CI/CD
 

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 import LineupInsightsPanel from "./index";
 import type { LineupInsights } from "@/types/PlayerTypes";
 
@@ -216,6 +216,49 @@ describe("LineupInsightsPanel", () => {
                 )
             ).toBeInTheDocument();
             expect(screen.queryByText("Rising Star")).not.toBeInTheDocument();
+        });
+    });
+
+    describe("status", () => {
+        it("loading keeps the card tags, shows skeletons, and hides the empty-state copy", () => {
+            const { container } = render(<LineupInsightsPanel insights={null} season={2026} status="loading" />);
+
+            expect(screen.getByText("LINEUP INSIGHTS")).toBeInTheDocument();
+            expect(screen.getByText("BEST PLAYER").className).toMatch(/cyan/);
+            expect(screen.getByText("WORST PLAYER").className).toMatch(/magenta/);
+            expect(screen.getByText("DARK HORSE").className).toMatch(/cyan/);
+            expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
+            expect(screen.getByText("Loading…")).toBeInTheDocument();
+            // value + name + two detail lines per card, plus the dark horse bar track.
+            expect(container.querySelectorAll("[data-skeleton]")).toHaveLength(13);
+
+            expect(screen.queryByText("No players rostered yet.")).not.toBeInTheDocument();
+            expect(container.querySelector('[class*="cardEmpty"]')).not.toBeInTheDocument();
+        });
+
+        it("loading hides stale insights instead of rendering them", () => {
+            render(<LineupInsightsPanel insights={buildInsights()} season={2026} status="loading" />);
+            expect(screen.queryByText("Justin Jefferson")).not.toBeInTheDocument();
+            expect(screen.queryByText("289.4")).not.toBeInTheDocument();
+        });
+
+        it("error shows a single neutral card with a retry that calls onRetry", () => {
+            const onRetry = vi.fn();
+            render(<LineupInsightsPanel insights={null} season={2026} status="error" onRetry={onRetry} />);
+
+            const alert = screen.getByRole("alert");
+            expect(alert).toHaveTextContent("Couldn't load insights.");
+            expect(alert.className).not.toMatch(/magenta/);
+            expect(screen.queryByText("BEST PLAYER")).not.toBeInTheDocument();
+
+            fireEvent.click(screen.getByRole("button", { name: "RETRY" }));
+            expect(onRetry).toHaveBeenCalledTimes(1);
+        });
+
+        it("ready renders today's cards", () => {
+            render(<LineupInsightsPanel insights={buildInsights()} season={2026} status="ready" />);
+            expect(screen.getByText("Justin Jefferson")).toBeInTheDocument();
+            expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
         });
     });
 });

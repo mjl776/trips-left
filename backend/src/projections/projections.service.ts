@@ -18,10 +18,7 @@ import {
   StatLine,
 } from './scoring';
 import { Prisma } from '../../generated/prisma/client';
-import {
-  ColumnDistributionEntry,
-  PositionStatsService,
-} from '../stats/position-stats.service';
+import { PositionStatsService } from '../stats/position-stats.service';
 
 type ProjectionWithPlayer = Prisma.ProjectionGetPayload<{
   include: { player: true };
@@ -48,7 +45,7 @@ const EPA_STAT_BY_POSITION: Record<string, EpaStat> = {
 // Top 20% cutoff value of a best-to-worst distribution.
 // Infinity (nobody qualifies) if there's no data to compare against.
 function getTopPercentileThreshold(
-  distribution: Array<{ value: number }>,
+  distribution: ReadonlyArray<{ value: number }>,
 ): number {
   if (distribution.length === 0) {
     return Infinity;
@@ -236,9 +233,6 @@ export class ProjectionsService {
         EPA_STAT_BY_POSITION[rp.player.position] != null,
     );
 
-    // Avoids repeating the same position+stat aggregation across candidates
-    // who share a position within this one findDarkHorse call.
-    const distributionCache = new Map<string, ColumnDistributionEntry[]>();
     let darkHorse: DarkHorsePlayer | null = null;
     let bestMargin = -Infinity;
 
@@ -253,17 +247,14 @@ export class ProjectionsService {
         0,
       );
 
-      const cacheKey = `${candidate.player.position}:${stat}`;
-      let distribution = distributionCache.get(cacheKey);
-      if (distribution === undefined) {
-        distribution = await this.positionStats.getColumnDistribution(
-          candidate.player.position,
-          stat,
-          'sum',
-          season,
-        );
-        distributionCache.set(cacheKey, distribution);
-      }
+      // Cached (and single-flighted) in PositionStatsService, so candidates
+      // sharing a position don't repeat the aggregation.
+      const distribution = await this.positionStats.getColumnDistribution(
+        candidate.player.position,
+        stat,
+        'sum',
+        season,
+      );
 
       const threshold = getTopPercentileThreshold(distribution);
       const margin = value - threshold;

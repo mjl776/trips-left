@@ -116,6 +116,8 @@ type FetchMockOptions = {
     statsById?: Record<string, PlayerStats>;
     removeOutcome?: "success" | "failure";
     swapOutcome?: "success" | "failure";
+    lineupOutcome?: "success" | "failure";
+    insightsOutcome?: "success" | "failure";
 };
 
 function createFetchMock({
@@ -125,12 +127,15 @@ function createFetchMock({
     statsById: statsMap = {},
     removeOutcome = "success",
     swapOutcome = "success",
+    lineupOutcome = "success",
+    insightsOutcome = "success",
 }: FetchMockOptions) {
     return vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
         const url = String(input);
         const method = (init?.method ?? "GET").toUpperCase();
 
         if (url.includes("/view-lineup")) {
+            if (lineupOutcome === "failure") return Promise.resolve(jsonResponse({ message: "server error" }, false));
             // Mirrors the backend: view-lineup embeds each rostered player's season
             // stats server-side (when `season` is passed) instead of the frontend
             // fanning out one GET /view-player per rostered player.
@@ -142,6 +147,7 @@ function createFetchMock({
             return Promise.resolve(jsonResponse(rosterWithStats));
         }
         if (url.includes("/lineup-insights")) {
+            if (insightsOutcome === "failure") return Promise.resolve(jsonResponse({ message: "server error" }, false));
             return Promise.resolve(jsonResponse(insights));
         }
         if (url.includes("/view-player")) {
@@ -200,17 +206,21 @@ afterEach(() => {
 });
 
 describe("ViewLineupPanel", () => {
-    it("shows a default empty state before load, then populates starters, bench, total points, and verdict badges once the lineup and insights load", async () => {
+    it("shows the roster and insights skeletons before load, then populates starters, bench, total points, and verdict badges once the lineup and insights load", async () => {
         vi.stubGlobal(
             "fetch",
             createFetchMock({ roster: makeRoster(), insights: populatedInsights, statsById, playersList: freeAgents }),
         );
 
-        render(<ViewLineupPanel />);
+        const { container } = render(<ViewLineupPanel />);
 
-        expect(screen.getByRole("heading", { level: 2, name: "Untitled Lineup" })).toBeInTheDocument();
-        expect(screen.getByText("0.0")).toBeInTheDocument();
-        expect(screen.getByText("No players on the bench.")).toBeInTheDocument();
+        expect(container.querySelectorAll('[aria-busy="true"]')).toHaveLength(2);
+        expect(screen.getAllByText("Loading…")).toHaveLength(2);
+        expect(container.querySelectorAll("[data-skeleton]").length).toBeGreaterThan(0);
+        expect(screen.queryByRole("heading", { level: 2 })).not.toBeInTheDocument();
+        // Insights keep their real tag headers while loading, and never show empty-state copy.
+        expect(screen.getByText("BEST PLAYER")).toBeInTheDocument();
+        expect(screen.queryByText("No players rostered yet.")).not.toBeInTheDocument();
 
         await waitFor(() => {
             expect(screen.getByRole("heading", { level: 2, name: "Championship Squad" })).toBeInTheDocument();
@@ -237,6 +247,7 @@ describe("ViewLineupPanel", () => {
         expect(screen.getByText(/Most fantasy points on your roster/)).toBeInTheDocument();
         expect(screen.getByText(/Lowest scorer on the roster/)).toBeInTheDocument();
         expect(screen.getByText(/clears the top-20% cutoff/)).toBeInTheDocument();
+        expect(container.querySelector('[aria-busy="true"]')).not.toBeInTheDocument();
     });
 
     it("renders the empty-insights state and no verdict badges when bestPlayer, worstPlayer, and darkHorse are all null", async () => {
@@ -471,5 +482,142 @@ describe("ViewLineupPanel", () => {
         // GET /players is now deferred until a slot is actually opened (Phase 4)
         // — nothing here opens one, so it should never fire.
         expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/players"))).toBe(false);
+    });
+
+    describe("loading, error, and insights refresh", () => {
+        const insightsCalls = (fetchMock: ReturnType<typeof createFetchMock>) =>
+            fetchMock.mock.calls.filter(([input]) => String(input).includes("/lineup-insights"));
+
+        it("shows a neutral roster error card on a non-ok /view-lineup and retries into the loaded roster", async () => {
+            const fetchMock = createFetchMock({
+                roster: makeRoster(),
+                insights: emptyInsights,
+                statsById,
+                lineupOutcome: "failure",
+            });
+            vi.stubGlobal("fetch", fetchMock);
+
+            render(<ViewLineupPanel />);
+
+            const alert = await screen.findByText("Couldn't load this lineup.");
+            expect(alert.closest('[role="alert"]')?.className).not.toMatch(/magenta/);
+            expect(screen.queryByText("Josh Allen")).not.toBeInTheDocument();
+
+            vi.stubGlobal("fetch", createFetchMock({ roster: makeRoster(), insights: emptyInsights, statsById }));
+            fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+
+            await waitFor(() => expect(screen.getByText("Josh Allen")).toBeInTheDocument());
+            expect(screen.queryByText("Couldn't load this lineup.")).not.toBeInTheDocument();
+        });
+
+        it("shows the insights error card on a non-ok /lineup-insights, leaves the roster usable, and retries", async () => {
+            const fetchMock = createFetchMock({
+                roster: makeRoster(),
+                insights: populatedInsights,
+                statsById,
+                insightsOutcome: "failure",
+            });
+            vi.stubGlobal("fetch", fetchMock);
+
+            render(<ViewLineupPanel />);
+
+            await waitFor(() => expect(screen.getByText("Couldn't load insights.")).toBeInTheDocument());
+            expect(screen.getByText("Justin Jefferson")).toBeInTheDocument();
+            expect(screen.queryByText("Best Player")).not.toBeInTheDocument();
+
+            vi.stubGlobal("fetch", createFetchMock({ roster: makeRoster(), insights: populatedInsights, statsById }));
+            fireEvent.click(screen.getByRole("button", { name: "RETRY" }));
+
+            await waitFor(() => expect(screen.getByText("Best Player")).toBeInTheDocument());
+            expect(screen.queryByText("Couldn't load insights.")).not.toBeInTheDocument();
+        });
+
+        it("refetches /lineup-insights after removing a starter, without showing the roster skeleton", async () => {
+            const fetchMock = createFetchMock({ roster: makeRoster(), insights: populatedInsights, statsById });
+            vi.stubGlobal("fetch", fetchMock);
+
+            const { container } = render(<ViewLineupPanel />);
+            await waitFor(() => expect(screen.getByText("Best Player")).toBeInTheDocument());
+            expect(insightsCalls(fetchMock)).toHaveLength(1);
+
+            fireEvent.click(screen.getByRole("button", { name: "Remove player from WR" }));
+
+            await waitFor(() => expect(insightsCalls(fetchMock)).toHaveLength(2));
+            // Roster stays on screen during the refresh; only the insights region is busy.
+            expect(screen.getByRole("heading", { level: 2, name: "Championship Squad" })).toBeInTheDocument();
+            expect(container.querySelectorAll('[aria-busy="true"]').length).toBeLessThanOrEqual(1);
+            await waitFor(() => expect(screen.queryByText("Justin Jefferson")).not.toBeInTheDocument());
+            await waitFor(() => expect(screen.getByText("Best Player")).toBeInTheDocument());
+        });
+
+        it("refetches /lineup-insights after adding a player", async () => {
+            const fetchMock = createFetchMock({
+                roster: makeRoster(),
+                insights: emptyInsights,
+                statsById,
+                playersList: freeAgents,
+            });
+            vi.stubGlobal("fetch", fetchMock);
+
+            render(<ViewLineupPanel />);
+            await waitFor(() => expect(screen.getByText("Empty")).toBeInTheDocument());
+
+            fireEvent.click(screen.getByRole("button", { name: "Add player to FLEX" }));
+            fireEvent.change(await screen.findByPlaceholderText("Search players..."), {
+                target: { value: "Free Agent" },
+            });
+            fireEvent.click(await screen.findByText("Free Agent Receiver"));
+
+            await waitFor(() => expect(insightsCalls(fetchMock)).toHaveLength(2));
+        });
+
+        it("refetches /lineup-insights after a swap", async () => {
+            const fetchMock = createFetchMock({ roster: makeRoster(), insights: emptyInsights, statsById });
+            vi.stubGlobal("fetch", fetchMock);
+
+            render(<ViewLineupPanel />);
+            await waitFor(() => expect(screen.getByText("Bench Guy")).toBeInTheDocument());
+
+            fireEvent.click(screen.getAllByRole("button", { name: "SWAP" })[0]);
+            fireEvent.click(screen.getByText("Bijan Robinson"));
+
+            await waitFor(() => expect(insightsCalls(fetchMock)).toHaveLength(2));
+        });
+
+        it("hides verdict badges while insights refresh and ignores a stale insights response", async () => {
+            const baseFetch = createFetchMock({ roster: makeRoster(), insights: populatedInsights, statsById });
+            // Hold every /lineup-insights response so the test controls resolution order.
+            const pending: Array<(value: unknown) => void> = [];
+            const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+                if (String(input).includes("/lineup-insights")) {
+                    return new Promise((resolve) => pending.push(resolve));
+                }
+                return baseFetch(input, init);
+            });
+            vi.stubGlobal("fetch", fetchMock);
+
+            render(<ViewLineupPanel />);
+            await waitFor(() => expect(pending).toHaveLength(1));
+            pending[0](jsonResponse(populatedInsights));
+            await waitFor(() => expect(screen.getByText("Best Player")).toBeInTheDocument());
+
+            // Two back-to-back refreshes; answer the newer one first, then the stale one.
+            fireEvent.click(screen.getAllByRole("button", { name: "DROP" })[1]);
+            await waitFor(() => expect(pending).toHaveLength(2));
+            expect(screen.queryByText("Best Player")).not.toBeInTheDocument();
+            expect(screen.queryByText("Worst Player")).not.toBeInTheDocument();
+
+            await waitFor(() => expect(screen.getAllByRole("button", { name: "DROP" })).toHaveLength(1));
+            fireEvent.click(screen.getAllByRole("button", { name: "DROP" })[0]);
+            await waitFor(() => expect(pending).toHaveLength(3));
+
+            pending[2](jsonResponse(emptyInsights));
+            await waitFor(() => expect(screen.getByText("No players rostered yet.")).toBeInTheDocument());
+
+            pending[1](jsonResponse(populatedInsights));
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(screen.getByText("No players rostered yet.")).toBeInTheDocument();
+            expect(screen.queryByText("Best Player")).not.toBeInTheDocument();
+        });
     });
 });

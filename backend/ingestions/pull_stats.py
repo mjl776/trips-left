@@ -21,13 +21,21 @@ Usage:
     python pull_stats.py --seasons 2025 --dry-run    # don't write, just report
 
 Env:
-    DATABASE_URL  Postgres connection string (the direct/session connection,
-                  NOT the pgbouncer pooled one — bulk upserts need real sessions).
+    DATABASE_URL       Postgres connection string (the direct/session connection,
+                       NOT the pgbouncer pooled one — bulk upserts need real sessions).
+    CACHE_FLUSH_URL    Optional. Backend flush endpoint, e.g.
+                       https://<backend-host>/admin/cache/flush. With
+                       CACHE_FLUSH_TOKEN set, the backend's cached stat
+                       distributions are flushed after a successful upsert.
+    CACHE_FLUSH_TOKEN  Optional. Must match the backend's CACHE_FLUSH_TOKEN.
 """
 
 import argparse
+import json
 import os
 import sys
+import urllib.error
+import urllib.request
 
 import nflreadpy as nfl
 import polars as pl
@@ -242,10 +250,11 @@ def build_def_rows(seasons, week=None, inspect=False):
     return team_stats
 
 
-def upsert_rows(engine, df: pl.DataFrame, dry_run=False):
+def upsert_rows(engine, df: pl.DataFrame, dry_run=False) -> int:
+    """Returns the number of rows written (0 on a dry run or no-op)."""
     if df.height == 0:
         print("No rows to write.")
-        return
+        return 0
 
     # Defensive: the crosswalk can reference players our local `players` table
     # doesn't carry (IDPs excluded by design, or sync gaps like FB-tagged
@@ -259,7 +268,7 @@ def upsert_rows(engine, df: pl.DataFrame, dry_run=False):
         print(f"Skipped {skipped} stat rows whose player_id isn't in the local players table.")
     if df.height == 0:
         print("No rows to write after filtering against players table.")
-        return
+        return 0
 
     rows = df.to_dicts()
     stat_cols = [c for c in df.columns if c not in ("player_id", "season", "week")]
@@ -267,7 +276,7 @@ def upsert_rows(engine, df: pl.DataFrame, dry_run=False):
     if dry_run:
         print(f"[dry-run] would upsert {len(rows)} rows into player_stats.")
         print("[dry-run] sample:", rows[0])
-        return
+        return 0
 
     # Build an INSERT ... ON CONFLICT upsert. Far faster than row-by-row for
     # the volume here, and Postgres handles the idempotency on the natural key.
@@ -293,6 +302,33 @@ def upsert_rows(engine, df: pl.DataFrame, dry_run=False):
             written += len(chunk)
             print(f"  upserted {written}/{len(rows)}")
     print(f"Done. Upserted {written} rows into player_stats.")
+    return written
+
+
+def flush_backend_cache():
+    """Flush the backend's cached stat distributions so new stats show up
+    immediately instead of after the cache TTL. Best effort: a failure only
+    warns, since the upsert already succeeded and the TTL is the backstop.
+    Uses stdlib urllib so requirements.txt gains no new package."""
+    url = os.environ.get("CACHE_FLUSH_URL")
+    token = os.environ.get("CACHE_FLUSH_TOKEN")
+    if not url or not token:
+        print("CACHE_FLUSH_URL/CACHE_FLUSH_TOKEN not set; skipping backend cache flush.")
+        return
+
+    request = urllib.request.Request(
+        url,
+        data=json.dumps({"prefix": "stats:"}).encode(),
+        headers={"Content-Type": "application/json", "x-admin-token": token},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            body = json.loads(response.read() or b"{}")
+        print(f"Flushed {body.get('flushed', 0)} backend cache entries.")
+    except (urllib.error.URLError, TimeoutError, ValueError) as error:
+        print(f"WARNING: backend cache flush failed ({error}); "
+              "cached stats will refresh when the TTL expires.", file=sys.stderr)
 
 
 def main():
@@ -317,7 +353,9 @@ def main():
     print(f"Prepared {df.height} mapped stat rows ({offense_df.height} offense, {def_df.height} defense).")
 
     engine = get_engine()
-    upsert_rows(engine, df, dry_run=args.dry_run)
+    written = upsert_rows(engine, df, dry_run=args.dry_run)
+    if written > 0:
+        flush_backend_cache()
 
 
 if __name__ == "__main__":

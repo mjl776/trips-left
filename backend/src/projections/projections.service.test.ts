@@ -3,6 +3,7 @@ import { NotFoundException } from '@nestjs/common';
 import { ProjectionsService } from './projections.service';
 import { PrismaService } from '../prisma.service';
 import { PositionStatsService } from '../stats/position-stats.service';
+import { createPassThroughCacheProvider } from '../test/cache-mock';
 import {
   createMockPrismaService,
   dec,
@@ -98,6 +99,7 @@ describe('ProjectionsService', () => {
       providers: [
         ProjectionsService,
         PositionStatsService,
+        createPassThroughCacheProvider(),
         { provide: PrismaService, useValue: prisma },
       ],
     }).compile();

@@ -50,6 +50,12 @@ A lineup can't exist without a league setting attached, so one of these has to h
 
 `/calculate-projected-points` is the single source of truth the rest of the insight layer builds on — **best player**, **worst player** (drop candidate), and **dark horse** (sleeper pick) are all derived from this one ranked output rather than separate calculations, since they're different lenses on the same underlying per-player projection rather than independent computations.
 
+### Admin
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/admin/cache/flush` | Clears cached stat distributions. Requires header `x-admin-token` matching env `CACHE_FLUSH_TOKEN`; optional body `{ "prefix": string }` (default `"stats:"`). Returns `{ flushed: number }`. 404 when `CACHE_FLUSH_TOKEN` is unset, 401 on a missing/wrong token. |
+
 ## Notes
 
 - Projected points are always relative to a specific league's scoring settings — there's no global/default projection, since the same stat line scores differently across leagues.

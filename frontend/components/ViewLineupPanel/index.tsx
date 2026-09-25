@@ -2,7 +2,7 @@
 
 import LineupSlotsList from "../LineupSlotsList";
 import type { PlayerStats } from "../LineupSlotsList";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { ActiveSlot, getEligiblePlayers } from "@/lib/playerEligibility";
@@ -12,7 +12,8 @@ import styles from "./page.module.css";
 import { useSearchParams } from "next/navigation";
 import { PROJECTION_BASE_SEASON } from "@/lib/playerStats";
 import BenchRow from "@/components/BenchRow";
-import LineupInsightsPanel from "@/components/LineupInsightsPanel";
+import LineupInsightsPanel, { type InsightsStatus } from "@/components/LineupInsightsPanel";
+import { RosterSkeleton } from "./ViewLineupSkeleton";
 import { LineupInsights } from "@/types/PlayerTypes";
 import { SLOT_ELIGIBILITY } from "@/constants";
 import { API_BASE_URL } from "@/lib/api";
@@ -23,6 +24,8 @@ const AddPlayerOverlay = dynamic(() => import("@/components/AddPlayerOverlay"));
 const IndividualPlayerCardOverlay = dynamic(() => import("@/components/IndividualPlayerCardOverlay"));
 
 const NO_SCORE_POSITIONS = ["K", "DEF"];
+
+type LoadStatus = InsightsStatus;
 
 type RosterPlayerWithStats = {
   player: { playerId: string };
@@ -55,6 +58,12 @@ const ViewLineupPanel: FC = () => {
   const [leagueName, setLeagueName] = useState("");
   const [swapFromPlayerId, setSwapFromPlayerId] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState(false);
+  // Without both ids nothing is fetched, so start "ready" and show the empty state.
+  const hasIds = !!rosterId && !!leagueId;
+  const [lineupStatus, setLineupStatus] = useState<LoadStatus>(hasIds ? "loading" : "ready");
+  const [insightsStatus, setInsightsStatus] = useState<LoadStatus>(hasIds ? "loading" : "ready");
+  // Incremented per insights request; only the latest response may update state.
+  const insightsRequestRef = useRef(0);
 
   const isSwapping = !!swapFromPlayerId;
   const swapFromPlayer = swapFromPlayerId
@@ -68,12 +77,17 @@ const ViewLineupPanel: FC = () => {
   // `season` is passed) — this replaces what used to be a separate
   // fetchPlayerStatsByPlayerId fan-out of one GET /view-player per rostered
   // player.
+  //
+  // Doesn't set "loading" itself: only the initial load (and a retry from the
+  // error card) shows the skeleton. Reloads after a mutation keep the current
+  // roster visible, with isMutating disabling interactions.
   const loadLineup = async () => {
     if (!rosterId || !leagueId) return;
     try {
       const response = await fetch(
         `${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}&season=${PROJECTION_BASE_SEASON}`,
       );
+      if (!response.ok) throw new Error("Could not fetch lineup");
       const roster = await response.json();
       const labels = getStarterLabels(roster.league.rosterPositions);
       setStarterLabels(labels);
@@ -90,13 +104,50 @@ const ViewLineupPanel: FC = () => {
             .map((rp) => [rp.player.playerId, rp.stats as PlayerStats]),
         ),
       );
+      setLineupStatus("ready");
     } catch (error) {
       console.error(error);
+      setLineupStatus("error");
     }
   };
 
+  const retryLineup = () => {
+    setLineupStatus("loading");
+    loadLineup();
+  };
+
+  // Shows the insights skeleton on every call, including refreshes after a
+  // mutation, and drops any response that a newer request has superseded.
+  const loadInsights = async () => {
+    if (!rosterId || !leagueId) return;
+    const requestId = ++insightsRequestRef.current;
+    setInsightsStatus("loading");
+    try {
+      const params = new URLSearchParams({ rosterId, leagueId, season: String(PROJECTION_BASE_SEASON) });
+      const response = await fetch(`${API_BASE_URL}/lineup-insights?${params}`);
+      if (!response.ok) throw new Error("Could not fetch lineup insights");
+      const data = await response.json();
+      if (requestId !== insightsRequestRef.current) return;
+      setLineupInsights(data);
+      setInsightsStatus("ready");
+    } catch (error) {
+      if (requestId !== insightsRequestRef.current) return;
+      console.error(error);
+      setInsightsStatus("error");
+    }
+  };
+
+  // Both requests start together, but only the roster reload gates isMutating:
+  // the roster stays interactive while (slower) insights recompute, and the
+  // request counter in loadInsights drops any response a newer one superseded.
+  const refreshAfterMutation = async () => {
+    void loadInsights();
+    await loadLineup();
+  };
+
+  // loadInsights doesn't depend on the roster, so both fire in parallel on mount.
   useEffect(() => {
-    Promise.resolve().then(loadLineup);
+    Promise.resolve().then(() => Promise.all([loadLineup(), loadInsights()]));
   }, [rosterId, leagueId]);
 
   // Deferred until a slot is actually opened — GET /players returns the
@@ -116,25 +167,6 @@ const ViewLineupPanel: FC = () => {
     loadPlayers();
   }, [activeSlot, playersLoaded]);
 
-  // Only depends on rosterId/leagueId (the body never reads assignments/
-  // benchAssignments), so it fires in parallel with loadLineup on mount
-  // instead of waiting for the roster to load first.
-  useEffect(() => {
-    const loadInsights = async () => {
-      if (!rosterId || !leagueId) return;
-      try {
-        const params = new URLSearchParams({ rosterId, leagueId, season: String(PROJECTION_BASE_SEASON) });
-        const response = await fetch(`${API_BASE_URL}/lineup-insights?${params}`);
-        if (!response.ok) throw new Error("Could not fetch lineup insights");
-        const data = await response.json();
-        setLineupInsights(data);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-    loadInsights();
-  }, [rosterId, leagueId]);
-
   const handleAddPlayer = async (player: AddPlayerOverlayPlayer) => {
     if (!activeSlot || !rosterId || !leagueId) return;
     setIsMutating(true);
@@ -146,7 +178,7 @@ const ViewLineupPanel: FC = () => {
       });
       if (!response.ok) throw new Error("Failed to add player");
       setActiveSlot(null);
-      await loadLineup();
+      await refreshAfterMutation();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Something went wrong");
     } finally {
@@ -164,7 +196,7 @@ const ViewLineupPanel: FC = () => {
         body: JSON.stringify({ rosterId, leagueId, playerId }),
       });
       if (!response.ok) throw new Error("Failed to remove player");
-      await loadLineup();
+      await refreshAfterMutation();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Something went wrong");
     } finally {
@@ -183,13 +215,17 @@ const ViewLineupPanel: FC = () => {
       });
       if (!response.ok) throw new Error("Failed to swap players");
       setSwapFromPlayerId(null);
-      await loadLineup();
+      await refreshAfterMutation();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setIsMutating(false);
     }
   };
+
+  // Verdict badges only render from fresh insights; while a refresh is in
+  // flight the previous verdicts may be wrong for the new roster.
+  const verdicts = insightsStatus === "ready" ? lineupInsights : null;
 
   const starterSlots = starterLabels.map((label, index) => {
     const slotId = `starter-${index}`;
@@ -206,14 +242,54 @@ const ViewLineupPanel: FC = () => {
       assignedPlayerName: player?.fullName,
       assignedPlayerStats: player ? playerStatsByPlayerId[player.playerId] : undefined,
       meta: player ? buildPlayerMeta(player, playerStatsByPlayerId[player.playerId]) : undefined,
-      isBestPlayer: player ? player.playerId === lineupInsights?.bestPlayer?.playerId : undefined,
-      isWorstPlayer: player ? player.playerId === lineupInsights?.worstPlayer?.playerId : undefined,
-      isDarkHorse: player ? player.playerId === lineupInsights?.darkHorse?.playerId : undefined,
+      isBestPlayer: player ? player.playerId === verdicts?.bestPlayer?.playerId : undefined,
+      isWorstPlayer: player ? player.playerId === verdicts?.worstPlayer?.playerId : undefined,
+      isDarkHorse: player ? player.playerId === verdicts?.darkHorse?.playerId : undefined,
       swapTarget: isEligibleTarget,
     };
   });
 
   const starterTotal = computeStarterPointsTotal(assignments, playerStatsByPlayerId);
+
+  const insightsPanel = (
+    <LineupInsightsPanel
+      insights={lineupInsights}
+      season={PROJECTION_BASE_SEASON}
+      status={insightsStatus}
+      onRetry={loadInsights}
+    />
+  );
+
+  if (lineupStatus === "loading") {
+    return (
+      <div className={styles.layout}>
+        <div className={styles.main}>
+          <RosterSkeleton />
+        </div>
+        {insightsPanel}
+      </div>
+    );
+  }
+
+  if (lineupStatus === "error") {
+    return (
+      <div className={styles.layout}>
+        <div className={styles.main}>
+          <div className={styles.errorCard} role="alert">
+            <div className={styles.errorEyebrow}>LINEUP</div>
+            <div className={styles.errorTitle}>Couldn&apos;t load this lineup.</div>
+            <div className={styles.errorBody}>
+              The roster request didn&apos;t come back. Your lineup is saved — retrying usually fixes it.
+            </div>
+            <button type="button" className={styles.retryButton} onClick={retryLineup}>
+              Retry
+            </button>
+          </div>
+        </div>
+        {insightsPanel}
+      </div>
+    );
+  }
 
   return (
     <div className={styles.layout}>
@@ -300,7 +376,7 @@ const ViewLineupPanel: FC = () => {
         )}
       </div>
 
-      <LineupInsightsPanel insights={lineupInsights} season={PROJECTION_BASE_SEASON} />
+      {insightsPanel}
     </div>
   );
 };
