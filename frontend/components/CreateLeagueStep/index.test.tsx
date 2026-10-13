@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
 import CreateLeagueStep from "./index";
+import ToastProvider from "@/components/ToastProvider";
 import type { League } from "@/types/LeagueTypes";
 
 const mockLeague: League = {
@@ -28,7 +29,7 @@ afterEach(() => {
 
 describe("CreateLeagueStep", () => {
     it("renders the mock league card with the fixed starter slots and the import card with its default hint", () => {
-        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />);
+        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />, { wrapper: ToastProvider });
 
         expect(screen.getByText("Mock league")).toBeInTheDocument();
         expect(screen.getByText("Import from Sleeper")).toBeInTheDocument();
@@ -55,7 +56,7 @@ describe("CreateLeagueStep", () => {
         vi.stubGlobal("fetch", vi.fn().mockReturnValue(fetchPromise));
         const onLeagueAttached = vi.fn();
 
-        render(<CreateLeagueStep onLeagueAttached={onLeagueAttached} />);
+        render(<CreateLeagueStep onLeagueAttached={onLeagueAttached} />, { wrapper: ToastProvider });
         fireEvent.click(screen.getByRole("button", { name: "Create mock league" }));
 
         expect(screen.getByRole("button", { name: "Creating..." })).toBeDisabled();
@@ -67,15 +68,17 @@ describe("CreateLeagueStep", () => {
         expect(screen.getByRole("button", { name: "Create mock league" })).toBeEnabled();
     });
 
-    it("alerts and resets when creating a mock league fails", async () => {
+    it("shows an error toast and resets when creating a mock league fails", async () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
-        const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
+        vi.spyOn(console, "error").mockImplementation(() => {});
         const onLeagueAttached = vi.fn();
 
-        render(<CreateLeagueStep onLeagueAttached={onLeagueAttached} />);
+        render(<CreateLeagueStep onLeagueAttached={onLeagueAttached} />, { wrapper: ToastProvider });
         fireEvent.click(screen.getByRole("button", { name: "Create mock league" }));
 
-        await waitFor(() => expect(alertSpy).toHaveBeenCalledWith("Failed to create mock league"));
+        expect(
+            await within(screen.getByRole("alert")).findByText("Couldn't create mock league"),
+        ).toBeInTheDocument();
         expect(onLeagueAttached).not.toHaveBeenCalled();
         expect(screen.getByRole("button", { name: "Create mock league" })).toBeEnabled();
     });
@@ -84,7 +87,7 @@ describe("CreateLeagueStep", () => {
         const fetchMock = vi.fn();
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />);
+        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />, { wrapper: ToastProvider });
         fireEvent.change(screen.getByPlaceholderText("Sleeper league ID"), { target: { value: "abc12" } });
         fireEvent.click(screen.getByRole("button", { name: "Import" }));
 
@@ -97,7 +100,7 @@ describe("CreateLeagueStep", () => {
     it("resets the hint back to the default once the user edits the input again", () => {
         vi.stubGlobal("fetch", vi.fn());
 
-        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />);
+        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />, { wrapper: ToastProvider });
         fireEvent.change(screen.getByPlaceholderText("Sleeper league ID"), { target: { value: "abc" } });
         fireEvent.click(screen.getByRole("button", { name: "Import" }));
         expect(screen.getByText(/doesn't look like a Sleeper league ID/)).toBeInTheDocument();
@@ -111,7 +114,7 @@ describe("CreateLeagueStep", () => {
         vi.stubGlobal("fetch", fetchMock);
         const onLeagueAttached = vi.fn();
 
-        render(<CreateLeagueStep onLeagueAttached={onLeagueAttached} />);
+        render(<CreateLeagueStep onLeagueAttached={onLeagueAttached} />, { wrapper: ToastProvider });
         fireEvent.change(screen.getByPlaceholderText("Sleeper league ID"), { target: { value: "1234567890" } });
         fireEvent.click(screen.getByRole("button", { name: "Import" }));
 
@@ -127,7 +130,7 @@ describe("CreateLeagueStep", () => {
             vi.fn().mockResolvedValue({ ok: false, json: async () => ({ message: "League not found" }) }),
         );
 
-        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />);
+        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />, { wrapper: ToastProvider });
         fireEvent.change(screen.getByPlaceholderText("Sleeper league ID"), { target: { value: "1234567890" } });
         fireEvent.click(screen.getByRole("button", { name: "Import" }));
 
@@ -137,7 +140,7 @@ describe("CreateLeagueStep", () => {
     it("falls back to a generic message when the import request 400s without one", async () => {
         vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false, json: async () => ({}) }));
 
-        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />);
+        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />, { wrapper: ToastProvider });
         fireEvent.change(screen.getByPlaceholderText("Sleeper league ID"), { target: { value: "1234567890" } });
         fireEvent.click(screen.getByRole("button", { name: "Import" }));
 
@@ -147,7 +150,7 @@ describe("CreateLeagueStep", () => {
     it("shows a network-error hint when the import request throws", async () => {
         vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
 
-        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />);
+        render(<CreateLeagueStep onLeagueAttached={vi.fn()} />, { wrapper: ToastProvider });
         fireEvent.change(screen.getByPlaceholderText("Sleeper league ID"), { target: { value: "1234567890" } });
         fireEvent.click(screen.getByRole("button", { name: "Import" }));
 

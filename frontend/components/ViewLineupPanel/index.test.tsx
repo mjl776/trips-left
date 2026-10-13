@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import type { AddPlayerOverlayPlayer } from "../AddPlayerOverlay";
 import type { PlayerStats } from "../LineupSlotsList";
 import type { LineupInsights } from "@/types/PlayerTypes";
@@ -10,6 +10,7 @@ vi.mock("next/navigation", () => ({
 
 import { useSearchParams } from "next/navigation";
 import ViewLineupPanel from "./index";
+import ToastProvider from "@/components/ToastProvider";
 
 type RosterPlayerFixture = {
     slot: string;
@@ -114,6 +115,7 @@ type FetchMockOptions = {
     insights?: LineupInsights | null;
     playersList?: AddPlayerOverlayPlayer[];
     statsById?: Record<string, PlayerStats>;
+    addOutcome?: "success" | "failure";
     removeOutcome?: "success" | "failure";
     swapOutcome?: "success" | "failure";
     lineupOutcome?: "success" | "failure";
@@ -125,6 +127,7 @@ function createFetchMock({
     insights = null,
     playersList = [],
     statsById: statsMap = {},
+    addOutcome = "success",
     removeOutcome = "success",
     swapOutcome = "success",
     lineupOutcome = "success",
@@ -159,6 +162,7 @@ function createFetchMock({
             return Promise.resolve(jsonResponse(playersList));
         }
         if (url.includes("/add-player") && method === "POST") {
+            if (addOutcome === "failure") return Promise.resolve(jsonResponse({ message: "server error" }, false));
             const body = JSON.parse(String(init?.body ?? "{}"));
             const player = playersList.find((candidate) => candidate.playerId === body.playerId);
             if (player) roster.rosterPlayers.push({ slot: body.slot, player });
@@ -189,14 +193,10 @@ function createFetchMock({
     });
 }
 
-let alertMock: ReturnType<typeof vi.fn>;
-
 beforeEach(() => {
     vi.mocked(useSearchParams).mockReturnValue(
         new URLSearchParams("rosterId=test-roster&leagueId=test-league") as ReturnType<typeof useSearchParams>,
     );
-    alertMock = vi.fn();
-    vi.stubGlobal("alert", alertMock);
 });
 
 afterEach(() => {
@@ -212,7 +212,7 @@ describe("ViewLineupPanel", () => {
             createFetchMock({ roster: makeRoster(), insights: populatedInsights, statsById, playersList: freeAgents }),
         );
 
-        const { container } = render(<ViewLineupPanel />);
+        const { container } = render(<ViewLineupPanel />, { wrapper: ToastProvider });
 
         expect(container.querySelectorAll('[aria-busy="true"]')).toHaveLength(2);
         expect(screen.getAllByText("Loading…")).toHaveLength(2);
@@ -253,7 +253,7 @@ describe("ViewLineupPanel", () => {
     it("renders the empty-insights state and no verdict badges when bestPlayer, worstPlayer, and darkHorse are all null", async () => {
         vi.stubGlobal("fetch", createFetchMock({ roster: makeRoster(), insights: emptyInsights, statsById }));
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Josh Allen")).toBeInTheDocument());
 
         expect(screen.getByText("No players rostered yet.")).toBeInTheDocument();
@@ -276,7 +276,7 @@ describe("ViewLineupPanel", () => {
         const fetchMock = createFetchMock({ roster, insights: populatedInsights, statsById, playersList: freeAgents });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Empty")).toBeInTheDocument());
 
         fireEvent.click(screen.getByRole("button", { name: "Add player to FLEX" }));
@@ -314,7 +314,7 @@ describe("ViewLineupPanel", () => {
         const fetchMock = createFetchMock({ roster, insights: populatedInsights, statsById, playersList: freeAgents });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Empty bench slot")).toBeInTheDocument());
 
         fireEvent.click(screen.getByRole("button", { name: "Add player to bench" }));
@@ -350,7 +350,7 @@ describe("ViewLineupPanel", () => {
         const fetchMock = createFetchMock({ roster, insights: emptyInsights, statsById });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Justin Jefferson")).toBeInTheDocument());
 
         fireEvent.click(screen.getByRole("button", { name: "Remove player from WR" }));
@@ -373,7 +373,7 @@ describe("ViewLineupPanel", () => {
         const fetchMock = createFetchMock({ roster, insights: emptyInsights, statsById });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Bench Guy")).toBeInTheDocument());
 
         // "Bench Guy" (bn1, RB) is the first SWAP button rendered in bench order.
@@ -408,7 +408,7 @@ describe("ViewLineupPanel", () => {
         const fetchMock = createFetchMock({ roster, insights: emptyInsights, statsById });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Bench Guy")).toBeInTheDocument());
 
         fireEvent.click(screen.getAllByRole("button", { name: "SWAP" })[0]);
@@ -426,7 +426,7 @@ describe("ViewLineupPanel", () => {
         const fetchMock = createFetchMock({ roster, insights: emptyInsights, statsById });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Bench Two")).toBeInTheDocument());
 
         // "Bench Two" (bn2, WR) is the second DROP button rendered in bench order.
@@ -445,19 +445,67 @@ describe("ViewLineupPanel", () => {
         expect(screen.getByText("Bench Guy")).toBeInTheDocument();
     });
 
-    it("shows an alert and leaves the lineup unchanged when a remove-player request fails", async () => {
+    it("shows an error toast and leaves the lineup unchanged when a remove-player request fails", async () => {
         const roster = makeRoster();
         const fetchMock = createFetchMock({ roster, insights: emptyInsights, statsById, removeOutcome: "failure" });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        vi.spyOn(console, "error").mockImplementation(() => {});
+
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Justin Jefferson")).toBeInTheDocument());
 
         fireEvent.click(screen.getByRole("button", { name: "Remove player from WR" }));
 
-        await waitFor(() => expect(alertMock).toHaveBeenCalledWith("Failed to remove player"));
+        expect(await within(screen.getByRole("alert")).findByText("Couldn't remove player")).toBeInTheDocument();
 
         expect(screen.getByText("Justin Jefferson")).toBeInTheDocument();
+        expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/view-lineup"))).toHaveLength(1);
+    });
+
+    it("shows an error toast and keeps the overlay open when an add-player request fails", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        const roster = makeRoster();
+        roster.rosterPlayers = roster.rosterPlayers.filter((rosterPlayer) => rosterPlayer.player.playerId !== "bn2");
+        const fetchMock = createFetchMock({
+            roster,
+            insights: emptyInsights,
+            statsById,
+            playersList: freeAgents,
+            addOutcome: "failure",
+        });
+        vi.stubGlobal("fetch", fetchMock);
+
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
+        await waitFor(() => expect(screen.getByText("Empty bench slot")).toBeInTheDocument());
+
+        fireEvent.click(screen.getByRole("button", { name: "Add player to bench" }));
+        await waitFor(() => expect(screen.getByText("Add Bench")).toBeInTheDocument());
+        fireEvent.change(screen.getByPlaceholderText("Search players..."), { target: { value: "Free Agent" } });
+        await waitFor(() => expect(screen.getByText("Free Agent Kicker")).toBeInTheDocument());
+        fireEvent.click(screen.getByText("Free Agent Kicker"));
+
+        expect(await within(screen.getByRole("alert")).findByText("Couldn't add player")).toBeInTheDocument();
+
+        expect(screen.getByText("Add Bench")).toBeInTheDocument();
+        expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/view-lineup"))).toHaveLength(1);
+    });
+
+    it("shows an error toast and stays in swap mode when a swap-players request fails", async () => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        const roster = makeRoster();
+        const fetchMock = createFetchMock({ roster, insights: emptyInsights, statsById, swapOutcome: "failure" });
+        vi.stubGlobal("fetch", fetchMock);
+
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
+        await waitFor(() => expect(screen.getByText("Bench Guy")).toBeInTheDocument());
+
+        fireEvent.click(screen.getAllByRole("button", { name: "SWAP" })[0]);
+        fireEvent.click(screen.getByText("Bijan Robinson"));
+
+        expect(await within(screen.getByRole("alert")).findByText("Couldn't swap players")).toBeInTheDocument();
+
+        expect(screen.getByText(/Swapping Bench Guy/)).toBeInTheDocument();
         expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/view-lineup"))).toHaveLength(1);
     });
 
@@ -471,7 +519,7 @@ describe("ViewLineupPanel", () => {
         });
         vi.stubGlobal("fetch", fetchMock);
 
-        render(<ViewLineupPanel />);
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
 
         expect(screen.getByRole("heading", { level: 2, name: "Untitled Lineup" })).toBeInTheDocument();
         expect(screen.getByText("No players on the bench.")).toBeInTheDocument();
@@ -497,7 +545,7 @@ describe("ViewLineupPanel", () => {
             });
             vi.stubGlobal("fetch", fetchMock);
 
-            render(<ViewLineupPanel />);
+            render(<ViewLineupPanel />, { wrapper: ToastProvider });
 
             const alert = await screen.findByText("Couldn't load this lineup.");
             expect(alert.closest('[role="alert"]')?.className).not.toMatch(/magenta/);
@@ -519,7 +567,7 @@ describe("ViewLineupPanel", () => {
             });
             vi.stubGlobal("fetch", fetchMock);
 
-            render(<ViewLineupPanel />);
+            render(<ViewLineupPanel />, { wrapper: ToastProvider });
 
             await waitFor(() => expect(screen.getByText("Couldn't load insights.")).toBeInTheDocument());
             expect(screen.getByText("Justin Jefferson")).toBeInTheDocument();
@@ -536,7 +584,7 @@ describe("ViewLineupPanel", () => {
             const fetchMock = createFetchMock({ roster: makeRoster(), insights: populatedInsights, statsById });
             vi.stubGlobal("fetch", fetchMock);
 
-            const { container } = render(<ViewLineupPanel />);
+            const { container } = render(<ViewLineupPanel />, { wrapper: ToastProvider });
             await waitFor(() => expect(screen.getByText("Best Player")).toBeInTheDocument());
             expect(insightsCalls(fetchMock)).toHaveLength(1);
 
@@ -559,7 +607,7 @@ describe("ViewLineupPanel", () => {
             });
             vi.stubGlobal("fetch", fetchMock);
 
-            render(<ViewLineupPanel />);
+            render(<ViewLineupPanel />, { wrapper: ToastProvider });
             await waitFor(() => expect(screen.getByText("Empty")).toBeInTheDocument());
 
             fireEvent.click(screen.getByRole("button", { name: "Add player to FLEX" }));
@@ -575,7 +623,7 @@ describe("ViewLineupPanel", () => {
             const fetchMock = createFetchMock({ roster: makeRoster(), insights: emptyInsights, statsById });
             vi.stubGlobal("fetch", fetchMock);
 
-            render(<ViewLineupPanel />);
+            render(<ViewLineupPanel />, { wrapper: ToastProvider });
             await waitFor(() => expect(screen.getByText("Bench Guy")).toBeInTheDocument());
 
             fireEvent.click(screen.getAllByRole("button", { name: "SWAP" })[0]);
@@ -596,7 +644,7 @@ describe("ViewLineupPanel", () => {
             });
             vi.stubGlobal("fetch", fetchMock);
 
-            render(<ViewLineupPanel />);
+            render(<ViewLineupPanel />, { wrapper: ToastProvider });
             await waitFor(() => expect(pending).toHaveLength(1));
             pending[0](jsonResponse(populatedInsights));
             await waitFor(() => expect(screen.getByText("Best Player")).toBeInTheDocument());

@@ -5,12 +5,14 @@ import styles from "./page.module.css";
 import { API_BASE_URL } from "@/lib/api";
 import { STARTER_SLOTS } from "@/constants";
 import type { League } from "@/types/LeagueTypes";
+import { useToast } from "../ToastProvider";
 
 type CreateLeagueStepProps = {
   onLeagueAttached: (league: League) => void;
 };
 
 const CreateLeagueStep: FC<CreateLeagueStepProps> = ({ onLeagueAttached }) => {
+  const { showToast } = useToast();
   const [isCreatingMock, setIsCreatingMock] = useState(false);
   const [importId, setImportId] = useState("");
   const [importHint, setImportHint] = useState("Find the ID in your Sleeper league URL.");
@@ -25,7 +27,8 @@ const CreateLeagueStep: FC<CreateLeagueStepProps> = ({ onLeagueAttached }) => {
       const league: League = await response.json();
       onLeagueAttached(league);
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Something went wrong");
+      console.error(error);
+      showToast({ variant: "error", title: "Couldn't create mock league" });
     } finally {
       setIsCreatingMock(false);
     }

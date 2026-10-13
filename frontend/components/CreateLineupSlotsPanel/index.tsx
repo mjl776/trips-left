@@ -13,11 +13,28 @@ import { STARTER_SLOTS } from "@/constants";
 import { API_BASE_URL } from "@/lib/api";
 import { fetchPlayerStatsByPlayerId, PROJECTION_BASE_SEASON } from "@/lib/playerStats";
 import type { League } from "@/types/LeagueTypes";
+import { useToast } from "../ToastProvider";
 
 type LineupSlotAssignment = {
   playerId: string;
   slot: string;
 };
+
+const GENERIC_ERROR_MESSAGE = "Something went wrong";
+
+// Nest's error body is { statusCode, message, error }; `message` is a string
+// for the service's BadRequest/NotFound exceptions and a string[] for
+// validation errors.
+async function readErrorMessage(response: Response): Promise<string> {
+  try {
+    const body: { message?: unknown } = await response.json();
+    if (Array.isArray(body.message)) return body.message.join("; ") || GENERIC_ERROR_MESSAGE;
+    if (typeof body.message === "string" && body.message) return body.message;
+  } catch {
+    // Non-JSON error body (e.g. a proxy's HTML error page).
+  }
+  return GENERIC_ERROR_MESSAGE;
+}
 
 type CreateLineupSlotsPanelProps = {
   league: League;
@@ -26,6 +43,7 @@ type CreateLineupSlotsPanelProps = {
 
 const CreateLineupSlotsPanel: FC<CreateLineupSlotsPanelProps> = ({ league, onChangeLeague }) => {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [players, setPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
   const [assignments, setAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
@@ -79,7 +97,12 @@ const CreateLineupSlotsPanel: FC<CreateLineupSlotsPanelProps> = ({ league, onCha
         body: JSON.stringify({ leagueId: league.leagueId, name, assignments: slotAssignments }),
       });
       if (!lineupRes.ok) {
-        throw new Error("Failed to create lineup");
+        showToast({
+          variant: "error",
+          title: "Couldn't create lineup",
+          message: await readErrorMessage(lineupRes),
+        });
+        return;
       }
       const roster: { rosterId: string; leagueId: string; name: string } = await lineupRes.json();
 
@@ -91,10 +114,12 @@ const CreateLineupSlotsPanel: FC<CreateLineupSlotsPanelProps> = ({ league, onCha
         createdAt: new Date().toISOString(),
       });
 
-      alert("Lineup created!");
+      // The provider lives in the root layout, so the toast survives the navigation.
+      showToast({ variant: "success", title: "Lineup created", message: roster.name });
       router.push("/lineup-management");
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Something went wrong");
+      console.error(error);
+      showToast({ variant: "error", title: "Couldn't create lineup", message: GENERIC_ERROR_MESSAGE });
     } finally {
       setIsSubmitting(false);
     }
