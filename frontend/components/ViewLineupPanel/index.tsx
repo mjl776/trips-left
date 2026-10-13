@@ -17,6 +17,7 @@ import { RosterSkeleton } from "./ViewLineupSkeleton";
 import { LineupInsights } from "@/types/PlayerTypes";
 import { SLOT_ELIGIBILITY } from "@/constants";
 import { API_BASE_URL } from "@/lib/api";
+import { useToast } from "@/components/ToastProvider";
 
 // Only rendered once a slot/card is actually opened — code-split out of the
 // initial route bundle instead of shipping unconditionally.
@@ -43,6 +44,7 @@ const ViewLineupPanel: FC = () => {
   const searchParams = useSearchParams();
   const leagueId = searchParams.get("leagueId");
   const rosterId = searchParams.get("rosterId");
+  const { showToast } = useToast();
 
   const [players, setPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
   const [playersLoaded, setPlayersLoaded] = useState(false);
@@ -180,7 +182,8 @@ const ViewLineupPanel: FC = () => {
       setActiveSlot(null);
       await refreshAfterMutation();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Something went wrong");
+      console.error(error);
+      showToast({ variant: "error", title: "Couldn't add player" });
     } finally {
       setIsMutating(false);
     }
@@ -198,7 +201,8 @@ const ViewLineupPanel: FC = () => {
       if (!response.ok) throw new Error("Failed to remove player");
       await refreshAfterMutation();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Something went wrong");
+      console.error(error);
+      showToast({ variant: "error", title: "Couldn't remove player" });
     } finally {
       setIsMutating(false);
     }
@@ -217,7 +221,8 @@ const ViewLineupPanel: FC = () => {
       setSwapFromPlayerId(null);
       await refreshAfterMutation();
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Something went wrong");
+      console.error(error);
+      showToast({ variant: "error", title: "Couldn't swap players" });
     } finally {
       setIsMutating(false);
     }

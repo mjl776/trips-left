@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
+import ToastProvider from "@/components/ToastProvider";
 import "./globals.css";
 
 import { Space_Grotesk } from 'next/font/google'
@@ -35,8 +36,10 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${orbitron.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar />
-        {children}
+        <ToastProvider>
+          <Navbar />
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

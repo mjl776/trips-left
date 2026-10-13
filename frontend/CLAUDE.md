@@ -83,6 +83,7 @@ Numerals render via `var(--font-orbitan)`: point totals (`ProjectedPointsBox`, l
 - Constants that mirror the backend live in `frontend/constants.ts` (`STARTER_SLOTS`, `BENCH_SLOTS`, `SLOT_ELIGIBILITY`, `RANKABLE_STAT_LABELS`, `POSITION_RANKABLE_STATS`). If you change `SLOT_ELIGIBILITY` or the mock roster in `backend/src/`, update this file in the same PR — they are duplicated by design and drift silently.
 - Types shared with the backend live in `frontend/types/PlayerTypes.ts` (player/insights shapes) and `frontend/types/LeagueTypes.ts` (`League`) and must stay structurally identical to `backend/src/**/**.models.ts`.
 - Bench is a flat list of current occupants (`getBenchPlayers`), not fixed indexed slots — there is no "add to bench" UI; players only reach the bench via a starter-slot swap.
+- User-action feedback (a mutation succeeded or failed) goes through `useToast` from `components/ToastProvider` — `showToast({ variant, title, message? })`. `alert()` is not used (ESLint `no-alert` enforces it). Error toasts are neutral muted, not magenta. Toasts sit at `z-index: 60`, above the `50` used by Navbar and the overlays. Load failures still render as inline error cards, not toasts.
 - No state library. Component state + `localStorage` (`lib/savedLineups.ts`) is the whole model. Don't add Redux/Zustand/React Query without asking.
 - No new dependencies without asking.
 
