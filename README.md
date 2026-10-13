@@ -28,10 +28,10 @@ This application is a fantasy football optimizer that uses advanced metrics the 
            │           │  REST / JSON (SIMULATION_SERVICE_URL)
            │           ▼
            │  ┌─────────────────────────────┐
-           │  │      Simulation Service      │
-           │  │      FastAPI (Python)        │
-           │  │  stateless Monte Carlo trade │
-           │  │   simulator (Railway)        │
+           │  │     Simulation Service      │
+           │  │     FastAPI (Python)        │
+           │  │ stateless Monte Carlo trade │
+           │  │  simulator (Railway)        │
            │  └─────────────────────────────┘
            │  SQL via Prisma ORM
            ▼
