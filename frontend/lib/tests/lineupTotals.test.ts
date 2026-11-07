@@ -17,14 +17,15 @@ describe("computeStarterPointsTotal", () => {
     expect(computeStarterPointsTotal(assignments, stats)).toBe(20);
   });
 
-  it("excludes K and DEF from the total even if stats exist for them", () => {
-    const assignments = { "starter-0": kicker, "starter-1": defense };
+  it("includes K and DEF points in the total", () => {
+    const assignments = { "starter-0": qb, "starter-1": kicker, "starter-2": defense };
     const stats: Record<string, PlayerStats> = {
+      "qb-1": { totalPoints: 20 } as PlayerStats,
       "k-1": { totalPoints: 9 } as PlayerStats,
       "def-1": { totalPoints: 7 } as PlayerStats,
     };
 
-    expect(computeStarterPointsTotal(assignments, stats)).toBe(0);
+    expect(computeStarterPointsTotal(assignments, stats)).toBe(36);
   });
 
   it("treats a starter with no matching stats entry as contributing 0", () => {

@@ -4,14 +4,11 @@ import { API_BASE_URL } from "@/lib/api";
 import { getStarterLabels, buildStarterAssignments } from "@/lib/lineupSections";
 import { fetchPlayerStatsByPlayerId, CURRENT_SEASON } from "@/lib/playerStats";
 
-const NO_SCORE_POSITIONS = ["K", "DEF"];
-
 export function computeStarterPointsTotal(
   starterAssignments: Record<string, AddPlayerOverlayPlayer>,
   statsByPlayerId: Record<string, PlayerStats>,
 ): number {
   return Object.values(starterAssignments).reduce((total, player) => {
-    if (NO_SCORE_POSITIONS.includes(player.position)) return total;
     const stats = statsByPlayerId[player.playerId];
     return stats ? total + stats.totalPoints : total;
   }, 0);

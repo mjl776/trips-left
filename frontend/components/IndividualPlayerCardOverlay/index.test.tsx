@@ -261,7 +261,7 @@ describe("IndividualPlayerCardOverlay", () => {
         await screen.findByText("Charlie Kicker");
         expect(
             await screen.findByText(
-                "No advanced metrics are ranked for Ks — the stats table has no field-goal or points-allowed columns yet, so kickers and defenses have no rankable production.",
+                "No advanced metrics are ranked for Ks — the ranked stats (air yards, target share, WOPR, CPOE) only apply to passers and pass-catchers.",
             ),
         ).toBeInTheDocument();
         expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/player-stat-rank"))).toBe(false);

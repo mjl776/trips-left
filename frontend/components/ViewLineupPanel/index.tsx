@@ -24,8 +24,6 @@ import { useToast } from "@/components/ToastProvider";
 const AddPlayerOverlay = dynamic(() => import("@/components/AddPlayerOverlay"));
 const IndividualPlayerCardOverlay = dynamic(() => import("@/components/IndividualPlayerCardOverlay"));
 
-const NO_SCORE_POSITIONS = ["K", "DEF"];
-
 type LoadStatus = InsightsStatus;
 
 type RosterPlayerWithStats = {
@@ -35,7 +33,6 @@ type RosterPlayerWithStats = {
 
 function buildPlayerMeta(player: AddPlayerOverlayPlayer, stats?: PlayerStats): string {
   const team = player.team ?? "FA";
-  if (NO_SCORE_POSITIONS.includes(player.position)) return `${team} · ${player.position} · no scoring data`;
   if (stats?.positionRank) return `${team} · ${player.position} · ${player.position}${stats.positionRank}`;
   return `${team} · ${player.position} · unranked`;
 }

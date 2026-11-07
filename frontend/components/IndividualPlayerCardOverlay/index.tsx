@@ -152,7 +152,7 @@ const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ pla
                     ) : (
                         <div className={styles.emptyStats}>
                             {playerStats.position === "K" || playerStats.position === "DEF"
-                                ? `No advanced metrics are ranked for ${playerStats.position}s — the stats table has no field-goal or points-allowed columns yet, so kickers and defenses have no rankable production.`
+                                ? `No advanced metrics are ranked for ${playerStats.position}s — the ranked stats (air yards, target share, WOPR, CPOE) only apply to passers and pass-catchers.`
                                 : "No advanced metrics available for this player yet."}
                         </div>
                     )}
