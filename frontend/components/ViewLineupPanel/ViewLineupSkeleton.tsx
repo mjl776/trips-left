@@ -1,7 +1,7 @@
 import { FC } from "react";
 import Skeleton from "@/components/Skeleton";
 import LineupInsightsPanel from "@/components/LineupInsightsPanel";
-import { PROJECTION_BASE_SEASON } from "@/lib/playerStats";
+import { CURRENT_SEASON } from "@/lib/playerStats";
 import styles from "./page.module.css";
 
 // 10 rows = the fixed mock roster starter count; starterLabels is unknown
@@ -68,7 +68,7 @@ const ViewLineupSkeleton: FC = () => (
     <div className={styles.main}>
       <RosterSkeleton />
     </div>
-    <LineupInsightsPanel insights={null} season={PROJECTION_BASE_SEASON} status="loading" />
+    <LineupInsightsPanel insights={null} season={CURRENT_SEASON} status="loading" />
   </div>
 );
 

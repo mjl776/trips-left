@@ -10,7 +10,7 @@ import { getStarterLabels, buildStarterAssignments, getBenchLabels, buildBenchAs
 import { computeStarterPointsTotal } from "@/lib/lineupTotals";
 import styles from "./page.module.css";
 import { useSearchParams } from "next/navigation";
-import { PROJECTION_BASE_SEASON } from "@/lib/playerStats";
+import { CURRENT_SEASON } from "@/lib/playerStats";
 import BenchRow from "@/components/BenchRow";
 import LineupInsightsPanel, { type InsightsStatus } from "@/components/LineupInsightsPanel";
 import { RosterSkeleton } from "./ViewLineupSkeleton";
@@ -87,7 +87,7 @@ const ViewLineupPanel: FC = () => {
     if (!rosterId || !leagueId) return;
     try {
       const response = await fetch(
-        `${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}&season=${PROJECTION_BASE_SEASON}`,
+        `${API_BASE_URL}/view-lineup?rosterId=${rosterId}&leagueId=${leagueId}&season=${CURRENT_SEASON}`,
       );
       if (!response.ok) throw new Error("Could not fetch lineup");
       const roster = await response.json();
@@ -125,7 +125,7 @@ const ViewLineupPanel: FC = () => {
     const requestId = ++insightsRequestRef.current;
     setInsightsStatus("loading");
     try {
-      const params = new URLSearchParams({ rosterId, leagueId, season: String(PROJECTION_BASE_SEASON) });
+      const params = new URLSearchParams({ rosterId, leagueId, season: String(CURRENT_SEASON) });
       const response = await fetch(`${API_BASE_URL}/lineup-insights?${params}`);
       if (!response.ok) throw new Error("Could not fetch lineup insights");
       const data = await response.json();
@@ -259,7 +259,7 @@ const ViewLineupPanel: FC = () => {
   const insightsPanel = (
     <LineupInsightsPanel
       insights={lineupInsights}
-      season={PROJECTION_BASE_SEASON}
+      season={CURRENT_SEASON}
       status={insightsStatus}
       onRetry={loadInsights}
     />
@@ -306,7 +306,7 @@ const ViewLineupPanel: FC = () => {
           </div>
           <div className={styles.totalBlock}>
             <div className={styles.totalValue}>{starterTotal.toFixed(1)}</div>
-            <div className={styles.totalLabel}>{PROJECTION_BASE_SEASON} SEASON TOTALS</div>
+            <div className={styles.totalLabel}>{CURRENT_SEASON} SEASON TOTALS</div>
           </div>
         </div>
 
@@ -374,7 +374,7 @@ const ViewLineupPanel: FC = () => {
           <IndividualPlayerCardOverlay
             playerId={activePlayerId}
             leagueId={leagueId}
-            season={PROJECTION_BASE_SEASON}
+            season={CURRENT_SEASON}
             initialStats={playerStatsByPlayerId[activePlayerId]}
             onClose={() => setActivePlayerId(null)}
           />

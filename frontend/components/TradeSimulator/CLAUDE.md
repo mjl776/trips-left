@@ -47,7 +47,7 @@ present (`...(leagueId ? { leagueId } : {})`) — omit it otherwise and let the
 backend fall back to `DEFAULT_SCORING_SETTINGS` (see `backend/src/trade/CLAUDE.md`).
 Don't gate the simulate-trade request or render a "missing leagueId" error on
 its absence. `season` should default to the same baseline season the rest of
-the app uses for "last completed season" data (see `PROJECTION_BASE_SEASON` in
+the app uses for season data (see `CURRENT_SEASON` in
 `frontend/lib/playerStats.ts`; don't hardcode a second copy of that year —
 import or mirror it).
 

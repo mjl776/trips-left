@@ -2,7 +2,7 @@ import type { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import type { PlayerStats } from "@/components/LineupSlotsList";
 import { API_BASE_URL } from "@/lib/api";
 import { getStarterLabels, buildStarterAssignments } from "@/lib/lineupSections";
-import { fetchPlayerStatsByPlayerId, PROJECTION_BASE_SEASON } from "@/lib/playerStats";
+import { fetchPlayerStatsByPlayerId, CURRENT_SEASON } from "@/lib/playerStats";
 
 const NO_SCORE_POSITIONS = ["K", "DEF"];
 
@@ -27,6 +27,6 @@ export async function fetchStarterPointsTotal(rosterId: string, leagueId: string
   const playerIds = Object.values(assignments).map((player) => player.playerId);
   if (playerIds.length === 0) return 0;
 
-  const stats = await fetchPlayerStatsByPlayerId(playerIds, PROJECTION_BASE_SEASON, leagueId);
+  const stats = await fetchPlayerStatsByPlayerId(playerIds, CURRENT_SEASON, leagueId);
   return computeStarterPointsTotal(assignments, stats);
 }

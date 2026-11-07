@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 import AddPlayerOverlay, { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { API_BASE_URL } from "@/lib/api";
-import { PROJECTION_BASE_SEASON } from "@/lib/playerStats";
+import { CURRENT_SEASON } from "@/lib/playerStats";
 import type { SimulateTradeResponse, TradePlayer } from "@/types/TradeTypes";
 
 type FetchState = "idle" | "loading" | "error" | "success";
@@ -53,7 +53,7 @@ const TradeSimulator: FC = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             ...(leagueId ? { leagueId } : {}),
-            season: PROJECTION_BASE_SEASON,
+            season: CURRENT_SEASON,
             playerOutId: playerOut.playerId,
             playerInId: playerIn.playerId,
           }),
@@ -171,7 +171,7 @@ const TradeSimulator: FC = () => {
       <h2 className={styles.heading}>Simulate a trade</h2>
       <p className={styles.subtitle}>
         Pick one player to give up and one to receive. Value, efficiency, and ROI are scored against each player&apos;s
-        real {PROJECTION_BASE_SEASON} production.
+        real {CURRENT_SEASON} production.
       </p>
 
       <div className={styles.slotsGrid}>
@@ -198,7 +198,7 @@ const TradeSimulator: FC = () => {
             </div>
             <div className={styles.comparisonTable}>
               {renderComparisonRow(
-                `VALUE (${PROJECTION_BASE_SEASON})`,
+                `VALUE (${CURRENT_SEASON})`,
                 (p) => p.value.toFixed(1),
                 (p) => p.value,
               )}
@@ -217,11 +217,11 @@ const TradeSimulator: FC = () => {
             </div>
             <div className={styles.roiNote}>
               {result.roi === null
-                ? `No ${PROJECTION_BASE_SEASON} production recorded for ${result.playerOut.fullName} — ROI can't be computed against zero value.`
+                ? `No ${CURRENT_SEASON} production recorded for ${result.playerOut.fullName} — ROI can't be computed against zero value.`
                 : `Trading ${result.playerOut.fullName} for ${result.playerIn.fullName} returns ${fmtSigned(
                     result.roi,
                     1,
-                  )}% on the value given up, based on ${PROJECTION_BASE_SEASON} production.`}
+                  )}% on the value given up, based on ${CURRENT_SEASON} production.`}
             </div>
           </div>
 

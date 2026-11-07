@@ -7,10 +7,10 @@ trade expectation computed by the `simulation-service` (see its own CLAUDE.md).
 
 The `Projection` table has 0 rows in the live DB — there's no forward-projection
 pipeline yet. `PlayerStats` (realized) has full 2024/2025 data. Following the
-precedent already set in `frontend/lib/playerStats.ts` (`PROJECTION_BASE_SEASON
-= 2025`, "last season's real totals" as the projection baseline), this module
-computes everything from the most recently complete season's realized
-`PlayerStats`, not from `Projection`. Mirror `PROJECTION_BASE_SEASON` — don't
+precedent already set in `frontend/lib/playerStats.ts` (`CURRENT_SEASON
+= 2026`, the current season's real totals as the baseline), this module
+computes everything from that season's realized
+`PlayerStats`, not from `Projection`. Mirror `CURRENT_SEASON` — don't
 invent a second constant for the same idea; import or match it.
 
 ## Module layout (mirrors `backend/src/projections/`)
