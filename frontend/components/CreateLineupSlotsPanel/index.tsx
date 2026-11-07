@@ -11,7 +11,7 @@ import { getEligiblePlayers, type ActiveSlot } from "@/lib/playerEligibility";
 import { useRouter } from "next/navigation";
 import { STARTER_SLOTS } from "@/constants";
 import { API_BASE_URL } from "@/lib/api";
-import { fetchPlayerStatsByPlayerId, PROJECTION_BASE_SEASON } from "@/lib/playerStats";
+import { fetchPlayerStatsByPlayerId, CURRENT_SEASON } from "@/lib/playerStats";
 import type { League } from "@/types/LeagueTypes";
 import { useToast } from "../ToastProvider";
 
@@ -70,7 +70,7 @@ const CreateLineupSlotsPanel: FC<CreateLineupSlotsPanelProps> = ({ league, onCha
       try {
         const playerIds = Object.values(assignments).map((player) => player.playerId);
         if (playerIds.length === 0) return;
-        const data = await fetchPlayerStatsByPlayerId(playerIds, PROJECTION_BASE_SEASON);
+        const data = await fetchPlayerStatsByPlayerId(playerIds, CURRENT_SEASON);
         setPlayerStatsByPlayerId(data);
       } catch (error) {
         console.error(error);

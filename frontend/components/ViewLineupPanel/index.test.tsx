@@ -58,8 +58,8 @@ const statsById: Record<string, PlayerStats> = {
     rb1: statsFor("Bijan Robinson", "RB", "ATL", 250.5, 4),
     wr1: statsFor("Justin Jefferson", "WR", "MIN", 300.1, 2),
     te1: statsFor("Sam LaPorta", "TE", "DET", 150.0, 8),
-    k1: statsFor("Justin Tucker", "K", "BAL", 0, null),
-    def1: statsFor("49ers DEF", "DEF", "SF", 0, null),
+    k1: statsFor("Justin Tucker", "K", "BAL", 120.0, 3),
+    def1: statsFor("49ers DEF", "DEF", "SF", 95.0, 10),
     bn1: statsFor("Bench Guy", "RB", "NYJ", 90.3, 20),
     bn2: statsFor("Bench Two", "WR", "MIA", 60.0, 45),
 };
@@ -226,7 +226,8 @@ describe("ViewLineupPanel", () => {
             expect(screen.getByRole("heading", { level: 2, name: "Championship Squad" })).toBeInTheDocument();
         });
         expect(screen.getByText("Dynasty League")).toBeInTheDocument();
-        await waitFor(() => expect(screen.getByText("1110.8")).toBeInTheDocument());
+        // Starter total includes K (120.0) and DEF (95.0).
+        await waitFor(() => expect(screen.getByText("1325.8")).toBeInTheDocument());
 
         // Josh Allen, Bijan Robinson, and Sam LaPorta each render twice: once in their
         // starter row and once as the best/dark-horse/worst player in the sidebar.
@@ -236,6 +237,10 @@ describe("ViewLineupPanel", () => {
         expect(screen.getByText("Justin Jefferson")).toBeInTheDocument();
         expect(screen.getByText("Justin Tucker")).toBeInTheDocument();
         expect(screen.getByText("49ers DEF")).toBeInTheDocument();
+        // K and DEF are scored, so they get a position rank like everyone else.
+        expect(screen.getByText("BAL · K · K3")).toBeInTheDocument();
+        expect(screen.getByText("SF · DEF · DEF10")).toBeInTheDocument();
+        expect(screen.queryByText(/no scoring data/)).not.toBeInTheDocument();
         expect(screen.getByText("Bench Guy")).toBeInTheDocument();
         expect(screen.getByText("Bench Two")).toBeInTheDocument();
         expect(screen.getByText("Empty")).toBeInTheDocument();

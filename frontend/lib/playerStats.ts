@@ -1,10 +1,10 @@
 import type { PlayerStats } from "@/components/LineupSlotsList";
 import { API_BASE_URL } from "@/lib/api";
 
-// "Projected points" = last season's real totals (see PlayerSeasonOverview on
-// the backend) — there's no forward-projection model yet, so this is the
-// simplest baseline: most recent season with real ingested stats.
-export const PROJECTION_BASE_SEASON = 2025;
+// The NFL season the app reads stats for. Point totals are this season's real
+// totals so far (see PlayerSeasonOverview on the backend) — there's no
+// forward-projection model yet. Bump this when a new season starts.
+export const CURRENT_SEASON = 2026;
 
 export async function fetchPlayerStatsByPlayerId(
   playerIds: string[],

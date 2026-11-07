@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchPlayerStatsByPlayerId, PROJECTION_BASE_SEASON } from "../playerStats";
+import { fetchPlayerStatsByPlayerId, CURRENT_SEASON } from "../playerStats";
 
 function mockFetchImplementation(okByPlayerId: Record<string, boolean> = {}) {
   return vi.fn(async (input: string | URL) => {
@@ -14,9 +14,9 @@ function mockFetchImplementation(okByPlayerId: Record<string, boolean> = {}) {
   });
 }
 
-describe("PROJECTION_BASE_SEASON", () => {
-  it("is 2025", () => {
-    expect(PROJECTION_BASE_SEASON).toBe(2025);
+describe("CURRENT_SEASON", () => {
+  it("is 2026", () => {
+    expect(CURRENT_SEASON).toBe(2026);
   });
 });
 
