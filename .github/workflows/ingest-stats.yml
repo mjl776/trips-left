@@ -1,0 +1,121 @@
+name: Ingest player stats
+
+# Refreshes player_stats from nflverse so point totals stay current during the
+# NFL season. Runs pull_stats.py for the whole current season each time, so
+# stat corrections to earlier weeks get picked up too (the upsert is idempotent).
+#
+# Run times (US Eastern):
+#   Sunday    8:00 pm   after the 1 pm and 4 pm games
+#   Sunday   11:50 pm   after Sunday Night Football
+#   Monday   11:50 pm   after Monday Night Football
+#   Tuesday   9:00 am   picks up nflverse's overnight updates / corrections
+#   Thursday 11:50 pm   after Thursday Night Football
+#   Friday    9:00 am   picks up nflverse's overnight updates / corrections
+#
+# GitHub cron runs in UTC and ignores daylight saving, so every slot is listed
+# twice: once for EDT (UTC-4) and once for EST (UTC-5). The "Check schedule"
+# step skips whichever copy doesn't match New York's current offset.
+#
+# Required repo secrets:
+#   DATABASE_URL       direct (non-pgbouncer) Postgres connection string
+# Optional repo secrets (flush the backend's stats cache after an upsert):
+#   CACHE_FLUSH_URL    e.g. https://trips-left-production.up.railway.app/admin/cache/flush
+#   CACHE_FLUSH_TOKEN  must match the backend's CACHE_FLUSH_TOKEN
+
+on:
+  schedule:
+    # EDT (UTC-4)
+    - cron: '0 0 * * 1' # Sun 8:00 pm
+    - cron: '50 3 * * 1,2,5' # Sun/Mon/Thu 11:50 pm
+    - cron: '0 13 * * 2,5' # Tue/Fri 9:00 am
+    # EST (UTC-5)
+    - cron: '0 1 * * 1' # Sun 8:00 pm
+    - cron: '50 4 * * 1,2,5' # Sun/Mon/Thu 11:50 pm
+    - cron: '0 14 * * 2,5' # Tue/Fri 9:00 am
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'Season to pull (blank = current season)'
+        required: false
+      week:
+        description: 'Single week to refresh (blank = whole season)'
+        required: false
+
+# Never run two ingests at once; let the in-flight one finish.
+concurrency:
+  group: ingest-stats
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend/ingestions
+    steps:
+      - name: Check schedule
+        id: gate
+        env:
+          SCHEDULE: ${{ github.event.schedule }}
+          INPUT_SEASON: ${{ inputs.season }}
+          INPUT_WEEK: ${{ inputs.week }}
+        working-directory: .
+        run: |
+          month=$(TZ=America/New_York date +%-m)
+          year=$(TZ=America/New_York date +%Y)
+          # The NFL season spans Sep-Feb; Jan/Feb games belong to last year's season.
+          if [ "$month" -le 2 ]; then season=$((year - 1)); else season=$year; fi
+
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            case "$SCHEDULE" in
+              '0 0 * * 1' | '50 3 * * 1,2,5' | '0 13 * * 2,5') expected=-0400 ;;
+              *) expected=-0500 ;;
+            esac
+            offset=$(TZ=America/New_York date +%z)
+            if [ "$offset" != "$expected" ]; then
+              echo "Skipping: '$SCHEDULE' is the $expected copy, New York is $offset."
+              echo "run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$month" -ge 3 ] && [ "$month" -le 8 ]; then
+              echo "Skipping: offseason (month $month)."
+              echo "run=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          for value in "$INPUT_SEASON" "$INPUT_WEEK"; do
+            if [ -n "$value" ] && ! [[ "$value" =~ ^[0-9]+$ ]]; then
+              echo "::error::season and week must be numbers, got '$value'."
+              exit 1
+            fi
+          done
+
+          args="--seasons ${INPUT_SEASON:-$season}"
+          if [ -n "$INPUT_WEEK" ]; then args="$args --week $INPUT_WEEK"; fi
+          echo "Running pull_stats.py $args"
+          echo "run=true" >> "$GITHUB_OUTPUT"
+          echo "args=$args" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/ingestions/requirements.txt
+
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Pull stats
+        if: steps.gate.outputs.run == 'true'
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CACHE_FLUSH_URL: ${{ secrets.CACHE_FLUSH_URL }}
+          CACHE_FLUSH_TOKEN: ${{ secrets.CACHE_FLUSH_TOKEN }}
+        run: python pull_stats.py ${{ steps.gate.outputs.args }}
