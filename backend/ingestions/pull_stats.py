@@ -12,8 +12,9 @@ Two sources feed it:
     their team code (e.g. "DEN").
 
 This is a standalone ingest job. It talks to Postgres directly and shares nothing
-with the Next.js app except the database. Run it manually or on a schedule
-(e.g. a weekly GitHub Action during the season).
+with the Next.js app except the database. During the season it runs on a
+schedule via .github/workflows/ingest-stats.yml (Sun/Mon/Tue/Thu/Fri); run it
+manually for backfills.
 
 Usage:
     python pull_stats.py --seasons 2024 2025
