@@ -1,0 +1,50 @@
+name: Sync players
+
+# Refreshes the players table (team, status, bye week, name) from Sleeper so
+# cuts, trades, signings and IR moves show up. Runs year-round, since roster
+# moves happen in the offseason too.
+#
+# Runs once a week on Tuesday at 10:00 am US Eastern (11:00 am during daylight
+# saving; GitHub cron is UTC). Tuesday is after Monday Night Football, when
+# teams make most of their roster moves. Sleeper asks that its full player
+# dump be fetched at most once a day, and this makes exactly one call.
+#
+# Required repo secret:
+#   DATABASE_URL   direct (non-pgbouncer) Postgres connection string, same
+#                  secret the "Ingest player stats" workflow uses
+
+on:
+  schedule:
+    - cron: '0 15 * * 2' # Tue 10:00 am EST / 11:00 am EDT
+  workflow_dispatch:
+
+concurrency:
+  group: sync-players
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # prisma.config.ts and schema.prisma both read DIRECT_URL; point it at
+      # the same direct connection.
+      DIRECT_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npx prisma generate
+
+      - name: Sync players from Sleeper
+        run: npx --yes tsx@4.19.2 scripts/syncPlayers.ts
