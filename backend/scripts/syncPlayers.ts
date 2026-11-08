@@ -7,6 +7,9 @@
  * day — so this makes exactly ONE Sleeper API call regardless of how many
  * rows it writes.
  *
+ * Runs weekly (Tuesdays) via .github/workflows/sync-players.yml so team and
+ * roster status (cuts, trades, IR) stay current.
+ *
  * Usage:
  *   npx tsx scripts/syncPlayers.ts
  *   npx tsx scripts/syncPlayers.ts --from-cache   (read local JSON, 0 API calls)
@@ -17,7 +20,6 @@ import "dotenv/config";
 import { PrismaClient } from "../generated/prisma/client";
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
-import _ from "lodash";
 
 const prisma = new PrismaClient();
 
@@ -66,6 +68,12 @@ function readFromCache(): Record<string, SleeperPlayer> {
   return JSON.parse(readFileSync(CACHE_PATH, "utf-8"));
 }
 
+function toChunks<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
 function toPlayerRow(p: SleeperPlayer) {
   const fullName =
     p.full_name ??
@@ -100,7 +108,7 @@ async function syncPlayers() {
   players = players.filter((p) => !!p.player_id);
 
   const rows = players.map(toPlayerRow);
-  const chunks = _.chunk(rows, CHUNK_SIZE);
+  const chunks = toChunks(rows, CHUNK_SIZE);
   console.log(`Upserting in ${chunks.length} chunks of up to ${CHUNK_SIZE}...`);
 
   let done = 0;
@@ -134,6 +142,7 @@ async function syncPlayers() {
   }
   if (failed > 0) {
     console.warn(`${failed} player upserts failed — see logs above.`);
+    process.exitCode = 1; // fail the scheduled run so it shows up in Actions
   }
 
   const total = await prisma.player.count();
