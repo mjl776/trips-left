@@ -37,6 +37,10 @@ Defined in `frontend/app/globals.css`. **Never hardcode a hex in a component** â
 | `--tertiary-color` | `#E84393` | Alerts and weak spots only: worst player, drop actions, destructive confirms |
 | `--secondary-text-color` | `#FFFFFF` | Player names and body copy on dark surfaces |
 | `--medium-bold` | `600` | Standard emphasis weight |
+| `--highlight` | `#f0c31c` | v4 redesign. Reserved for the Best Player verdict only â€” not a general accent. Not used by any component yet (see `documentation/v4-redesign/`) |
+| `--on-accent` | `#06253C` | Text/icons on a solid `--foreground` fill (primary buttons, active nav) |
+
+A global `:focus-visible` rule in `globals.css` draws a 2px `--foreground` outline with 2px offset. Don't suppress it with `outline: none` in new components.
 
 Derived surfaces follow the existing `color-mix` pattern rather than new variables:
 
