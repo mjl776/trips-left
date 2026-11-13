@@ -142,7 +142,7 @@ afterEach(() => {
 describe("CreateLineupSlotsPanel", () => {
     it("renders league details and ten empty starter slots with a disabled create button", async () => {
         stubFetch();
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         expect(screen.getByText("LEAGUE ATTACHED")).toBeInTheDocument();
         expect(screen.getByText("Test League")).toBeInTheDocument();
@@ -173,7 +173,7 @@ describe("CreateLineupSlotsPanel", () => {
 
     it("falls back to placeholder copy for an imported league with no name or team count", async () => {
         stubFetch();
-        render(<CreateLineupSlotsPanel league={importedLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={importedLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         expect(screen.getByText("Untitled league")).toBeInTheDocument();
         expect(screen.getByText("Sleeper import")).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("CreateLineupSlotsPanel", () => {
 
     it("only offers position-eligible players in the add-player overlay, and assigns the selection", async () => {
         stubFetch();
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         const addButtons = await screen.findAllByRole("button", { name: "Add player to QB" });
         fireEvent.click(addButtons[0]);
@@ -214,7 +214,7 @@ describe("CreateLineupSlotsPanel", () => {
 
     it("clears a slot when its remove button is clicked", async () => {
         stubFetch();
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         await selectPlayerForSlot("QB", "Quarterback Player");
         expect(screen.getByText("Quarterback Player")).toBeInTheDocument();
@@ -230,11 +230,9 @@ describe("CreateLineupSlotsPanel", () => {
 
     it("enables Create lineup once all ten starter slots are filled, and submits the assignments", async () => {
         const fetchMock = stubFetch();
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="My Lineup" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         await fillAllStarterSlots();
-
-        fireEvent.change(screen.getByPlaceholderText("Name your lineup"), { target: { value: "My Lineup" } });
 
         const createButton = screen.getByRole("button", { name: "Create lineup" });
         expect(createButton).toBeEnabled();
@@ -271,7 +269,7 @@ describe("CreateLineupSlotsPanel", () => {
 
     it("shows an error toast with the server's message when the create-lineup request 400s", async () => {
         stubFetch({ createLineupOk: false });
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         await fillAllStarterSlots();
         fireEvent.click(screen.getByRole("button", { name: "Create lineup" }));
@@ -287,7 +285,7 @@ describe("CreateLineupSlotsPanel", () => {
 
     it("joins an array of server messages in the error toast", async () => {
         stubFetch({ createLineupOk: false, createLineupMessage: ["Slot QB is already filled", "Player k-1 does not exist"] });
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         await fillAllStarterSlots();
         fireEvent.click(screen.getByRole("button", { name: "Create lineup" }));
@@ -299,7 +297,7 @@ describe("CreateLineupSlotsPanel", () => {
 
     it("falls back to a generic message in the error toast when the error body has none", async () => {
         stubFetch({ createLineupOk: false, createLineupMessage: undefined });
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         await fillAllStarterSlots();
         fireEvent.click(screen.getByRole("button", { name: "Create lineup" }));
@@ -310,10 +308,24 @@ describe("CreateLineupSlotsPanel", () => {
         expect(pushMock).not.toHaveBeenCalled();
     });
 
+    it("renders the controlled lineup name behind a label and reports edits through onNameChange", async () => {
+        stubFetch();
+        const onNameChange = vi.fn();
+        render(<CreateLineupSlotsPanel name="Week 1" onNameChange={onNameChange} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+
+        const input = screen.getByLabelText("Lineup name");
+        expect(input).toHaveValue("Week 1");
+
+        fireEvent.change(input, { target: { value: "Week 2" } });
+        expect(onNameChange).toHaveBeenCalledWith("Week 2");
+
+        await flushPendingFetches();
+    });
+
     it("calls onChangeLeague when Change league is clicked", async () => {
         stubFetch();
         const onChangeLeague = vi.fn();
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={onChangeLeague} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={onChangeLeague} />, { wrapper: ToastProvider });
 
         fireEvent.click(screen.getByRole("button", { name: "Change league" }));
         expect(onChangeLeague).toHaveBeenCalledTimes(1);
@@ -324,7 +336,7 @@ describe("CreateLineupSlotsPanel", () => {
     it("leaves the player pool empty (without crashing) when GET /players fails", async () => {
         const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
         stubFetch({ playersOk: false });
-        render(<CreateLineupSlotsPanel league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
+        render(<CreateLineupSlotsPanel name="" onNameChange={vi.fn()} league={mockLeague} onChangeLeague={vi.fn()} />, { wrapper: ToastProvider });
 
         const addButtons = await screen.findAllByRole("button", { name: "Add player to QB" });
         fireEvent.click(addButtons[0]);

@@ -41,9 +41,16 @@ describe("CreateLeagueStep", () => {
         expect(screen.getAllByText("FLEX")).toHaveLength(2);
         expect(screen.getByText("K")).toBeInTheDocument();
         expect(screen.getByText("DEF")).toBeInTheDocument();
-        expect(screen.getByText("10× BN")).toBeInTheDocument();
+        expect(screen.getByText("10 × BN")).toBeInTheDocument();
 
-        expect(screen.getByText("Find the ID in your Sleeper league URL.")).toBeInTheDocument();
+        // Endpoint-name pills were prototype annotations, not product UI.
+        expect(screen.queryByText("create-mock-league")).not.toBeInTheDocument();
+        expect(screen.queryByText("import-sleeper-league")).not.toBeInTheDocument();
+
+        const input = screen.getByLabelText("Sleeper league ID");
+        expect(input).toHaveAccessibleDescription("Find the ID in your Sleeper league URL.");
+        expect(input).toHaveAttribute("aria-invalid", "false");
+        expect(screen.getByText("Find the ID in your Sleeper league URL.")).toHaveAttribute("aria-live", "polite");
         expect(screen.getByRole("button", { name: "Create mock league" })).toBeEnabled();
         expect(screen.getByRole("button", { name: "Import" })).toBeEnabled();
     });
@@ -92,9 +99,12 @@ describe("CreateLeagueStep", () => {
         fireEvent.click(screen.getByRole("button", { name: "Import" }));
 
         expect(fetchMock).not.toHaveBeenCalled();
-        expect(
-            screen.getByText("That doesn't look like a Sleeper league ID — it's a long numeric string."),
-        ).toBeInTheDocument();
+        const error = "That doesn't look like a Sleeper league ID — it's a long numeric string.";
+        expect(screen.getByText(error)).toHaveAttribute("aria-live", "polite");
+
+        const input = screen.getByLabelText("Sleeper league ID");
+        expect(input).toHaveAccessibleDescription(error);
+        expect(input).toHaveAttribute("aria-invalid", "true");
     });
 
     it("resets the hint back to the default once the user edits the input again", () => {

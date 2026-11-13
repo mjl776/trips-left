@@ -4,7 +4,7 @@
   justify-content: space-between;
   min-height: 11.5rem;
   padding: 1.375rem;
-  border-radius: 1.125rem;
+  border-radius: 1rem;
   border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
   background: color-mix(in srgb, var(--foreground) 3%, transparent);
   text-decoration: none;

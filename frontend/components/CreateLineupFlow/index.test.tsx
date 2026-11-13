@@ -20,9 +20,20 @@ vi.mock("@/components/CreateLeagueStep", () => ({
 }));
 
 vi.mock("@/components/CreateLineupSlotsPanel", () => ({
-    default: ({ league, onChangeLeague }: { league: League; onChangeLeague: () => void }) => (
+    default: ({
+        league,
+        name,
+        onNameChange,
+        onChangeLeague,
+    }: {
+        league: League;
+        name: string;
+        onNameChange: (name: string) => void;
+        onChangeLeague: () => void;
+    }) => (
         <div>
             <span>mock-slots-panel:{league.leagueId}</span>
+            <input aria-label="mock lineup name" value={name} onChange={(event) => onNameChange(event.target.value)} />
             <button type="button" onClick={onChangeLeague}>
                 change league
             </button>
@@ -61,5 +72,16 @@ describe("CreateLineupFlow", () => {
 
         expect(screen.getByText("STEP 1 OF 2")).toBeInTheDocument();
         expect(screen.getByRole("heading", { level: 2, name: "Attach a league" })).toBeInTheDocument();
+    });
+
+    it("keeps the lineup name when the league is changed and re-attached", () => {
+        render(<CreateLineupFlow />);
+
+        fireEvent.click(screen.getByText("mock-create-league-step"));
+        fireEvent.change(screen.getByLabelText("mock lineup name"), { target: { value: "Sunday Squad" } });
+        fireEvent.click(screen.getByText("change league"));
+        fireEvent.click(screen.getByText("mock-create-league-step"));
+
+        expect(screen.getByLabelText("mock lineup name")).toHaveValue("Sunday Squad");
     });
 });
