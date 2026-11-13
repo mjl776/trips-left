@@ -42,4 +42,4 @@ The job:
 4. `npm run lint`
 5. `npm run test` — unit tests only. Every unit test mocks `PrismaService` (see "Unit testing" in [CLAUDE.md](./CLAUDE.md)), so this job never touches a real database.
 
-`npm run test:e2e` is intentionally not part of CI yet — it would need a real Postgres service container. See [documentation/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline-plan.md) for the full pipeline design, rollout notes, and that deferral's rationale.
+`npm run test:e2e` is intentionally not part of CI yet — it would need a real Postgres service container. See [documentation/ci-cd-pipeline/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline/ci-cd-pipeline-plan.md) for the full pipeline design, rollout notes, and that deferral's rationale.

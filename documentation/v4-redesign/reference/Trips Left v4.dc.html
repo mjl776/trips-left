@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; padding: 0; background:#0B1D3A; }
+  * { box-sizing: border-box; }
+  a { color: #00E5FF; text-decoration: none; }
+  a:hover { color: #7FF0FF; }
+  input, button { font-family: inherit; transition: all 150ms ease; }
+  input::placeholder { color: rgba(255,255,255,0.35); }
+  ::selection { background: #00E5FF; color: #06253C; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.14); border-radius: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  @keyframes tl-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes tl-fade { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</helmet>
+<div style="position:relative;min-height:100vh;background:#0B1D3A;color:#FFFFFF;font-family:'Space Grotesk',Helvetica,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden">
+
+
+  <div style="position:sticky;top:0;z-index:40;background:#0B1D3A;border-bottom:1px solid color-mix(in srgb,#00E5FF 10%,transparent)">
+    <div style="max-width:1240px;margin:0 auto;padding:0 28px;min-height:74px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:12px;cursor:pointer" onClick="{{ goHome }}">
+        <div style="position:relative;width:24px;height:24px">
+          <div style="position:absolute;left:0;right:0;top:7px;height:2px;border-radius:2px;background:#00E5FF"></div>
+          <div style="position:absolute;left:0;top:0;width:2px;height:8px;border-radius:2px;background:#00E5FF"></div>
+          <div style="position:absolute;right:0;top:0;width:2px;height:8px;border-radius:2px;background:#00E5FF"></div>
+          <div style="position:absolute;left:11px;top:7px;width:2px;height:17px;border-radius:2px;background:#00E5FF"></div>
+        </div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;letter-spacing:0.06em">TRIPS <span style="color:#00E5FF">LEFT</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:color-mix(in srgb,#00E5FF 3%,transparent);border:1px solid color-mix(in srgb,#00E5FF 10%,transparent)">
+        <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="3">
+          <button onClick="{{ item.onClick }}" style="border:none;padding:9px 20px;border-radius:999px;font-size:14px;font-weight:500;cursor:pointer;color:{{ item.color }};background:{{ item.bg }}">{{ item.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div data-screen-label="Home" style="position:relative;max-width:1240px;margin:0 auto;padding:118px 28px 120px;animation:tl-rise 600ms ease both">
+      <h1 style="margin:0;max-width:940px;font-size:72px;line-height:1.0;font-weight:700;letter-spacing:-0.04em;text-wrap:balance">Your worst starter is costing you the week.</h1>
+      <p style="margin:30px 0 0;max-width:560px;font-size:19px;line-height:1.6;color:color-mix(in srgb,#FFFFFF 62%,transparent);text-wrap:pretty">Build a lineup against your real league's scoring, then read the three verdicts that matter: your best player, your worst, and the dark horse whose advanced metrics already sit in the top 20% of his position.</p>
+      <div style="display:flex;gap:12px;margin-top:40px;flex-wrap:wrap">
+        <button onClick="{{ goCreate }}" style="background:#00E5FF;color:#06253C;border:none;padding:17px 32px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer">Create a lineup</button>
+        <button onClick="{{ goLineups }}" style="background:color-mix(in srgb,#00E5FF 10%,transparent);color:#FFFFFF;border:1px solid color-mix(in srgb,#00E5FF 22%,transparent);padding:17px 30px;border-radius:12px;font-size:16px;font-weight:500;cursor:pointer" style-hover="border-color:#00E5FF">My lineups</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:80px">
+        <sc-for list="{{ homeCards }}" as="c" hint-placeholder-count="3">
+          <div style="padding:26px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent)">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.14em;color:{{ c.color }}">{{ c.tag }}</div>
+            <div style="font-size:19px;font-weight:600;margin-top:14px;letter-spacing:-0.02em">{{ c.title }}</div>
+            <div style="font-size:14px;line-height:1.6;color:color-mix(in srgb,#FFFFFF 62%,transparent);margin-top:9px;text-wrap:pretty">{{ c.body }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLineups }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="My lineups" style="position:relative;max-width:1240px;margin:0 auto;padding:56px 28px 110px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.18em;color:#00E5FF">SAVED ON THIS DEVICE</div>
+          <h2 style="margin:14px 0 0;font-size:42px;font-weight:700;letter-spacing:-0.035em">My lineups</h2>
+        </div>
+        <div style="font-size:13px;color:color-mix(in srgb,#FFFFFF 45%,transparent)">{{ savedCountLabel }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(272px,1fr));gap:14px;margin-top:32px">
+        <div onClick="{{ goCreate }}" style="min-height:184px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border-radius:16px;border:1px dashed color-mix(in srgb,#00E5FF 30%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent);cursor:pointer" style-hover="background:color-mix(in srgb,#00E5FF 10%,transparent);border-color:#00E5FF">
+          <div style="width:46px;height:46px;border-radius:50%;border:2px solid color-mix(in srgb,#00E5FF 45%,transparent);display:flex;align-items:center;justify-content:center;font-size:22px;color:#00E5FF">+</div>
+          <div style="font-size:16px;font-weight:600;color:#00E5FF">Create a lineup</div>
+        </div>
+        <sc-for list="{{ savedLineups }}" as="l" hint-placeholder-count="2">
+          <div onClick="{{ l.onOpen }}" style="min-height:184px;display:flex;flex-direction:column;justify-content:space-between;padding:22px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent);cursor:pointer" style-hover="background:color-mix(in srgb,#00E5FF 10%,transparent)">
+            <div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;color:{{ l.tagColor }}">{{ l.tag }}</div>
+              <div style="font-size:19px;font-weight:600;margin-top:12px;letter-spacing:-0.02em">{{ l.name }}</div>
+              <div style="font-size:12px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:7px">{{ l.meta }}</div>
+            </div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+              <div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:24px;font-weight:600;color:#00E5FF">{{ l.points }}</div>
+                <div style="font-size:11px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:5px">{{ l.pointsLabel }}</div>
+              </div>
+              <div style="font-size:13px;color:#00E5FF">Open →</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="Create lineup" style="position:relative;max-width:1240px;margin:0 auto;padding:56px 28px 110px">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.18em;color:#00E5FF">STEP {{ stepLabel }}</div>
+      <h2 style="margin:14px 0 0;font-size:42px;font-weight:700;letter-spacing:-0.035em">{{ stepTitle }}</h2>
+      <p style="margin:14px 0 0;max-width:620px;font-size:16px;line-height:1.6;color:color-mix(in srgb,#FFFFFF 62%,transparent);text-wrap:pretty">{{ stepBlurb }}</p>
+
+      <sc-if value="{{ stepIsLeague }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-top:36px;align-items:start">
+          <div style="padding:28px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em">Mock league</div>
+              <div style="font-size:10px;letter-spacing:0.08em;color:color-mix(in srgb,#FFFFFF 45%,transparent);border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);border-radius:999px;padding:5px 10px;white-space:nowrap">create-mock-league</div>
+            </div>
+            <div style="font-size:14px;line-height:1.6;color:color-mix(in srgb,#FFFFFF 62%,transparent);margin-top:12px;text-wrap:pretty">Sleeper's default scoring and a standard roster. Nothing to configure — settings are fixed once the league is created.</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:20px">
+              <sc-for list="{{ mockSlotChips }}" as="c" hint-placeholder-count="10">
+                <div style="padding:6px 11px;border-radius:8px;font-size:11px;font-weight:600;letter-spacing:0.06em;color:{{ c.color }};border:1px solid {{ c.border }}">{{ c.label }}</div>
+              </sc-for>
+            </div>
+            <button onClick="{{ onCreateMock }}" style="width:100%;margin-top:24px;background:#00E5FF;color:#06253C;border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">Create mock league</button>
+          </div>
+
+          <div style="padding:28px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div style="font-size:20px;font-weight:600;letter-spacing:-0.02em">Import from Sleeper</div>
+              <div style="font-size:10px;letter-spacing:0.08em;color:color-mix(in srgb,#FFFFFF 45%,transparent);border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);border-radius:999px;padding:5px 10px;white-space:nowrap">import-sleeper-league</div>
+            </div>
+            <div style="font-size:14px;line-height:1.6;color:color-mix(in srgb,#FFFFFF 62%,transparent);margin-top:12px;text-wrap:pretty">Pulls the real scoring settings and roster positions from your league. Read-only — nothing is written back to Sleeper.</div>
+            <div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">
+              <input value="{{ importId }}" onChange="{{ onImportChange }}" placeholder="Sleeper league ID" style="flex:1 1 190px;min-width:0;background:color-mix(in srgb,#00E5FF 3%,transparent);border:1px solid color-mix(in srgb,#00E5FF 30%,transparent);border-radius:12px;padding:14px 16px;font-size:15px;color:#FFFFFF;outline:none" style-focus="border-color:#00E5FF" />
+              <button onClick="{{ onImportSleeper }}" style="background:rgba(0,229,255,0.14);border:1px solid color-mix(in srgb,#00E5FF 30%,transparent);color:#00E5FF;padding:14px 22px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer" style-hover="background:#00E5FF;color:#06253C">Import</button>
+            </div>
+            <div style="font-size:12px;color:{{ importHintColor }};margin-top:12px">{{ importHint }}</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ stepIsRoster }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-wrap:wrap;gap:22px;margin-top:32px;align-items:flex-start">
+          <div style="flex:1 1 520px;min-width:0">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:18px">
+              <input value="{{ lineupName }}" onChange="{{ onLineupNameChange }}" placeholder="Name your lineup" style="flex:1 1 260px;min-width:0;background:color-mix(in srgb,#00E5FF 3%,transparent);border:1px solid color-mix(in srgb,#00E5FF 30%,transparent);border-radius:12px;padding:14px 18px;font-size:18px;font-weight:600;color:#FFFFFF;outline:none" style-focus="border-color:#00E5FF" />
+              <button onClick="{{ onAutofill }}" style="background:rgba(0,229,255,0.14);border:1px solid color-mix(in srgb,#00E5FF 24%,transparent);color:#00E5FF;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer" style-hover="background:rgba(0,229,255,0.14)">Fill top scorers</button>
+            </div>
+            <div style="border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);overflow:hidden;background:color-mix(in srgb,#00E5FF 3%,transparent)">
+              <div style="padding:15px 22px;font-size:11px;font-weight:600;letter-spacing:0.18em;color:color-mix(in srgb,#FFFFFF 45%,transparent);border-bottom:1px solid color-mix(in srgb,#00E5FF 10%,transparent)">STARTERS</div>
+              <sc-for list="{{ starterSlots }}" as="slot" hint-placeholder-count="10">
+                <div onClick="{{ slot.onClick }}" style="display:grid;grid-template-columns:56px minmax(120px,1fr) auto;align-items:center;gap:16px;padding:13px 22px;cursor:pointer;border-bottom:1px solid color-mix(in srgb,#00E5FF 10%,transparent)" style-hover="background:color-mix(in srgb,#00E5FF 10%,transparent)">
+                  <div style="width:48px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:2px solid color-mix(in srgb,#00E5FF 38%,transparent);font-size:12px;font-weight:600;letter-spacing:0.02em;color:#00E5FF">{{ slot.label }}</div>
+                  <div style="min-width:0;font-size:16px;font-weight:500;color:{{ slot.nameColor }}">{{ slot.name }}</div>
+                  <div style="display:flex;align-items:center;gap:14px">
+                    <div style="font-family:'Orbitron',sans-serif;font-size:15px;color:{{ slot.ptsColor }};min-width:66px;text-align:right">{{ slot.pts }}</div>
+                    <div style="width:32px;height:32px;border-radius:50%;border:2px solid color-mix(in srgb,#00E5FF 40%,transparent);display:flex;align-items:center;justify-content:center;font-size:15px;color:#00E5FF">{{ slot.icon }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="flex:1 1 300px;min-width:0;max-width:380px;position:sticky;top:100px;padding:26px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent)">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.18em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">LEAGUE ATTACHED</div>
+            <div style="font-size:22px;font-weight:600;margin-top:12px;letter-spacing:-0.02em">{{ leagueName }}</div>
+            <div style="display:flex;flex-direction:column;gap:1px;margin-top:20px;background:color-mix(in srgb,#00E5FF 10%,transparent);border:1px solid color-mix(in srgb,#00E5FF 10%,transparent);border-radius:12px;overflow:hidden">
+              <sc-for list="{{ leagueRows }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;background:#0B1D3A">
+                  <div style="font-size:11px;font-weight:600;letter-spacing:0.12em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">{{ r.label }}</div>
+                  <div style="font-size:13px;text-align:right;color:#FFFFFF">{{ r.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:12px;line-height:1.55;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:16px;text-wrap:pretty">{{ createHint }}</div>
+            <button onClick="{{ onCreateLineup }}" style="width:100%;margin-top:20px;background:{{ createBtnBg }};color:{{ createBtnColor }};border:none;padding:15px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer">{{ createBtnLabel }}</button>
+            <button onClick="{{ onBackToLeague }}" style="width:100%;margin-top:9px;background:none;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);color:color-mix(in srgb,#FFFFFF 62%,transparent);padding:13px;border-radius:12px;font-size:14px;cursor:pointer" style-hover="color:#00E5FF;border-color:color-mix(in srgb,#00E5FF 35%,transparent)">Change league</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLineup }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="View lineup" style="position:relative;max-width:1240px;margin:0 auto;padding:48px 28px 110px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:28px">
+        <div>
+          <div style="font-size:12px;font-weight:600;letter-spacing:0.18em;color:#00E5FF">{{ leagueName }}</div>
+          <h2 style="margin:12px 0 0;font-size:38px;font-weight:700;letter-spacing:-0.03em">{{ lineupName }}</h2>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Orbitron',sans-serif;font-size:34px;font-weight:600;color:#00E5FF">{{ starterTotal }}</div>
+          <div style="font-size:12px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:6px">{{ seasonLabel }}</div>
+        </div>
+      </div>
+
+      <sc-if value="{{ swapping }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 20px;border-radius:12px;border:1px solid color-mix(in srgb,#E84393 40%,transparent);background:color-mix(in srgb,#E84393 10%,transparent);margin-bottom:16px;animation:tl-fade 200ms ease both">
+          <div style="font-size:14px">{{ swapBanner }}</div>
+          <button onClick="{{ onCancelSwap }}" style="background:none;border:1px solid color-mix(in srgb,#00E5FF 30%,transparent);color:#FFFFFF;padding:8px 16px;border-radius:999px;font-size:13px;cursor:pointer" style-hover="border-color:#E84393;color:#E84393">Cancel</button>
+        </div>
+      </sc-if>
+
+      <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+        <div style="flex:1 1 540px;min-width:0">
+          <div style="border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);overflow:hidden;background:color-mix(in srgb,#00E5FF 3%,transparent)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 22px;border-bottom:1px solid color-mix(in srgb,#00E5FF 10%,transparent)">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.18em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">STARTERS</div>
+              <div style="font-size:10px;letter-spacing:0.08em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">view-lineup</div>
+            </div>
+            <sc-for list="{{ starterRows }}" as="slot" hint-placeholder-count="10">
+              <div onClick="{{ slot.onRowClick }}" style="position:relative;display:grid;grid-template-columns:56px minmax(130px,1fr) auto;align-items:center;gap:16px;padding:13px 22px;border-bottom:1px solid color-mix(in srgb,#00E5FF 10%,transparent);cursor:pointer;background:{{ slot.bg }}" style-hover="background:color-mix(in srgb,#00E5FF 10%,transparent)">
+                <div style="position:absolute;left:0;top:8px;bottom:8px;width:2px;border-radius:999px;background:{{ slot.rail }}"></div>
+                <div style="width:48px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;border:2px solid color-mix(in srgb,#00E5FF 38%,transparent);font-size:12px;font-weight:600;color:#00E5FF">{{ slot.label }}</div>
+                <div style="min-width:0">
+                  <div style="font-size:16px;font-weight:500;color:{{ slot.nameColor }}">{{ slot.name }}</div>
+                  <div style="font-size:11px;letter-spacing:0.06em;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:4px">{{ slot.meta }}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end">
+                  <sc-for list="{{ slot.badges }}" as="b" hint-placeholder-count="1">
+                    <div style="padding:7px 11px;border-radius:9px;font-size:11px;font-weight:600;letter-spacing:0.04em;color:{{ b.color }};border:1px solid {{ b.color }}">{{ b.label }}</div>
+                  </sc-for>
+                  <div style="font-family:'Orbitron',sans-serif;font-size:15px;color:{{ slot.ptsColor }};min-width:66px;text-align:right">{{ slot.pts }}</div>
+                  <button onClick="{{ slot.onAction }}" style="width:32px;height:32px;border-radius:50%;border:2px solid color-mix(in srgb,#00E5FF 40%,transparent);background:none;color:#00E5FF;font-size:15px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(0,229,255,0.14)">{{ slot.icon }}</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:30px 0 14px">
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.18em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">BENCH</div>
+            <div style="font-size:10px;letter-spacing:0.08em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">swap-players · remove-player</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px">
+            <sc-for list="{{ benchRows }}" as="b" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:12px;padding:13px 16px;border-radius:12px;border:1px solid {{ b.border }};background:color-mix(in srgb,#00E5FF 3%,transparent)">
+                <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">{{ b.pos }}</div>
+                <div style="min-width:0;cursor:pointer" onClick="{{ b.onView }}">
+                  <div style="font-size:15px;font-weight:500">{{ b.name }}</div>
+                  <div style="font-size:11px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:4px">{{ b.meta }}</div>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <button onClick="{{ b.onSwap }}" style="background:color-mix(in srgb,#00E5FF 10%,transparent);border:1px solid color-mix(in srgb,#00E5FF 22%,transparent);color:#00E5FF;padding:7px 12px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:0.06em;cursor:pointer" style-hover="background:#00E5FF;color:#06253C">SWAP</button>
+                  <button onClick="{{ b.onRemove }}" style="background:none;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);color:color-mix(in srgb,#FFFFFF 45%,transparent);padding:7px 11px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:0.06em;cursor:pointer" style-hover="color:#E84393;border-color:color-mix(in srgb,#E84393 45%,transparent)">DROP</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1 1 320px;min-width:0;max-width:400px;position:sticky;top:100px">
+          <div style="padding:26px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent)">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.18em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">LINEUP INSIGHTS</div>
+              <div style="font-size:10px;letter-spacing:0.08em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">lineup-insights</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:20px">
+              <sc-for list="{{ insightCards }}" as="c" hint-placeholder-count="3">
+                <div style="padding:18px;border-radius:16px;border:1px solid {{ c.ring }};background:{{ c.bg }}">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                    <div style="font-size:11px;font-weight:600;letter-spacing:0.14em;color:{{ c.color }}">{{ c.tag }}</div>
+                    <div style="font-family:'Orbitron',sans-serif;font-size:15px;color:{{ c.color }}">{{ c.value }}</div>
+                  </div>
+                  <div style="font-size:17px;font-weight:600;margin-top:10px;letter-spacing:-0.015em;color:{{ c.nameColor }}">{{ c.name }}</div>
+                  <div style="font-size:13px;line-height:1.5;color:color-mix(in srgb,#FFFFFF 62%,transparent);margin-top:7px;text-wrap:pretty">{{ c.detail }}</div>
+                  <sc-if value="{{ c.hasBar }}" hint-placeholder-val="{{ false }}">
+                    <div style="height:4px;border-radius:999px;background:color-mix(in srgb,#00E5FF 10%,transparent);margin-top:14px;overflow:hidden">
+                      <div style="height:100%;border-radius:999px;background:{{ c.color }};width:{{ c.barPct }}%;transition:width 400ms ease"></div>
+                    </div>
+                    <div style="font-size:11px;letter-spacing:0.06em;color:{{ c.color }};margin-top:8px">{{ c.barLabel }}</div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding:18px 20px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 10%,transparent);font-size:12px;line-height:1.6;color:color-mix(in srgb,#FFFFFF 45%,transparent);text-wrap:pretty">{{ dataNote }}</div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAbout }}" hint-placeholder-val="{{ false }}">
+    <div data-screen-label="About" style="position:relative;max-width:1240px;margin:0 auto;padding:96px 28px 110px">
+      <div style="max-width:720px">
+        <div style="font-size:12px;font-weight:600;letter-spacing:0.18em;color:#00E5FF">ABOUT</div>
+        <h2 style="margin:18px 0 0;font-size:50px;font-weight:700;letter-spacing:-0.04em;line-height:1.03">Trips Left</h2>
+        <p style="margin:24px 0 0;font-size:18px;line-height:1.65;color:color-mix(in srgb,#FFFFFF 62%,transparent);text-wrap:pretty">A fantasy football optimizer that uses advanced metrics the average fan might not look at to help you identify the key players in your lineup. Build a lineup against your league's real scoring settings and see which players are carrying you, which are dead weight, and which are quietly worth a flier.</p>
+        <p style="margin:20px 0 0;font-size:16px;line-height:1.7;color:color-mix(in srgb,#FFFFFF 45%,transparent);text-wrap:pretty">"Trips left" is a formation: three receivers bunched on the left side of the offense, one on the right. The name is about alignment — figuring out what your team is actually built to do, then lining it up that way.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:56px">
+        <sc-for list="{{ aboutCards }}" as="c" hint-placeholder-count="3">
+          <div style="padding:28px;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:color-mix(in srgb,#00E5FF 3%,transparent)">
+            <div style="font-size:12px;font-weight:600;letter-spacing:0.14em;color:{{ c.color }}">{{ c.tag }}</div>
+            <div style="font-size:18px;font-weight:600;margin-top:14px;letter-spacing:-0.02em">{{ c.title }}</div>
+            <div style="font-size:14px;line-height:1.6;color:color-mix(in srgb,#FFFFFF 62%,transparent);margin-top:9px;text-wrap:pretty">{{ c.body }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ pickerOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ onClosePicker }}" style="position:fixed;inset:0;z-index:60;background:color-mix(in srgb,#0B1D3A 82%,transparent);display:flex;align-items:center;justify-content:center;padding:28px;animation:tl-fade 160ms ease both">
+      <div onClick="{{ stop }}" style="width:100%;max-width:560px;max-height:82vh;display:flex;flex-direction:column;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 25%,transparent);background:#0B1D3A;box-shadow:0 1.5rem 3rem rgba(0,0,0,0.65);overflow:hidden">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:22px 24px;border-bottom:1px solid color-mix(in srgb,#00E5FF 10%,transparent)">
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.16em;color:#00E5FF">{{ pickerTag }}</div>
+            <div style="font-size:20px;font-weight:600;margin-top:9px;letter-spacing:-0.02em">{{ pickerTitle }}</div>
+            <div style="font-size:12px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:6px">{{ pickerSub }}</div>
+          </div>
+          <button onClick="{{ onClosePicker }}" style="width:32px;height:32px;border-radius:50%;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:none;color:color-mix(in srgb,#FFFFFF 62%,transparent);font-size:15px;cursor:pointer;flex-shrink:0" style-hover="color:#E84393;border-color:#E84393">×</button>
+        </div>
+        <div style="padding:14px 20px;border-bottom:1px solid color-mix(in srgb,#00E5FF 10%,transparent)">
+          <input value="{{ pickerQuery }}" onChange="{{ onPickerQuery }}" placeholder="Search players" style="width:100%;background:color-mix(in srgb,#00E5FF 3%,transparent);border:1px solid color-mix(in srgb,#00E5FF 30%,transparent);border-radius:11px;padding:12px 15px;font-size:14px;color:#FFFFFF;outline:none" style-focus="border-color:#00E5FF" />
+        </div>
+        <div style="overflow:auto;padding:8px">
+          <sc-for list="{{ pickerPlayers }}" as="p" hint-placeholder-count="6">
+            <div onClick="{{ p.onSelect }}" style="display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:14px;padding:13px 14px;border-radius:12px;cursor:pointer" style-hover="background:color-mix(in srgb,#00E5FF 10%,transparent)">
+              <div style="font-size:11px;font-weight:600;letter-spacing:0.06em;color:#00E5FF">{{ p.pos }}</div>
+              <div style="min-width:0">
+                <div style="font-size:15px;font-weight:500">{{ p.name }}</div>
+                <div style="font-size:11px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:4px">{{ p.meta }}</div>
+              </div>
+              <div style="font-family:'Orbitron',sans-serif;font-size:14px;color:{{ p.color }}">{{ p.pts }}</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ pickerEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:34px 16px;text-align:center;font-size:14px;color:color-mix(in srgb,#FFFFFF 45%,transparent)">No eligible players left for this slot.</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ cardOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ onCloseCard }}" style="position:fixed;inset:0;z-index:60;background:color-mix(in srgb,#0B1D3A 82%,transparent);display:flex;align-items:center;justify-content:center;padding:28px;animation:tl-fade 160ms ease both">
+      <div onClick="{{ stop }}" style="width:100%;max-width:520px;max-height:86vh;overflow:auto;border-radius:16px;border:1px solid color-mix(in srgb,#00E5FF 25%,transparent);background:#0B1D3A;box-shadow:0 1.5rem 3rem rgba(0,0,0,0.65);padding:28px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+          <div>
+            <div style="font-size:11px;font-weight:600;letter-spacing:0.16em;color:#00E5FF">{{ cardTag }}</div>
+            <div style="font-size:28px;font-weight:700;margin-top:10px;letter-spacing:-0.03em">{{ cardName }}</div>
+            <div style="font-size:13px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:7px">{{ cardMeta }}</div>
+          </div>
+          <button onClick="{{ onCloseCard }}" style="width:32px;height:32px;border-radius:50%;border:1px solid color-mix(in srgb,#00E5FF 15%,transparent);background:none;color:color-mix(in srgb,#FFFFFF 62%,transparent);font-size:15px;cursor:pointer;flex-shrink:0" style-hover="color:#E84393;border-color:#E84393">×</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;margin-top:24px;background:color-mix(in srgb,#00E5FF 10%,transparent);border:1px solid color-mix(in srgb,#00E5FF 10%,transparent);border-radius:12px;overflow:hidden">
+          <sc-for list="{{ cardTotals }}" as="t" hint-placeholder-count="3">
+            <div style="padding:16px;background:#0B1D3A">
+              <div style="font-size:10px;font-weight:600;letter-spacing:0.14em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">{{ t.label }}</div>
+              <div style="font-family:'Orbitron',sans-serif;font-size:20px;margin-top:9px;color:{{ t.color }}">{{ t.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:26px 0 14px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:0.16em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">ADVANCED METRIC RANKS</div>
+          <div style="font-size:10px;letter-spacing:0.08em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">player-stat-rank</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:15px">
+          <sc-for list="{{ cardStats }}" as="s" hint-placeholder-count="3">
+            <div>
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                <div style="font-size:14px">{{ s.label }}</div>
+                <div style="font-size:12px;color:{{ s.color }}">{{ s.rankLabel }}</div>
+              </div>
+              <div style="height:4px;border-radius:999px;background:color-mix(in srgb,#00E5FF 10%,transparent);overflow:hidden;margin-top:8px">
+                <div style="height:100%;border-radius:999px;background:{{ s.color }};width:{{ s.pct }}%"></div>
+              </div>
+              <div style="font-size:11px;color:color-mix(in srgb,#FFFFFF 45%,transparent);margin-top:6px">{{ s.value }}</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ cardNoStats }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:20px;border-radius:12px;border:1px solid color-mix(in srgb,#E84393 30%,transparent);background:color-mix(in srgb,#E84393 8%,transparent);font-size:13px;line-height:1.55;color:color-mix(in srgb,#FFFFFF 62%,transparent);text-wrap:pretty">{{ cardNoStatsNote }}</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="position:relative;border-top:1px solid color-mix(in srgb,#00E5FF 10%,transparent);padding:26px 28px">
+    <div style="max-width:1240px;margin:0 auto;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:11px;letter-spacing:0.1em;color:color-mix(in srgb,#FFFFFF 45%,transparent)">
+      <div>TRIPS LEFT — FANTASY FOOTBALL OPTIMIZER</div>
+      <div>{{ seasonLabel }}</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:980}}">
+class Component extends DCLogic {
+  // Mirrors backend/src/lineup/lineup.models.ts SLOT_ELIGIBILITY
+  SLOT_ELIGIBILITY = { QB: ['QB'], RB: ['RB'], WR: ['WR'], TE: ['TE'], FLEX: ['RB', 'WR', 'TE'], K: ['K'], DEF: ['DEF'], BN: null };
+  // Mirrors the mock-league rosterPositions in backend/src/league/league.service.ts
+  STARTER_SLOTS = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'FLEX', 'K', 'DEF'];
+  BENCH_COUNT = 10;
+  SEASON = 2025;
+  NO_SCORE_POSITIONS = ['K', 'DEF'];
+
+  CY = '#00E5FF';
+  MG = '#E84393';
+  dim = pct => pct >= 55 ? 'color-mix(in srgb,#FFFFFF 62%,transparent)' : 'color-mix(in srgb,#FFFFFF 45%,transparent)';
+
+  // totalPoints = realized 2025 fantasy points under the league's scoring settings
+  // (GET /view-player). K and DEF total 0 — player_stats has no FG-made or
+  // points-allowed columns yet, same as the backend.
+  players = [
+    { playerId: 'p4046', fullName: 'Jayden Daniels', position: 'QB', team: 'WAS', games: 17, totalPoints: 341.6, positionRank: 2, positionPlayerCount: 41, epaStat: 'passing_epa', epa: 74.2, epaRank: 3, epaCount: 41, stats: [{ key: 'passingAirYards', label: 'Passing air yards', value: '3,984', rank: 9, count: 41 }, { key: 'passingCpoe', label: 'CPOE', value: '+4.1%', rank: 5, count: 41 }] },
+    { playerId: 'p4881', fullName: 'Jalen Hurts', position: 'QB', team: 'PHI', games: 16, totalPoints: 319.1, positionRank: 4, positionPlayerCount: 41, epaStat: 'passing_epa', epa: 58.9, epaRank: 7, epaCount: 41, stats: [{ key: 'passingAirYards', label: 'Passing air yards', value: '3,411', rank: 16, count: 41 }, { key: 'passingCpoe', label: 'CPOE', value: '+1.8%', rank: 12, count: 41 }] },
+    { playerId: 'p9226', fullName: 'Bo Nix', position: 'QB', team: 'DEN', games: 17, totalPoints: 288.4, positionRank: 9, positionPlayerCount: 41, epaStat: 'passing_epa', epa: 21.4, epaRank: 18, epaCount: 41, stats: [{ key: 'passingAirYards', label: 'Passing air yards', value: '3,775', rank: 11, count: 41 }, { key: 'passingCpoe', label: 'CPOE', value: '-0.6%', rank: 23, count: 41 }] },
+    { playerId: 'p8155', fullName: 'Bijan Robinson', position: 'RB', team: 'ATL', games: 17, totalPoints: 312.7, positionRank: 1, positionPlayerCount: 96, epaStat: 'rushing_epa', epa: 28.6, epaRank: 2, epaCount: 96, stats: [{ key: 'targetShare', label: 'Target share', value: '14.8%', rank: 4, count: 96 }, { key: 'wopr', label: 'WOPR', value: '0.41', rank: 6, count: 96 }] },
+    { playerId: 'p4034', fullName: 'Derrick Henry', position: 'RB', team: 'BAL', games: 17, totalPoints: 285.5, positionRank: 3, positionPlayerCount: 96, epaStat: 'rushing_epa', epa: 24.1, epaRank: 4, epaCount: 96, stats: [{ key: 'targetShare', label: 'Target share', value: '4.2%', rank: 58, count: 96 }, { key: 'wopr', label: 'WOPR', value: '0.13', rank: 61, count: 96 }] },
+    { playerId: 'p9509', fullName: 'Tyjae Spears', position: 'RB', team: 'TEN', games: 14, totalPoints: 148.9, positionRank: 31, positionPlayerCount: 96, epaStat: 'rushing_epa', epa: 12.8, epaRank: 12, epaCount: 96, stats: [{ key: 'targetShare', label: 'Target share', value: '11.9%', rank: 9, count: 96 }, { key: 'wopr', label: 'WOPR', value: '0.32', rank: 14, count: 96 }] },
+    { playerId: 'p9998', fullName: 'Jamal Haynes', position: 'RB', team: 'ATL', games: 9, totalPoints: 41.2, positionRank: 78, positionPlayerCount: 96, epaStat: 'rushing_epa', epa: -6.4, epaRank: 74, epaCount: 96, stats: [{ key: 'targetShare', label: 'Target share', value: '2.1%', rank: 82, count: 96 }, { key: 'wopr', label: 'WOPR', value: '0.06', rank: 85, count: 96 }] },
+    { playerId: 'p9493', fullName: 'Malik Nabers', position: 'WR', team: 'NYG', games: 15, totalPoints: 257.1, positionRank: 3, positionPlayerCount: 148, epaStat: 'receiving_epa', epa: 41.7, epaRank: 5, epaCount: 148, stats: [{ key: 'targetShare', label: 'Target share', value: '31.2%', rank: 1, count: 148 }, { key: 'receivingAirYards', label: 'Receiving air yards', value: '1,612', rank: 4, count: 148 }, { key: 'wopr', label: 'WOPR', value: '0.79', rank: 2, count: 148 }] },
+    { playerId: 'p9997', fullName: 'Jaxon Smith-Njigba', position: 'WR', team: 'SEA', games: 17, totalPoints: 244.6, positionRank: 5, positionPlayerCount: 148, epaStat: 'receiving_epa', epa: 38.2, epaRank: 8, epaCount: 148, stats: [{ key: 'targetShare', label: 'Target share', value: '26.4%', rank: 7, count: 148 }, { key: 'receivingAirYards', label: 'Receiving air yards', value: '1,344', rank: 12, count: 148 }, { key: 'wopr', label: 'WOPR', value: '0.68', rank: 9, count: 148 }] },
+    { playerId: 'p3321', fullName: 'Chris Godwin', position: 'WR', team: 'TB', games: 12, totalPoints: 181.0, positionRank: 21, positionPlayerCount: 148, epaStat: 'receiving_epa', epa: 19.4, epaRank: 26, epaCount: 148, stats: [{ key: 'targetShare', label: 'Target share', value: '23.1%', rank: 14, count: 148 }, { key: 'receivingAirYards', label: 'Receiving air yards', value: '806', rank: 44, count: 148 }, { key: 'wopr', label: 'WOPR', value: '0.55', rank: 19, count: 148 }] },
+    { playerId: 'p9494', fullName: 'Rome Odunze', position: 'WR', team: 'CHI', games: 17, totalPoints: 149.3, positionRank: 38, positionPlayerCount: 148, epaStat: 'receiving_epa', epa: 4.1, epaRank: 52, epaCount: 148, stats: [{ key: 'targetShare', label: 'Target share', value: '18.7%', rank: 29, count: 148 }, { key: 'receivingAirYards', label: 'Receiving air yards', value: '1,188', rank: 18, count: 148 }, { key: 'wopr', label: 'WOPR', value: '0.47', rank: 31, count: 148 }] },
+    { playerId: 'p9996', fullName: 'Dayton Wade', position: 'WR', team: 'NO', games: 11, totalPoints: 62.4, positionRank: 96, positionPlayerCount: 148, epaStat: 'receiving_epa', epa: -8.9, epaRank: 118, epaCount: 148, stats: [{ key: 'targetShare', label: 'Target share', value: '9.4%', rank: 88, count: 148 }, { key: 'receivingAirYards', label: 'Receiving air yards', value: '412', rank: 96, count: 148 }, { key: 'wopr', label: 'WOPR', value: '0.21', rank: 91, count: 148 }] },
+    { playerId: 'p8130', fullName: 'Trey McBride', position: 'TE', team: 'ARI', games: 16, totalPoints: 198.4, positionRank: 2, positionPlayerCount: 62, epaStat: 'receiving_epa', epa: 32.4, epaRank: 3, epaCount: 62, stats: [{ key: 'targetShare', label: 'Target share', value: '24.9%', rank: 1, count: 62 }, { key: 'wopr', label: 'WOPR', value: '0.61', rank: 2, count: 62 }] },
+    { playerId: 'p9495', fullName: 'Theo Johnson', position: 'TE', team: 'NYG', games: 15, totalPoints: 127.8, positionRank: 11, positionPlayerCount: 62, epaStat: 'receiving_epa', epa: 6.2, epaRank: 16, epaCount: 62, stats: [{ key: 'targetShare', label: 'Target share', value: '14.1%', rank: 13, count: 62 }, { key: 'wopr', label: 'WOPR', value: '0.34', rank: 15, count: 62 }] },
+    { playerId: 'p5272', fullName: 'Cameron Dicker', position: 'K', team: 'LAC', games: 17, totalPoints: 0, positionRank: null, positionPlayerCount: 34, stats: [] },
+    { playerId: 'p4335', fullName: 'Chase McLaughlin', position: 'K', team: 'TB', games: 17, totalPoints: 0, positionRank: null, positionPlayerCount: 34, stats: [] },
+    { playerId: 'pDEN', fullName: 'Broncos DEF', position: 'DEF', team: 'DEN', games: 17, totalPoints: 0, positionRank: null, positionPlayerCount: 32, stats: [] },
+    { playerId: 'pHOU', fullName: 'Texans DEF', position: 'DEF', team: 'HOU', games: 17, totalPoints: 0, positionRank: null, positionPlayerCount: 32, stats: [] }
+  ];
+
+  // Top-20% cutoff of each position's season EPA distribution (getTopPercentileThreshold)
+  EPA_THRESHOLD = { QB: 34.5, RB: 11.2, WR: 22.8, TE: 14.6 };
+  EPA_LABEL = { passing_epa: 'passing EPA', rushing_epa: 'rushing EPA', receiving_epa: 'receiving EPA' };
+
+  state = {
+    screen: 'home',
+    step: 'league',
+    league: null,
+    importId: '',
+    importHint: '',
+    importError: false,
+    lineupName: 'Bootleg Bandits',
+    picker: null,
+    pickerQuery: '',
+    card: null,
+    swapFrom: null,
+    saved: [],
+    roster: []
+  };
+
+  componentDidMount() {
+    let saved = [];
+    try { saved = JSON.parse(window.localStorage.getItem('tripsLeft.savedLineups') || '[]'); } catch (e) { saved = []; }
+    if (!saved.length) {
+      saved = [{ rosterId: 'r-demo', leagueId: 'lg-demo', name: 'Bootleg Bandits', isMock: true, createdAt: '2026-08-01' }];
+    }
+    this.setState({
+      saved,
+      league: { leagueId: 'lg-demo', name: 'Mock League', isMock: true, season: 2026, rosterPositions: this.fullRoster(), numTeams: 1 },
+      roster: [
+        { playerId: 'p4881', slot: 'QB' }, { playerId: 'p4034', slot: 'RB' }, { playerId: 'p9998', slot: 'RB' },
+        { playerId: 'p9493', slot: 'WR' }, { playerId: 'p3321', slot: 'WR' }, { playerId: 'p9495', slot: 'TE' },
+        { playerId: 'p9996', slot: 'FLEX' }, { playerId: 'p9494', slot: 'FLEX' }, { playerId: 'p5272', slot: 'K' },
+        { playerId: 'pHOU', slot: 'DEF' },
+        { playerId: 'p9509', slot: 'BN' }, { playerId: 'p8130', slot: 'BN' }, { playerId: 'p9997', slot: 'BN' }, { playerId: 'pDEN', slot: 'BN' }
+      ]
+    });
+  }
+
+  fullRoster() {
+    const bn = [];
+    for (let i = 0; i < this.BENCH_COUNT; i++) bn.push('BN');
+    return this.STARTER_SLOTS.concat(bn);
+  }
+
+  persist(saved) {
+    try { window.localStorage.setItem('tripsLeft.savedLineups', JSON.stringify(saved)); } catch (e) { /* ignore */ }
+  }
+
+  player(id) { return this.players.find(p => p.playerId === id) || null; }
+  rosteredIds() { return this.state.roster.map(r => r.playerId); }
+  noScore(pos) { return this.NO_SCORE_POSITIONS.indexOf(pos) >= 0; }
+
+  fmtPts(p) { return this.noScore(p.position) ? '—' : p.totalPoints.toFixed(1); }
+
+  // Starter rows are positional: one entry per STARTER_SLOTS index, filled in order.
+  starterAssignments() {
+    const byslot = {};
+    this.state.roster.forEach(r => {
+      if (r.slot === 'BN') return;
+      byslot[r.slot] = byslot[r.slot] || [];
+      byslot[r.slot].push(r.playerId);
+    });
+    const pool = {};
+    Object.keys(byslot).forEach(k => { pool[k] = byslot[k].slice(); });
+    return this.STARTER_SLOTS.map((label, i) => ({
+      id: 'starter-' + i,
+      label,
+      playerId: pool[label] && pool[label].length ? pool[label].shift() : null
+    }));
+  }
+
+  eligibleFor(label) {
+    const allowed = this.SLOT_ELIGIBILITY[label];
+    const used = this.rosteredIds();
+    const q = this.state.pickerQuery.trim().toLowerCase();
+    return this.players
+      .filter(p => used.indexOf(p.playerId) < 0)
+      .filter(p => !allowed || allowed.indexOf(p.position) >= 0)
+      .filter(p => !q || p.fullName.toLowerCase().indexOf(q) >= 0 || (p.team || '').toLowerCase().indexOf(q) >= 0)
+      .sort((a, b) => b.totalPoints - a.totalPoints);
+  }
+
+  addPlayer(slotLabel, playerId) {
+    this.setState(s => ({ roster: s.roster.concat([{ playerId, slot: slotLabel }]), picker: null, pickerQuery: '' }));
+  }
+
+  replacePlayer(slotLabel, dropId, addId) {
+    this.setState(s => ({
+      roster: s.roster.filter(r => r.playerId !== dropId).concat([{ playerId: addId, slot: slotLabel }]),
+      picker: null,
+      pickerQuery: ''
+    }));
+  }
+
+  removePlayer(playerId) {
+    this.setState(s => ({ roster: s.roster.filter(r => r.playerId !== playerId), swapFrom: null }));
+  }
+
+  swapPlayers(aId, bId) {
+    this.setState(s => {
+      const a = s.roster.find(r => r.playerId === aId);
+      const b = s.roster.find(r => r.playerId === bId);
+      if (!a || !b) return { swapFrom: null };
+      return { roster: s.roster.map(r => r.playerId === aId ? { ...r, slot: b.slot } : r.playerId === bId ? { ...r, slot: a.slot } : r), swapFrom: null };
+    });
+  }
+
+  autofill() {
+    this.setState(s => {
+      const roster = s.roster.slice();
+      const used = roster.map(r => r.playerId);
+      this.STARTER_SLOTS.forEach(label => {
+        const taken = roster.filter(r => r.slot === label).length;
+        const capacity = this.STARTER_SLOTS.filter(x => x === label).length;
+        if (taken >= capacity) return;
+        const allowed = this.SLOT_ELIGIBILITY[label];
+        const pick = this.players
+          .filter(p => used.indexOf(p.playerId) < 0 && (!allowed || allowed.indexOf(p.position) >= 0))
+          .sort((a, b) => b.totalPoints - a.totalPoints)[0];
+        if (pick) { roster.push({ playerId: pick.playerId, slot: label }); used.push(pick.playerId); }
+      });
+      return { roster };
+    });
+  }
+
+  // Mirrors ProjectionsService.getLineupInsights
+  insights() {
+    const scored = this.state.roster.map(r => this.player(r.playerId)).filter(Boolean);
+    const sorted = scored.slice().sort((a, b) => b.totalPoints - a.totalPoints);
+    const best = sorted[0] || null;
+    const worstPool = sorted.filter(p => !this.noScore(p.position));
+    const worst = worstPool.length > 1 ? worstPool[worstPool.length - 1] : null;
+
+    let dark = null;
+    let bestMargin = -Infinity;
+    scored.forEach(p => {
+      if (!p.epaStat || (best && p.playerId === best.playerId)) return;
+      const threshold = this.EPA_THRESHOLD[p.position];
+      if (threshold == null) return;
+      const margin = p.epa - threshold;
+      if (margin >= 0 && margin > bestMargin) {
+        bestMargin = margin;
+        dark = { player: p, threshold, percentile: ((p.epaCount - p.epaRank + 1) / p.epaCount) * 100 };
+      }
+    });
+    return { best, worst, dark };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const go = screen => () => this.setState({ screen, picker: null, card: null, swapFrom: null });
+    const dim = this.dim;
+    const ins = this.insights();
+    const starters = this.starterAssignments();
+    const bench = s.roster.filter(r => r.slot === 'BN').map(r => this.player(r.playerId)).filter(Boolean);
+    const starterTotal = starters.reduce((a, sl) => { const p = this.player(sl.playerId); return a + (p && !this.noScore(p.position) ? p.totalPoints : 0); }, 0);
+
+    const ptsColor = p => !p ? dim(35) : this.noScore(p.position) ? dim(35) : p.totalPoints >= 200 ? '#00E5FF' : p.totalPoints >= 120 ? '#FFFFFF' : this.MG;
+
+    const openPicker = (slotId, label, occupantId) => () => this.setState({ picker: { slotId, label, occupantId: occupantId || null }, pickerQuery: '' });
+
+    const createStarters = starters.map(sl => {
+      const p = this.player(sl.playerId);
+      return {
+        label: sl.label,
+        name: p ? p.fullName : 'Empty',
+        nameColor: p ? '#FFFFFF' : dim(38),
+        pts: p ? this.fmtPts(p) : '—',
+        ptsColor: ptsColor(p),
+        icon: p ? '−' : '+',
+        onClick: p ? () => this.removePlayer(p.playerId) : openPicker(sl.id, sl.label, null)
+      };
+    });
+
+    const starterRows = starters.map(sl => {
+      const p = this.player(sl.playerId);
+      const badges = [];
+      if (p && ins.best && p.playerId === ins.best.playerId) badges.push({ label: 'Best Player', color: this.CY });
+      if (p && ins.worst && p.playerId === ins.worst.playerId) badges.push({ label: 'Worst Player', color: this.MG });
+      if (p && ins.dark && p.playerId === ins.dark.player.playerId) badges.push({ label: 'Dark Horse', color: this.CY });
+      const isWorst = !!(p && ins.worst && p.playerId === ins.worst.playerId);
+      const swapTargetable = !!(s.swapFrom && p && (this.SLOT_ELIGIBILITY[sl.label] || []).indexOf(this.player(s.swapFrom).position) >= 0);
+      return {
+        label: sl.label,
+        name: p ? p.fullName : 'Empty',
+        nameColor: p ? '#FFFFFF' : dim(38),
+        meta: p ? (p.team || 'FA') + ' · ' + p.position + (this.noScore(p.position) ? ' · NO SCORING DATA' : ' · ' + (p.positionRank ? p.position + p.positionRank : 'unranked')) : 'Tap to add a player',
+        pts: p ? this.fmtPts(p) : '—',
+        ptsColor: ptsColor(p),
+        badges,
+        rail: isWorst ? this.MG : 'transparent',
+        bg: swapTargetable ? 'color-mix(in srgb, #E84393 9%, transparent)' : isWorst ? 'color-mix(in srgb,#E84393 6%,transparent)' : 'transparent',
+        icon: p ? '−' : '+',
+        onRowClick: () => {
+          if (s.swapFrom && p) { this.swapPlayers(s.swapFrom, p.playerId); return; }
+          if (p) this.setState({ card: p.playerId }); else openPicker(sl.id, sl.label, null)();
+        },
+        onAction: e => {
+          e.stopPropagation();
+          if (p) this.removePlayer(p.playerId); else openPicker(sl.id, sl.label, null)();
+        }
+      };
+    });
+
+    const benchRows = bench.map(p => ({
+      pos: p.position,
+      name: p.fullName,
+      meta: (p.team || 'FA') + ' · ' + (this.noScore(p.position) ? 'no scoring data' : this.fmtPts(p) + ' pts'),
+      border: ins.dark && ins.dark.player.playerId === p.playerId ? 'color-mix(in srgb, #00E5FF 40%, transparent)' : '#00E5FF',
+      onView: () => this.setState({ card: p.playerId }),
+      onSwap: () => this.setState({ swapFrom: p.playerId }),
+      onRemove: () => this.removePlayer(p.playerId)
+    }));
+
+    const insightCards = [];
+    if (ins.best) {
+      insightCards.push({
+        tag: 'BEST PLAYER', color: '#f0c31c', ring: 'color-mix(in srgb, #f0c31c 35%, transparent)', bg: 'color-mix(in srgb, #f0c31c 8%, transparent)',
+        name: ins.best.fullName, nameColor: '#FFFFFF', value: this.fmtPts(ins.best),
+        detail: 'Most fantasy points on your roster in ' + this.SEASON + ' under this league\u2019s scoring — ' + ins.best.position + (ins.best.positionRank || '') + ' of ' + ins.best.positionPlayerCount + ' at the position.',
+        hasBar: false, barPct: 0, barLabel: ''
+      });
+    }
+    if (ins.worst) {
+      insightCards.push({
+        tag: 'WORST PLAYER', color: this.MG, ring: 'color-mix(in srgb,#E84393 35%,transparent)', bg: 'color-mix(in srgb,#E84393 9%,transparent)',
+        name: ins.worst.fullName, nameColor: '#FFFFFF', value: this.fmtPts(ins.worst),
+        detail: 'Lowest scorer on the roster. Kickers and defenses are excluded from this verdict — their stat lines aren\u2019t scored yet, so a zero there means missing data, not a bad player.',
+        hasBar: false, barPct: 0, barLabel: ''
+      });
+    } else {
+      insightCards.push({
+        tag: 'WORST PLAYER', color: this.MG, ring: 'color-mix(in srgb,#00E5FF 15%,transparent)', bg: 'color-mix(in srgb,#00E5FF 3%,transparent)',
+        name: 'Not enough players', nameColor: dim(55), value: '—',
+        detail: 'Needs at least two rostered players outside K and DEF before a worst player can be named.',
+        hasBar: false, barPct: 0, barLabel: ''
+      });
+    }
+    if (ins.dark) {
+      const d = ins.dark;
+      insightCards.push({
+        tag: 'DARK HORSE', color: '#00E5FF', ring: 'color-mix(in srgb, #00E5FF 32%, transparent)', bg: 'color-mix(in srgb, #00E5FF 8%, transparent)',
+        name: d.player.fullName, nameColor: '#FFFFFF', value: d.player.epa.toFixed(1),
+        detail: d.player.fullName.split(' ')[1] + '\u2019s season ' + this.EPA_LABEL[d.player.epaStat] + ' of ' + d.player.epa.toFixed(1) + ' clears the top-20% cutoff of ' + d.threshold.toFixed(1) + ' for ' + d.player.position + 's — production your points total hasn\u2019t caught up to yet.',
+        hasBar: true, barPct: Math.round(d.percentile), barLabel: d.player.position + ' RANK #' + d.player.epaRank + ' OF ' + d.player.epaCount + ' · ' + Math.round(d.percentile) + 'TH PERCENTILE'
+      });
+    } else {
+      insightCards.push({
+        tag: 'DARK HORSE', color: '#00E5FF', ring: 'color-mix(in srgb,#00E5FF 15%,transparent)', bg: 'color-mix(in srgb,#00E5FF 3%,transparent)',
+        name: 'None on this roster', nameColor: dim(55), value: '—',
+        detail: 'No rostered QB, RB, WR, or TE outside your best player currently clears the top-20% EPA cutoff for his position.',
+        hasBar: false, barPct: 0, barLabel: ''
+      });
+    }
+
+    const pick = s.picker;
+    const pickerList = pick ? this.eligibleFor(pick.label) : [];
+    const occupant = pick && pick.occupantId ? this.player(pick.occupantId) : null;
+
+    const card = s.card ? this.player(s.card) : null;
+
+    const savedLineups = s.saved.map(l => ({
+      name: l.name,
+      tag: l.isMock ? 'MOCK LEAGUE' : 'SLEEPER',
+      tagColor: l.isMock ? this.CY : this.MG,
+      meta: l.leagueId.slice(0, 12) + ' · saved ' + l.createdAt,
+      points: starterTotal.toFixed(1),
+      pointsLabel: this.SEASON + ' starter pts',
+      onOpen: () => this.setState({ screen: 'lineup', lineupName: l.name })
+    }));
+
+    const nav = [
+      { label: 'Home', screen: 'home' },
+      { label: 'Lineup', screen: 'lineups' },
+      { label: 'About', screen: 'about' }
+    ].map(n => ({
+      label: n.label,
+      color: s.screen === n.screen ? '#06253C' : dim(65),
+      bg: s.screen === n.screen ? '#00E5FF' : 'transparent',
+      onClick: go(n.screen)
+    }));
+
+    const filledStarters = starters.filter(x => x.playerId).length;
+    const canCreate = filledStarters === this.STARTER_SLOTS.length;
+
+    return {
+      navItems: nav,
+      isHome: s.screen === 'home',
+      isLineups: s.screen === 'lineups',
+      isCreate: s.screen === 'create',
+      isLineup: s.screen === 'lineup',
+      isAbout: s.screen === 'about',
+      goHome: go('home'),
+      goLineups: go('lineups'),
+      goCreate: () => this.setState({ screen: 'create', step: s.league ? 'roster' : 'league', picker: null, card: null }),
+      stop: e => e.stopPropagation(),
+      seasonLabel: this.SEASON + ' SEASON TOTALS',
+
+      homeCards: [
+        { tag: 'BEST PLAYER', color: '#f0c31c', title: 'Who is actually carrying you', body: 'Every rostered player scored against your league\u2019s own scoring settings — not a generic average.' },
+        { tag: 'WORST PLAYER', color: this.MG, title: 'The starter to cut loose', body: 'Kickers and defenses are held out, so the verdict lands on a player you can actually replace.' },
+        { tag: 'DARK HORSE', color: '#00E5FF', title: 'Top-20% metrics, quiet box score', body: 'A rostered player whose season EPA already clears the top-20% cutoff at his position.' }
+      ],
+
+      savedLineups,
+      savedCountLabel: s.saved.length + (s.saved.length === 1 ? ' lineup' : ' lineups'),
+
+      stepIsLeague: s.step === 'league',
+      stepIsRoster: s.step === 'roster',
+      stepLabel: s.step === 'league' ? '1 OF 2' : '2 OF 2',
+      stepTitle: s.step === 'league' ? 'Attach a league' : 'Build the lineup',
+      stepBlurb: s.step === 'league'
+        ? 'A lineup can\u2019t exist without scoring settings behind it — fantasy points don\u2019t mean anything without weights to apply to a stat line.'
+        : 'Fill every starter slot. Position eligibility is enforced the same way the server enforces it, so the picker only offers players who can legally fill the slot.',
+      importId: s.importId,
+      importHint: s.importHint || 'Find the ID in your Sleeper league URL.',
+      importHintColor: s.importError ? this.MG : dim(40),
+      onImportChange: e => this.setState({ importId: e.target.value, importHint: '', importError: false }),
+      onImportSleeper: () => {
+        const id = s.importId.trim();
+        if (!/^[0-9]{6,}$/.test(id)) { this.setState({ importHint: 'That doesn\u2019t look like a Sleeper league ID — it\u2019s a long numeric string.', importError: true }); return; }
+        this.setState({ league: { leagueId: id, name: 'Sunday Scaries', isMock: false, season: 2026, rosterPositions: this.fullRoster(), numTeams: 12 }, step: 'roster', importHint: '', importError: false });
+      },
+      onCreateMock: () => this.setState({ league: { leagueId: 'lg-' + Math.random().toString(36).slice(2, 10), name: 'Mock League', isMock: true, season: 2026, rosterPositions: this.fullRoster(), numTeams: 1 }, step: 'roster' }),
+      onBackToLeague: () => this.setState({ step: 'league' }),
+      mockSlotChips: this.STARTER_SLOTS.map(l => ({ label: l, color: this.CY, border: 'color-mix(in srgb,#00E5FF 30%,transparent)' })).concat([{ label: '10 × BN', color: dim(55), border: 'color-mix(in srgb,#00E5FF 15%,transparent)' }]),
+      starterSlots: createStarters,
+      lineupName: s.lineupName,
+      onLineupNameChange: e => this.setState({ lineupName: e.target.value }),
+      onAutofill: () => this.autofill(),
+      leagueName: s.league ? s.league.name : 'No league attached',
+      leagueRows: [
+        { label: 'SOURCE', value: s.league && s.league.isMock ? 'Mock' : 'Sleeper import' },
+        { label: 'LEAGUE ID', value: s.league ? s.league.leagueId.slice(0, 14) : '—' },
+        { label: 'SEASON', value: s.league ? String(s.league.season) : '—' },
+        { label: 'TEAMS', value: s.league ? String(s.league.numTeams) : '—' },
+        { label: 'SCORING', value: s.league && s.league.isMock ? 'Sleeper default' : 'From league' },
+        { label: 'STARTERS', value: this.STARTER_SLOTS.length + ' + 10 BN' }
+      ],
+      createHint: s.league && s.league.isMock
+        ? 'Mock league scoring is fixed at creation — it can\u2019t be edited afterwards.'
+        : 'Imported settings stay in sync with Sleeper and are read-only here.',
+      createBtnLabel: canCreate ? 'Create lineup' : filledStarters + ' of ' + this.STARTER_SLOTS.length + ' slots filled',
+      createBtnBg: canCreate ? '#00E5FF' : 'color-mix(in srgb,#FFFFFF 45%,transparent)',
+      createBtnColor: canCreate ? '#06253C' : dim(45),
+      onCreateLineup: () => {
+        if (!canCreate) return;
+        const entry = { rosterId: 'r-' + Math.random().toString(36).slice(2, 8), leagueId: s.league.leagueId, name: s.lineupName || 'Untitled lineup', isMock: s.league.isMock, createdAt: '2026-08-03' };
+        const saved = s.saved.concat([entry]);
+        this.persist(saved);
+        this.setState({ saved, screen: 'lineup' });
+      },
+
+      starterRows,
+      benchRows,
+      insightCards,
+      starterTotal: starterTotal.toFixed(1),
+      dataNote: 'Points are realized ' + this.SEASON + ' totals recomputed under this league\u2019s scoring settings, not a forward projection. Kicker and defense stat lines aren\u2019t scored yet, so those slots read as \u2014.',
+      swapping: !!s.swapFrom,
+      swapBanner: s.swapFrom ? 'Swapping ' + this.player(s.swapFrom).fullName + ' — pick a starter to swap him with.' : '',
+      onCancelSwap: () => this.setState({ swapFrom: null }),
+
+      pickerOpen: !!pick,
+      pickerTag: occupant ? 'ADD & DROP' : 'ADD PLAYER',
+      pickerTitle: pick ? (occupant ? 'Replace ' + occupant.fullName : 'Fill the ' + pick.label + ' slot') : '',
+      pickerSub: pick ? (this.SLOT_ELIGIBILITY[pick.label] ? 'Eligible: ' + this.SLOT_ELIGIBILITY[pick.label].join(', ') : 'Any position') + ' · ' + this.SEASON + ' totals' : '',
+      pickerQuery: s.pickerQuery,
+      onPickerQuery: e => this.setState({ pickerQuery: e.target.value }),
+      onClosePicker: () => this.setState({ picker: null, pickerQuery: '' }),
+      pickerEmpty: !!pick && pickerList.length === 0,
+      pickerPlayers: pickerList.map(p => ({
+        pos: p.position,
+        name: p.fullName,
+        meta: (p.team || 'FA') + ' · ' + (this.noScore(p.position) ? 'no scoring data' : p.games + ' games · ' + (p.positionRank ? p.position + p.positionRank : 'unranked')),
+        pts: this.fmtPts(p),
+        color: ptsColor(p),
+        onSelect: () => occupant ? this.replacePlayer(pick.label, occupant.playerId, p.playerId) : this.addPlayer(pick.label, p.playerId)
+      })),
+
+      cardOpen: !!card,
+      cardTag: card ? (this.rosteredIds().indexOf(card.playerId) >= 0 ? 'ON YOUR ROSTER' : 'PLAYER') : '',
+      cardName: card ? card.fullName : '',
+      cardMeta: card ? (card.team || 'Free agent') + ' · ' + card.position + ' · ' + this.SEASON + ' season' : '',
+      onCloseCard: () => this.setState({ card: null }),
+      cardTotals: card ? [
+        { label: 'FANTASY PTS', value: this.fmtPts(card), color: ptsColor(card) },
+        { label: 'GAMES', value: String(card.games), color: '#FFFFFF' },
+        { label: 'POS RANK', value: card.positionRank ? '#' + card.positionRank + ' / ' + card.positionPlayerCount : '—', color: card.positionRank && card.positionRank <= 12 ? this.CY : dim(60) }
+      ] : [],
+      cardStats: card ? card.stats.map(st => {
+        const pct = Math.round(((st.count - st.rank + 1) / st.count) * 100);
+        return {
+          label: st.label,
+          rankLabel: '#' + st.rank + ' of ' + st.count,
+          value: st.value + ' · ' + pct + 'th percentile',
+          pct,
+          color: st.rank <= 12 ? this.CY : pct >= 45 ? '#FFFFFF' : this.MG
+        };
+      }) : [],
+      cardNoStats: !!card && card.stats.length === 0,
+      cardNoStatsNote: card ? 'No advanced metrics are ranked for ' + card.position + 's — the stats table has no field-goal or points-allowed columns yet, so kickers and defenses have no rankable production.' : '',
+
+      aboutCards: [
+        { tag: 'LEAGUE', color: this.CY, title: 'Mock or imported', body: 'Create a league with Sleeper\u2019s default scoring, or import a real one by ID. Every lineup hangs off one set of scoring rules.' },
+        { tag: 'LINEUP', color: this.CY, title: 'Add, drop, swap', body: 'Slot eligibility is enforced on both ends — a WR can\u2019t land in the TE slot, and FLEX takes RB, WR, or TE.' },
+        { tag: 'INSIGHTS', color: this.CY, title: 'Three verdicts', body: 'Best player, worst player, and a dark horse whose EPA already sits in the top 20% of his position.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

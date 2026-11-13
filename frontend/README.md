@@ -28,5 +28,5 @@ The job:
 3. `npm run lint`
 4. `npm run test:run` — the same Vitest command used locally, covering both unit tests (`lib/tests/`) and component tests (colocated `components/*/index.test.tsx`) in one run.
 
-No secrets are required for this job. See [documentation/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline-plan.md) for the full pipeline design and rollout notes.
+No secrets are required for this job. See [documentation/ci-cd-pipeline/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline/ci-cd-pipeline-plan.md) for the full pipeline design and rollout notes.
 

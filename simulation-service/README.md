@@ -85,4 +85,4 @@ The job:
 2. `pip install -r requirements-dev.txt` — installs `requirements.txt` plus `pytest`, which isn't needed in the production image so it's kept out of `requirements.txt` itself.
 3. `python -m pytest tests/ -v`.
 
-No secrets or external services are needed — this service is stateless (see [CLAUDE.md](./CLAUDE.md)), so the job only ever exercises the pure-numpy `simulate_trade` function. See [documentation/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline-plan.md) for the full pipeline design and rollout notes.
+No secrets or external services are needed — this service is stateless (see [CLAUDE.md](./CLAUDE.md)), so the job only ever exercises the pure-numpy `simulate_trade` function. See [documentation/ci-cd-pipeline/ci-cd-pipeline-plan.md](../documentation/ci-cd-pipeline/ci-cd-pipeline-plan.md) for the full pipeline design and rollout notes.
