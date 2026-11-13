@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, Fragment, useState } from "react";
+import { FC, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./page.module.css";
@@ -13,6 +13,13 @@ const NAV_LINKS = [
   { href: "/about", label: "About" },
 ];
 
+/** Home matches exactly; every other link is active on its own route and anything nested under it. */
+const isLinkActive = (pathname: string | null, href: string): boolean => {
+  if (!pathname) return false;
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
+};
+
 const Navbar: FC = () => {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
@@ -20,25 +27,26 @@ const Navbar: FC = () => {
   return (
     <header className={styles.header}>
       <nav className={styles.nav}>
-        <Link href="/" className={styles.logo} onClick={() => setIsOpen(false)}>
-          <LogoIcon />
-          <span className={styles.logoText}>
-            <span className={styles.topTextLogo}>
-              Trips
-            </span>
-            <span>
-              Left
-            </span>
+        <Link
+          href="/"
+          aria-label="Trips Left, home"
+          className={styles.logo}
+          onClick={() => setIsOpen(false)}
+        >
+          <LogoIcon className={styles.logoMark} />
+          <span className={styles.wordmark}>
+            Trips <span className={styles.wordmarkAccent}>Left</span>
           </span>
         </Link>
 
         <ul className={styles.desktopLinks}>
           {NAV_LINKS.map(({ href, label }) => {
-            const isActive = pathname === href;
+            const isActive = isLinkActive(pathname, href);
             return (
               <li key={href}>
                 <Link
                   href={href}
+                  aria-current={isActive ? "page" : undefined}
                   className={isActive ? `${styles.link} ${styles.linkActive}` : styles.link}
                 >
                   {label}
@@ -72,11 +80,12 @@ const Navbar: FC = () => {
       {isOpen && (
         <ul className={styles.mobileMenu}>
           {NAV_LINKS.map(({ href, label }) => {
-            const isActive = pathname === href;
+            const isActive = isLinkActive(pathname, href);
             return (
               <li key={href}>
                 <Link
                   href={href}
+                  aria-current={isActive ? "page" : undefined}
                   onClick={() => setIsOpen(false)}
                   className={isActive ? `${styles.mobileLink} ${styles.mobileLinkActive}` : styles.mobileLink}
                 >

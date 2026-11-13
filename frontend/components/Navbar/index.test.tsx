@@ -14,8 +14,11 @@ describe("Navbar", () => {
         mockUsePathname.mockReturnValue("/");
         render(<Navbar />);
 
-        expect(screen.getByText("Trips")).toBeInTheDocument();
+        const homeLogo = screen.getByRole("link", { name: "Trips Left, home" });
+        expect(homeLogo).toHaveAttribute("href", "/");
+        expect(homeLogo.querySelector("svg")).toHaveAttribute("viewBox", "0 0 24 24");
         expect(screen.getByText("Left")).toBeInTheDocument();
+        expect(screen.getAllByRole("link", { name: "Trade Simulator" }).length).toBeGreaterThan(0);
         expect(screen.getAllByRole("link", { name: "Home" }).length).toBeGreaterThan(0);
         expect(screen.getAllByRole("link", { name: "Lineup" }).length).toBeGreaterThan(0);
         expect(screen.getAllByRole("link", { name: "About" }).length).toBeGreaterThan(0);
@@ -53,11 +56,34 @@ describe("Navbar", () => {
         expect(aboutLink.className).toMatch(/linkActive/);
     });
 
-    it("marks no nav link active for an unrelated pathname", () => {
-        mockUsePathname.mockReturnValue("/lineup-management/view-lineup");
+    it.each(["/lineup-management/create", "/lineup-management/view-lineup"])(
+        "marks the Lineup link active on the nested route %s",
+        (pathname) => {
+            mockUsePathname.mockReturnValue(pathname);
+            render(<Navbar />);
+
+            const [lineupLink] = screen.getAllByRole("link", { name: "Lineup" });
+            const [homeLink] = screen.getAllByRole("link", { name: "Home" });
+            expect(lineupLink.className).toMatch(/linkActive/);
+            expect(lineupLink).toHaveAttribute("aria-current", "page");
+            expect(homeLink.className).not.toMatch(/linkActive/);
+            expect(homeLink).not.toHaveAttribute("aria-current");
+        },
+    );
+
+    it("does not treat a route that merely shares a prefix as nested", () => {
+        mockUsePathname.mockReturnValue("/lineup-management-old");
         render(<Navbar />);
 
-        for (const label of ["Home", "Lineup", "About"]) {
+        const [lineupLink] = screen.getAllByRole("link", { name: "Lineup" });
+        expect(lineupLink.className).not.toMatch(/linkActive/);
+    });
+
+    it("marks no nav link active for an unrelated pathname", () => {
+        mockUsePathname.mockReturnValue("/not-a-page");
+        render(<Navbar />);
+
+        for (const label of ["Home", "Lineup", "Trade Simulator", "About"]) {
             for (const link of screen.getAllByRole("link", { name: label })) {
                 expect(link.className).not.toMatch(/linkActive/);
             }

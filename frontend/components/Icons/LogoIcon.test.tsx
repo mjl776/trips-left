@@ -3,26 +3,41 @@ import { render } from "@testing-library/react";
 import { LogoIcon } from "./LogoIcon";
 
 describe("LogoIcon", () => {
-    it("renders an svg with the expected viewBox and four line segments", () => {
+    it("renders a 24×24 goalpost with stroke 2 and no Tailwind classes by default", () => {
         const { container } = render(<LogoIcon />);
 
         const svg = container.querySelector("svg");
         expect(svg).toBeInTheDocument();
-        expect(svg).toHaveAttribute("viewBox", "0 0 36 40");
-        expect(container.querySelectorAll("line")).toHaveLength(4);
+        expect(svg).toHaveAttribute("viewBox", "0 0 24 24");
+        expect(svg).toHaveAttribute("width", "24");
+        expect(svg).toHaveAttribute("height", "24");
+        expect(svg).toHaveAttribute("stroke-width", "2");
+        expect(svg).toHaveAttribute("stroke", "currentColor");
+        expect(svg).not.toHaveAttribute("class");
     });
 
-    it("applies the default className when none is provided", () => {
+    it("draws the uprights from the ends of the crossbar, and the stem from its center", () => {
         const { container } = render(<LogoIcon />);
 
-        expect(container.querySelector("svg")).toHaveClass("h-7", "w-7");
+        const paths = Array.from(container.querySelectorAll("path")).map((p) => p.getAttribute("d"));
+        // Up from (1,1) to the crossbar's left end, across to its right end, up to (23,1).
+        expect(paths).toContain("M1 1V8H23V1");
+        expect(paths).toContain("M12 8V23");
     });
 
-    it("applies a custom className when provided", () => {
-        const { container } = render(<LogoIcon className="h-10 w-10 text-red-500" />);
+    it("is decorative so the surrounding link supplies the accessible name", () => {
+        const { container } = render(<LogoIcon />);
+
+        expect(container.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    });
+
+    it("scales via the size prop and keeps the same viewBox", () => {
+        const { container } = render(<LogoIcon size={48} className="custom" />);
 
         const svg = container.querySelector("svg");
-        expect(svg).toHaveClass("h-10", "w-10", "text-red-500");
-        expect(svg).not.toHaveClass("h-7");
+        expect(svg).toHaveAttribute("width", "48");
+        expect(svg).toHaveAttribute("height", "48");
+        expect(svg).toHaveAttribute("viewBox", "0 0 24 24");
+        expect(svg).toHaveClass("custom");
     });
 });
