@@ -21,6 +21,11 @@
     box-shadow: 0 1.5rem 3rem color-mix(in srgb, black 35%, transparent);
 }
 
+/* The dialog itself only takes focus as a fallback; the ring belongs on its controls. */
+.playerCard:focus {
+    outline: none;
+}
+
 .header {
     display: flex;
     align-items: flex-start;
@@ -29,6 +34,7 @@
 }
 
 .playerName {
+    margin: 0;
     font-size: 1.5rem;
     font-weight: var(--medium-bold);
     letter-spacing: -0.02em;

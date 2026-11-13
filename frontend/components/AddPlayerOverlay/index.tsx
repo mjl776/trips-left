@@ -1,6 +1,7 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useId, useRef, useState } from "react";
+import { useDialog } from "@/lib/useDialog";
 import styles from "./page.module.css";
 
 export type AddPlayerOverlayPlayer = {
@@ -23,14 +24,10 @@ const MAX_RESULTS = 25;
 const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSelect, onClose, occupantName }) => {
   const [query, setQuery] = useState("");
   const [visibleCount, setVisibleCount] = useState(MAX_RESULTS);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  const titleId = useId();
+  const searchId = useId();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useDialog<HTMLDivElement>(onClose, searchRef);
 
   useEffect(() => {
     Promise.resolve().then(() => setVisibleCount(MAX_RESULTS));
@@ -44,20 +41,34 @@ const AddPlayerOverlay: FC<AddPlayerOverlayProps> = ({ slotLabel, players, onSel
 
   return (
     <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.card} onClick={(event) => event.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className={styles.card}
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className={styles.header}>
           <div>
             <div className={styles.tag}>{occupantName ? "ADD & DROP" : "ADD PLAYER"}</div>
-            <span className={styles.title}>{occupantName ? `Replace ${occupantName}` : `Add ${slotLabel}`}</span>
+            <h2 id={titleId} className={styles.title}>
+              {occupantName ? `Replace ${occupantName}` : `Fill the ${slotLabel} slot`}
+            </h2>
           </div>
           <button type="button" className={styles.closeButton} aria-label="Close" onClick={onClose}>
             ×
           </button>
         </div>
 
+        <label htmlFor={searchId} className={styles.srOnly}>
+          Search players by name
+        </label>
         <input
+          id={searchId}
+          ref={searchRef}
           type="text"
-          autoFocus
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search players..."
