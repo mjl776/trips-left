@@ -346,4 +346,62 @@ describe("IndividualPlayerCardOverlay", () => {
         await waitFor(() => expect(fetch).toHaveBeenCalled());
         expect(screen.queryByText(/FANTASY PTS/)).not.toBeInTheDocument();
     });
+
+    it("is a modal dialog labelled by the player's name once loaded", async () => {
+        stubFetch({ viewPlayer: qbStats, statRanks: {} });
+
+        render(<IndividualPlayerCardOverlay playerId="p1" leagueId={null} season={2025} onClose={vi.fn()} />);
+
+        expect(screen.getByRole("dialog", { name: "Loading player" })).toHaveAttribute("aria-modal", "true");
+        expect(await screen.findByRole("dialog", { name: "Alpha Quarterback" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { level: 2, name: "Alpha Quarterback" })).toBeInTheDocument();
+    });
+
+    it("uses correct ordinals for percentiles", async () => {
+        stubFetch({
+            statRanks: {
+                passingAirYards: {
+                    playerId: "p1",
+                    fullName: qbStats.fullName,
+                    position: "QB",
+                    team: "BUF",
+                    season: 2025,
+                    stat: "passingAirYards",
+                    value: 4321,
+                    gamesCounted: 17,
+                    positionRank: 10,
+                    positionPlayerCount: 100,
+                },
+            },
+        });
+
+        render(
+            <IndividualPlayerCardOverlay playerId="p1" leagueId={null} season={2025} onClose={vi.fn()} initialStats={qbStats} />,
+        );
+
+        // (100 - 10 + 1) / 100 = 91%
+        expect(await screen.findByText("91st percentile", { exact: false })).toBeInTheDocument();
+    });
+
+    it("traps Tab on the close button and returns focus to the opener on close", async () => {
+        stubFetch({ viewPlayer: qbStats, statRanks: {} });
+        const opener = document.createElement("button");
+        document.body.appendChild(opener);
+        opener.focus();
+
+        const { unmount } = render(
+            <IndividualPlayerCardOverlay playerId="p1" leagueId={null} season={2025} onClose={vi.fn()} />,
+        );
+        expect(screen.getByRole("dialog")).toHaveFocus();
+
+        await screen.findByText("Alpha Quarterback");
+        fireEvent.keyDown(window, { key: "Tab" });
+        expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+        fireEvent.keyDown(window, { key: "Tab" });
+        expect(screen.getByRole("button", { name: "Close" })).toHaveFocus();
+
+        unmount();
+        expect(opener).toHaveFocus();
+        opener.remove();
+    });
 });

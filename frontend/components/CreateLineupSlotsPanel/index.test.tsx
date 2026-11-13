@@ -192,7 +192,7 @@ describe("CreateLineupSlotsPanel", () => {
 
         const addButtons = await screen.findAllByRole("button", { name: "Add player to QB" });
         fireEvent.click(addButtons[0]);
-        expect(screen.getByText("Add QB")).toBeInTheDocument();
+        expect(screen.getByText("Fill the QB slot")).toBeInTheDocument();
 
         fireEvent.change(screen.getByPlaceholderText("Search players..."), { target: { value: "Player" } });
         // Only the QB should surface even though every fixture player's name contains "Player".
@@ -203,7 +203,7 @@ describe("CreateLineupSlotsPanel", () => {
         fireEvent.click(screen.getByRole("button", { name: /Quarterback Player/ }));
 
         // Overlay closes and the slot now shows the assigned player.
-        expect(screen.queryByText("Add QB")).not.toBeInTheDocument();
+        expect(screen.queryByText("Fill the QB slot")).not.toBeInTheDocument();
         expect(screen.getByText("Quarterback Player")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Remove Quarterback Player from QB" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "1 of 10 slots filled" })).toBeDisabled();

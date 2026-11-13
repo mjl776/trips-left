@@ -302,7 +302,7 @@ describe("ViewLineupPanel", () => {
         fireEvent.click(screen.getByRole("button", { name: "Add player to FLEX" }));
         // AddPlayerOverlay is now code-split via next/dynamic (Phase 4), so it
         // mounts asynchronously after the click.
-        await waitFor(() => expect(screen.getByText("Add FLEX")).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText("Fill the FLEX slot")).toBeInTheDocument());
 
         // GET /players is deferred until a slot is opened (Phase 4), so the
         // eligible list populates asynchronously after this click.
@@ -340,7 +340,7 @@ describe("ViewLineupPanel", () => {
         fireEvent.click(screen.getByRole("button", { name: "Add player to bench" }));
         // AddPlayerOverlay is now code-split via next/dynamic (Phase 4), so it
         // mounts asynchronously after the click.
-        await waitFor(() => expect(screen.getByText("Add Bench")).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText("Fill the Bench slot")).toBeInTheDocument());
 
         fireEvent.change(screen.getByPlaceholderText("Search players..."), { target: { value: "Free Agent" } });
         await waitFor(() => expect(screen.getByText("Free Agent Kicker")).toBeInTheDocument());
@@ -500,14 +500,14 @@ describe("ViewLineupPanel", () => {
         await waitFor(() => expect(screen.getByText("Empty bench slot")).toBeInTheDocument());
 
         fireEvent.click(screen.getByRole("button", { name: "Add player to bench" }));
-        await waitFor(() => expect(screen.getByText("Add Bench")).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText("Fill the Bench slot")).toBeInTheDocument());
         fireEvent.change(screen.getByPlaceholderText("Search players..."), { target: { value: "Free Agent" } });
         await waitFor(() => expect(screen.getByText("Free Agent Kicker")).toBeInTheDocument());
         fireEvent.click(screen.getByText("Free Agent Kicker"));
 
         expect(await within(screen.getByRole("alert")).findByText("Couldn't add player")).toBeInTheDocument();
 
-        expect(screen.getByText("Add Bench")).toBeInTheDocument();
+        expect(screen.getByText("Fill the Bench slot")).toBeInTheDocument();
         expect(fetchMock.mock.calls.filter(([input]) => String(input).includes("/view-lineup"))).toHaveLength(1);
     });
 

@@ -22,6 +22,11 @@
   overflow: hidden;
 }
 
+/* The dialog itself only takes focus as a fallback; the ring belongs on its controls. */
+.card:focus {
+  outline: none;
+}
+
 .header {
   display: flex;
   align-items: flex-start;
@@ -39,7 +44,7 @@
 
 .title {
   display: block;
-  margin-top: 0.5rem;
+  margin: 0.5rem 0 0;
   font-size: 1.0625rem;
   font-weight: var(--medium-bold);
   color: var(--secondary-text-color);
@@ -76,7 +81,6 @@
 }
 
 .searchInput:focus {
-  outline: none;
   border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
@@ -159,4 +163,16 @@
 .showMoreButton:hover {
   background: color-mix(in srgb, var(--foreground) 6%, transparent);
   border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

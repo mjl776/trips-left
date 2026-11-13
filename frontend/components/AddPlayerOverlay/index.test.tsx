@@ -21,7 +21,7 @@ describe("AddPlayerOverlay", () => {
         );
 
         expect(screen.getByText("ADD PLAYER")).toBeInTheDocument();
-        expect(screen.getByText("Add WR")).toBeInTheDocument();
+        expect(screen.getByText("Fill the WR slot")).toBeInTheDocument();
     });
 
     it("shows the 'ADD & DROP' tag and replace title when an occupant is provided", () => {
@@ -183,7 +183,7 @@ describe("AddPlayerOverlay", () => {
             <AddPlayerOverlay slotLabel="WR" players={[buildPlayer()]} onSelect={vi.fn()} onClose={onClose} />
         );
 
-        fireEvent.click(screen.getByText("Add WR"));
+        fireEvent.click(screen.getByText("Fill the WR slot"));
 
         expect(onClose).not.toHaveBeenCalled();
     });
@@ -231,5 +231,52 @@ describe("AddPlayerOverlay", () => {
         fireEvent.keyDown(window, { key: "Escape" });
 
         expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it("is a modal dialog labelled by its title", () => {
+        render(
+            <AddPlayerOverlay slotLabel="WR" players={[buildPlayer()]} onSelect={vi.fn()} onClose={vi.fn()} />
+        );
+
+        const dialog = screen.getByRole("dialog", { name: "Fill the WR slot" });
+        expect(dialog).toHaveAttribute("aria-modal", "true");
+    });
+
+    it("labels the search field and focuses it on open", () => {
+        render(
+            <AddPlayerOverlay slotLabel="WR" players={[buildPlayer()]} onSelect={vi.fn()} onClose={vi.fn()} />
+        );
+
+        expect(screen.getByLabelText("Search players by name")).toHaveFocus();
+    });
+
+    it("keeps Tab inside the dialog", () => {
+        render(
+            <AddPlayerOverlay slotLabel="WR" players={[buildPlayer()]} onSelect={vi.fn()} onClose={vi.fn()} />
+        );
+        const search = screen.getByLabelText("Search players by name");
+        const close = screen.getByRole("button", { name: "Close" });
+
+        fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+        expect(search).toHaveFocus();
+
+        close.focus();
+        fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
+        expect(search).toHaveFocus();
+    });
+
+    it("returns focus to the opener on close", () => {
+        const opener = document.createElement("button");
+        document.body.appendChild(opener);
+        opener.focus();
+
+        const { unmount } = render(
+            <AddPlayerOverlay slotLabel="WR" players={[buildPlayer()]} onSelect={vi.fn()} onClose={vi.fn()} />
+        );
+        expect(opener).not.toHaveFocus();
+
+        unmount();
+        expect(opener).toHaveFocus();
+        opener.remove();
     });
 });

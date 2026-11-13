@@ -161,7 +161,7 @@ If a task seems to need one of these, stop and ask rather than inventing an endp
 
 1. Before writing code, propose a short plan: which route/component(s), the prop interfaces, and whether new shared logic belongs in `frontend/lib/`. Wait for confirmation before implementing anything beyond a one-file fix.
 2. Build in reviewable chunks: `lib/` data/helper function first (if needed), then the presentational component, then wiring it into the route/page. Don't land data layer + UI + route wiring as one undifferentiated diff.
-3. Every screen that fetches must handle loading, empty, and error states explicitly — see `ViewLineupPanel`/`LineupInsightsPanel` for the null-state pattern (neutral muted card, never magenta/alert-styled). Overlay components (`AddPlayerOverlay`) need `Escape`-to-close and focus handling; don't skip keyboard/ARIA because "it's just an internal tool."
+3. Every screen that fetches must handle loading, empty, and error states explicitly — see `ViewLineupPanel`/`LineupInsightsPanel` for the null-state pattern (neutral muted card, never magenta/alert-styled). Overlay components (`AddPlayerOverlay`, `IndividualPlayerCardOverlay`) need `Escape`-to-close and focus handling — use `lib/useDialog.ts` (focus trap, Esc, focus restore) with `role="dialog"`, `aria-modal`, `aria-labelledby` and `tabIndex={-1}` on the card; don't skip keyboard/ARIA because "it's just an internal tool."
 4. After implementation, run `npm run lint` and `npm run test:run` in `frontend/` and fix any failures before returning.
 5. Add or update a component test in the same component folder (see "Testing" above) covering the loading/empty/error states you just added.
 

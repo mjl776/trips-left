@@ -1,10 +1,12 @@
 "use client";
 
-import { FC, useEffect, useState } from "react"
+import { FC, useEffect, useId, useState } from "react"
 import styles from './page.module.css'
 import type { PlayerStats } from "@/components/LineupSlotsList";
 import type { PlayerStatRank } from "@/types/PlayerTypes";
 import { API_BASE_URL } from "@/lib/api";
+import { formatOrdinal } from "@/lib/formatOrdinal";
+import { useDialog } from "@/lib/useDialog";
 import { POSITION_RANKABLE_STATS, RANKABLE_STAT_LABELS } from "@/constants";
 
 type IndividualPlayerCardOverlayProps = {
@@ -38,14 +40,8 @@ const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ pla
 
     const [playerStats, setPlayerStats] = useState<PlayerStats | undefined>(initialStats);
     const [statRanks, setStatRanks] = useState<PlayerStatRank[]>([]);
-
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-          if (event.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onClose]);
+    const titleId = useId();
+    const dialogRef = useDialog<HTMLDivElement>(onClose);
 
     useEffect(() => {
         if (initialStats) return;
@@ -92,11 +88,21 @@ const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ pla
 
     return (
         <div className={styles.backdrop} onClick={onClose}>
-            <div className={styles.playerCard} onClick={(event) => event.stopPropagation()}>
+            <div
+                ref={dialogRef}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={playerStats ? titleId : undefined}
+                aria-label={playerStats ? undefined : "Loading player"}
+                aria-busy={!playerStats}
+                tabIndex={-1}
+                className={styles.playerCard}
+                onClick={(event) => event.stopPropagation()}
+            >
                 {playerStats && <>
                     <div className={styles.header}>
                         <div>
-                            <header className={styles.playerName}>{playerStats.fullName}</header>
+                            <h2 id={titleId} className={styles.playerName}>{playerStats.fullName}</h2>
                             <div className={styles.playerMeta}>
                                 {playerStats.team ?? "Free agent"} · {playerStats.position} · {playerStats.season} season
                             </div>
@@ -142,7 +148,7 @@ const IndividualPlayerCardOverlay: FC<IndividualPlayerCardOverlayProps> = ({ pla
                                         </div>
                                         {rank.value !== null && (
                                             <div className={styles.statValue}>
-                                                {formatStatValue(rank.stat, rank.value)} · {pct}th percentile
+                                                {formatStatValue(rank.stat, rank.value)} · {formatOrdinal(pct)} percentile
                                             </div>
                                         )}
                                     </div>
