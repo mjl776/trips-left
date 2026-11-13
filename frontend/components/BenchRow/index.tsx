@@ -14,9 +14,11 @@ type BenchRowProps = {
   onDrop?: () => void;
   onAdd?: () => void;
   disabled?: boolean;
+  // From lineup-insights; gets the cyan 40% border.
+  isDarkHorse?: boolean;
 };
 
-const BenchRow: FC<BenchRowProps> = ({ player, stats, onView, onSwap, onDrop, onAdd, disabled }) => {
+const BenchRow: FC<BenchRowProps> = ({ player, stats, onView, onSwap, onDrop, onAdd, disabled, isDarkHorse }) => {
   if (!player) {
     return (
       <div className={`${styles.row} ${styles.empty}`}>
@@ -41,11 +43,13 @@ const BenchRow: FC<BenchRowProps> = ({ player, stats, onView, onSwap, onDrop, on
   }
 
   return (
-    <div className={styles.row}>
+    <div className={`${styles.row} ${isDarkHorse ? styles.darkHorse : ""}`}>
       <span className={styles.position}>{player.position}</span>
       <button type="button" className={styles.info} onClick={onView} disabled={disabled}>
         <span className={styles.name}>{player.fullName}</span>
         <span className={styles.meta}>{player.team ?? "FA"}</span>
+        {/* The border is the visual cue; this keeps the verdict from being color-only. */}
+        {isDarkHorse && <span className={styles.visuallyHidden}>Dark horse</span>}
       </button>
       <span className={styles.trailing}>
         <ProjectPointsBox stats={stats} />

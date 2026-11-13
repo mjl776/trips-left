@@ -205,7 +205,7 @@ describe("CreateLineupSlotsPanel", () => {
         // Overlay closes and the slot now shows the assigned player.
         expect(screen.queryByText("Add QB")).not.toBeInTheDocument();
         expect(screen.getByText("Quarterback Player")).toBeInTheDocument();
-        expect(screen.getByRole("button", { name: "Remove player from QB" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Remove Quarterback Player from QB" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "1 of 10 slots filled" })).toBeDisabled();
 
         // The projected-points fetch for the newly assigned player resolves asynchronously.
@@ -219,7 +219,7 @@ describe("CreateLineupSlotsPanel", () => {
         await selectPlayerForSlot("QB", "Quarterback Player");
         expect(screen.getByText("Quarterback Player")).toBeInTheDocument();
 
-        fireEvent.click(screen.getByRole("button", { name: "Remove player from QB" }));
+        fireEvent.click(screen.getByRole("button", { name: "Remove Quarterback Player from QB" }));
 
         expect(screen.queryByText("Quarterback Player")).not.toBeInTheDocument();
         expect(screen.getAllByText("Empty")).toHaveLength(10);

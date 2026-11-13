@@ -38,6 +38,24 @@ describe("BenchRow", () => {
         expect(screen.getByText("87.4")).toBeInTheDocument();
     });
 
+    it("gives the dark-horse row its border and an accessible 'Dark horse' label", () => {
+        const { container } = render(
+            <BenchRow player={player} stats={stats} onView={() => {}} onSwap={() => {}} onDrop={() => {}} isDarkHorse />,
+        );
+
+        expect((container.firstChild as HTMLElement).className).toMatch(/darkHorse/);
+        expect(screen.getByRole("button", { name: /Bench Guy.*Dark horse/ })).toBeInTheDocument();
+    });
+
+    it("has no dark-horse border or label by default", () => {
+        const { container } = render(
+            <BenchRow player={player} stats={stats} onView={() => {}} onSwap={() => {}} onDrop={() => {}} />,
+        );
+
+        expect((container.firstChild as HTMLElement).className).not.toMatch(/darkHorse/);
+        expect(screen.queryByText("Dark horse")).not.toBeInTheDocument();
+    });
+
     it("renders FA when the player has no team", () => {
         render(
             <BenchRow

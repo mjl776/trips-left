@@ -2,6 +2,7 @@ import { FC } from "react";
 import styles from "./page.module.css";
 import Skeleton from "@/components/Skeleton";
 import type { LineupInsights } from "@/types/PlayerTypes";
+import { formatOrdinal } from "@/lib/formatOrdinal";
 
 export type InsightsStatus = "loading" | "ready" | "error";
 
@@ -14,7 +15,7 @@ type LineupInsightsPanelProps = {
 };
 
 const CARD_TAGS = [
-  { label: "BEST PLAYER", tone: "cyan", nameWidth: "62%" },
+  { label: "BEST PLAYER", tone: "highlight", nameWidth: "62%" },
   { label: "WORST PLAYER", tone: "magenta", nameWidth: "58%" },
   { label: "DARK HORSE", tone: "cyan", nameWidth: "48%", hasBar: true },
 ] as const;
@@ -47,6 +48,15 @@ const EPA_LABELS: Record<string, string> = {
   receiving_epa: "receiving EPA",
 };
 
+// Static, so it renders under the panel in every status.
+const Footnote: FC<{ season: number }> = ({ season }) => (
+  <p className={styles.footnote}>
+    Points are realized {season} totals recomputed under this league&apos;s scoring settings, not a forward
+    projection. Kickers and defenses are scored, but they have no advanced metrics, so they never get a stat rank or
+    a dark-horse pick.
+  </p>
+);
+
 const LineupInsightsPanel: FC<LineupInsightsPanelProps> = ({ insights, season, status = "ready", onRetry }) => {
   const best = insights?.bestPlayer ?? null;
   const worst = insights?.worstPlayer ?? null;
@@ -71,6 +81,7 @@ const LineupInsightsPanel: FC<LineupInsightsPanelProps> = ({ insights, season, s
             </div>
           )}
         </div>
+        <Footnote season={season} />
       </div>
     );
   }
@@ -80,10 +91,12 @@ const LineupInsightsPanel: FC<LineupInsightsPanelProps> = ({ insights, season, s
       <div className={styles.panel}>
         <div className={styles.microLabel}>LINEUP INSIGHTS</div>
         <div className={styles.cards}>
-          <div className={styles.card}>
+          <div className={`${styles.card} ${best ? styles.highlightCard : ""}`}>
             <div className={styles.cardTop}>
-              <span className={`${styles.cardTag} ${styles.cyan}`}>BEST PLAYER</span>
-              {best && <span className={`${styles.cardValue} ${styles.cyan}`}>{best.totalPoints.toFixed(1)}</span>}
+              <span className={`${styles.cardTag} ${styles.highlight}`}>BEST PLAYER</span>
+              {best && (
+                <span className={`${styles.cardValue} ${styles.highlight}`}>{best.totalPoints.toFixed(1)}</span>
+              )}
             </div>
             {best ? (
               <>
@@ -97,7 +110,7 @@ const LineupInsightsPanel: FC<LineupInsightsPanelProps> = ({ insights, season, s
             )}
           </div>
 
-          <div className={styles.card}>
+          <div className={`${styles.card} ${worst ? styles.magentaCard : ""}`}>
             <div className={styles.cardTop}>
               <span className={`${styles.cardTag} ${styles.magenta}`}>WORST PLAYER</span>
               {worst && (
@@ -119,7 +132,7 @@ const LineupInsightsPanel: FC<LineupInsightsPanelProps> = ({ insights, season, s
             )}
           </div>
 
-          <div className={styles.card}>
+          <div className={`${styles.card} ${darkHorse ? styles.cyanCard : ""}`}>
             <div className={styles.cardTop}>
               <span className={`${styles.cardTag} ${styles.cyan}`}>DARK HORSE</span>
               {darkHorse && (
@@ -140,7 +153,7 @@ const LineupInsightsPanel: FC<LineupInsightsPanelProps> = ({ insights, season, s
                     </div>
                     <div className={styles.barLabel}>
                       {darkHorse.position} RANK #{darkHorse.positionRank ?? "—"} OF {darkHorse.positionPlayerCount} ·{" "}
-                      {Math.round(darkHorse.percentile)}TH PERCENTILE
+                      {formatOrdinal(darkHorse.percentile).toUpperCase()} PERCENTILE
                     </div>
                   </>
                 )}
@@ -154,6 +167,7 @@ const LineupInsightsPanel: FC<LineupInsightsPanelProps> = ({ insights, season, s
           </div>
         </div>
       </div>
+      <Footnote season={season} />
     </div>
   );
 };

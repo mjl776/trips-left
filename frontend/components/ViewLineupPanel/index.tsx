@@ -2,7 +2,7 @@
 
 import LineupSlotsList from "../LineupSlotsList";
 import type { PlayerStats } from "../LineupSlotsList";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { AddPlayerOverlayPlayer } from "@/components/AddPlayerOverlay";
 import { ActiveSlot, getEligiblePlayers } from "@/lib/playerEligibility";
@@ -80,7 +80,7 @@ const ViewLineupPanel: FC = () => {
   // Doesn't set "loading" itself: only the initial load (and a retry from the
   // error card) shows the skeleton. Reloads after a mutation keep the current
   // roster visible, with isMutating disabling interactions.
-  const loadLineup = async () => {
+  const loadLineup = useCallback(async () => {
     if (!rosterId || !leagueId) return;
     try {
       const response = await fetch(
@@ -108,7 +108,7 @@ const ViewLineupPanel: FC = () => {
       console.error(error);
       setLineupStatus("error");
     }
-  };
+  }, [rosterId, leagueId]);
 
   const retryLineup = () => {
     setLineupStatus("loading");
@@ -117,7 +117,7 @@ const ViewLineupPanel: FC = () => {
 
   // Shows the insights skeleton on every call, including refreshes after a
   // mutation, and drops any response that a newer request has superseded.
-  const loadInsights = async () => {
+  const loadInsights = useCallback(async () => {
     if (!rosterId || !leagueId) return;
     const requestId = ++insightsRequestRef.current;
     setInsightsStatus("loading");
@@ -134,7 +134,7 @@ const ViewLineupPanel: FC = () => {
       console.error(error);
       setInsightsStatus("error");
     }
-  };
+  }, [rosterId, leagueId]);
 
   // Both requests start together, but only the roster reload gates isMutating:
   // the roster stays interactive while (slower) insights recompute, and the
@@ -147,7 +147,7 @@ const ViewLineupPanel: FC = () => {
   // loadInsights doesn't depend on the roster, so both fire in parallel on mount.
   useEffect(() => {
     Promise.resolve().then(() => Promise.all([loadLineup(), loadInsights()]));
-  }, [rosterId, leagueId]);
+  }, [loadLineup, loadInsights]);
 
   // Deferred until a slot is actually opened — GET /players returns the
   // entire player list and is only needed for the add-player search.
@@ -345,6 +345,7 @@ const ViewLineupPanel: FC = () => {
                   key={slotId}
                   player={player}
                   stats={player ? playerStatsByPlayerId[player.playerId] : undefined}
+                  isDarkHorse={!!player && player.playerId === verdicts?.darkHorse?.playerId}
                   onView={player ? () => setActivePlayerId(player.playerId) : undefined}
                   onSwap={player ? () => setSwapFromPlayerId(player.playerId) : undefined}
                   onDrop={player ? () => handleRemovePlayer(player.playerId) : undefined}

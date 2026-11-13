@@ -1,14 +1,17 @@
 import { FC } from "react";
 import styles from './page.module.css'
 
+// highlight = Best Player, cyan = Dark Horse, magenta = Worst Player.
+export type SquareLabelTone = "cyan" | "magenta" | "highlight";
+
 type SquareLabelProps = {
     labelText: string;
-    tone?: "cyan" | "magenta";
+    tone?: SquareLabelTone;
 }
 
 const SquareLabel: FC<SquareLabelProps> = ({ labelText, tone = "cyan" }) => {
     return (
-        <div className={`${styles.squareLabel} ${tone === "magenta" ? styles.magenta : styles.cyan}`}>
+        <div className={`${styles.squareLabel} ${styles[tone]}`}>
             { labelText }
         </div>
     );

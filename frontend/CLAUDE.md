@@ -37,7 +37,7 @@ Defined in `frontend/app/globals.css`. **Never hardcode a hex in a component** �
 | `--tertiary-color` | `#E84393` | Alerts and weak spots only: worst player, drop actions, destructive confirms |
 | `--secondary-text-color` | `#FFFFFF` | Player names and body copy on dark surfaces |
 | `--medium-bold` | `600` | Standard emphasis weight |
-| `--highlight` | `#f0c31c` | v4 redesign. Reserved for the Best Player verdict only — not a general accent. Used today only by the Home page's Best Player card tag (see `documentation/v4-redesign/`) |
+| `--highlight` | `#f0c31c` | Reserved for the Best Player verdict only — not a general accent. Used by the Home page's Best Player card tag, the `LineupSlot` Best Player badge (`SquareLabel tone="highlight"`), and the Best Player card in `LineupInsightsPanel` (see `documentation/v4-redesign/`) |
 | `--on-accent` | `#06253C` | Text/icons on a solid `--foreground` fill (primary buttons, active nav) |
 
 A global `:focus-visible` rule in `globals.css` draws a 2px `--foreground` outline with 2px offset. Don't suppress it with `outline: none` in new components.
@@ -54,7 +54,8 @@ Rules of thumb:
 - Cyan is the interface; magenta is the warning. Never use magenta for decoration or for a positive state.
 - Magenta is scoped to exactly two things: the worst-player row/badge, and drop/remove actions (`LineupSlot`'s remove button, `BenchRow`'s DROP button, hover states on both). It does **not** extend to score-based tiering — point numerals, percentile bars, and stat ranks in `IndividualPlayerCardOverlay` stay cyan regardless of how low the value is.
 - Empty/null states (no worst player, no dark horse, no rankable stats for K/DEF) render as neutral muted cards, never as magenta/alert-styled boxes — see `LineupInsightsPanel` and `IndividualPlayerCardOverlay`.
-- `Labels/SquareLabel` takes a `tone: "cyan" | "magenta"` prop; badges must set it explicitly (Best Player/Dark Horse → cyan, Worst Player → magenta) rather than relying on a default.
+- `Labels/SquareLabel` takes a `tone: "cyan" | "magenta" | "highlight"` prop; badges must set it explicitly (Best Player → highlight, Dark Horse → cyan, Worst Player → magenta) rather than relying on a default.
+- Filled verdict cards in `LineupInsightsPanel` take their verdict color as a 35% ring and 8% tint; empty verdicts stay on the neutral card. A dark horse on the bench gets a cyan 40% border on its `BenchRow`.
 - Muted secondary text = `color-mix(in srgb, var(--secondary-text-color) 60%, transparent)`.
 - Radii: `1rem` cards/rows, `0.75rem` badges/inputs, `50%` icon buttons.
 - Transitions: `0.15s ease` on background/border only. No layout animation.

@@ -245,7 +245,7 @@ describe("ViewLineupPanel", () => {
         expect(screen.getByText("Bench Two")).toBeInTheDocument();
         expect(screen.getByText("Empty")).toBeInTheDocument();
 
-        expect(screen.getByText("Best Player").className).toMatch(/cyan/);
+        expect(screen.getByText("Best Player").className).toMatch(/highlight/);
         expect(screen.getByText("Worst Player").className).toMatch(/magenta/);
         expect(screen.getByText("Dark Horse").className).toMatch(/cyan/);
 
@@ -274,6 +274,21 @@ describe("ViewLineupPanel", () => {
         expect(screen.queryByText("Best Player")).not.toBeInTheDocument();
         expect(screen.queryByText("Worst Player")).not.toBeInTheDocument();
         expect(screen.queryByText("Dark Horse")).not.toBeInTheDocument();
+    });
+
+    it("borders the bench row of a dark horse who sits on the bench", async () => {
+        const insights: LineupInsights = {
+            ...populatedInsights,
+            darkHorse: { ...populatedInsights.darkHorse!, playerId: "bn1", fullName: "Bench Guy" },
+        };
+        vi.stubGlobal("fetch", createFetchMock({ roster: makeRoster(), insights, statsById }));
+
+        render(<ViewLineupPanel />, { wrapper: ToastProvider });
+        await waitFor(() => expect(screen.getByRole("button", { name: /Bench Guy.*Dark horse/ })).toBeInTheDocument());
+
+        // The bench row gets the border, not a starter "Dark Horse" badge.
+        expect(screen.queryByText("Dark Horse")).not.toBeInTheDocument();
+        expect(screen.getByRole("button", { name: /Bench Two/ }).textContent).not.toMatch(/Dark horse/);
     });
 
     it("opens the add-player overlay for an empty slot, filters eligible players, and adds the selection via POST /add-player", async () => {
@@ -358,7 +373,7 @@ describe("ViewLineupPanel", () => {
         render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Justin Jefferson")).toBeInTheDocument());
 
-        fireEvent.click(screen.getByRole("button", { name: "Remove player from WR" }));
+        fireEvent.click(screen.getByRole("button", { name: "Remove Justin Jefferson from WR" }));
 
         await waitFor(() => expect(screen.queryByText("Justin Jefferson")).not.toBeInTheDocument());
 
@@ -423,7 +438,7 @@ describe("ViewLineupPanel", () => {
 
         expect(screen.queryByText(/Swapping/)).not.toBeInTheDocument();
         expect(fetchMock.mock.calls.some(([input]) => String(input).includes("/swap-players"))).toBe(false);
-        expect(screen.getByRole("button", { name: "Remove player from RB" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Remove Bijan Robinson from RB" })).toBeInTheDocument();
     });
 
     it("drops a bench player via the DROP button, calling DELETE /remove-player with a JSON body", async () => {
@@ -460,7 +475,7 @@ describe("ViewLineupPanel", () => {
         render(<ViewLineupPanel />, { wrapper: ToastProvider });
         await waitFor(() => expect(screen.getByText("Justin Jefferson")).toBeInTheDocument());
 
-        fireEvent.click(screen.getByRole("button", { name: "Remove player from WR" }));
+        fireEvent.click(screen.getByRole("button", { name: "Remove Justin Jefferson from WR" }));
 
         expect(await within(screen.getByRole("alert")).findByText("Couldn't remove player")).toBeInTheDocument();
 
@@ -593,7 +608,7 @@ describe("ViewLineupPanel", () => {
             await waitFor(() => expect(screen.getByText("Best Player")).toBeInTheDocument());
             expect(insightsCalls(fetchMock)).toHaveLength(1);
 
-            fireEvent.click(screen.getByRole("button", { name: "Remove player from WR" }));
+            fireEvent.click(screen.getByRole("button", { name: "Remove Justin Jefferson from WR" }));
 
             await waitFor(() => expect(insightsCalls(fetchMock)).toHaveLength(2));
             // Roster stays on screen during the refresh; only the insights region is busy.

@@ -21,3 +21,9 @@
     color: var(--tertiary-color);
     border-color: color-mix(in srgb, var(--tertiary-color) 45%, transparent);
 }
+
+/* Best Player only — --highlight is not a general accent. */
+.highlight {
+    color: var(--highlight);
+    border-color: color-mix(in srgb, var(--highlight) 45%, transparent);
+}
