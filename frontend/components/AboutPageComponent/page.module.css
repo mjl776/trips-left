@@ -3,74 +3,82 @@
     flex-direction: column;
     align-items: flex-start;
     width: 100%;
-    max-width: 64rem;
+    max-width: 1240px;
     margin: 0 auto;
-    padding: 4rem 1.5rem 4rem;
+    padding: 96px 28px 110px;
 }
 
 .microLabel {
-    font-size: 0.75rem;
+    font-size: 12px;
     font-weight: var(--medium-bold);
     letter-spacing: 0.18em;
     color: var(--foreground);
 }
 
 .heading {
-    margin-top: 1.125rem;
-    font-size: 2rem;
-    font-weight: var(--medium-bold);
-    letter-spacing: -0.03em;
+    margin: 18px 0 0;
+    font-size: clamp(2.25rem, 6vw, 50px);
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.03;
     color: var(--secondary-text-color);
 }
 
 .content {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    max-width: 42rem;
-    margin-top: 1.25rem;
+    gap: 20px;
+    max-width: 720px;
+    margin-top: 24px;
 }
 
 .paragraph {
     margin: 0;
-    font-size: 1rem;
-    line-height: 1.65;
+    font-size: 16px;
+    line-height: 1.7;
+    text-wrap: pretty;
     color: color-mix(in srgb, var(--secondary-text-color) 62%, transparent);
+}
+
+.lead {
+    font-size: 18px;
+    line-height: 1.65;
 }
 
 .cardRow {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 0.875rem;
+    gap: 14px;
     width: 100%;
-    margin-top: 3.5rem;
+    margin-top: 56px;
 }
 
 .card {
-    padding: 1.75rem;
+    padding: 28px;
     border-radius: 1rem;
-    border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
     background: color-mix(in srgb, var(--foreground) 3%, transparent);
 }
 
 .cardTag {
-    font-size: 0.75rem;
+    font-size: 12px;
     font-weight: var(--medium-bold);
     letter-spacing: 0.14em;
     color: var(--foreground);
 }
 
 .cardTitle {
-    margin-top: 0.875rem;
-    font-size: 1.125rem;
+    margin-top: 14px;
+    font-size: 18px;
     font-weight: var(--medium-bold);
     letter-spacing: -0.02em;
     color: var(--secondary-text-color);
 }
 
 .cardBody {
-    margin-top: 0.5625rem;
-    font-size: 0.875rem;
+    margin-top: 9px;
+    font-size: 14px;
     line-height: 1.6;
-    color: color-mix(in srgb, var(--secondary-text-color) 55%, transparent);
+    text-wrap: pretty;
+    color: color-mix(in srgb, var(--secondary-text-color) 62%, transparent);
 }

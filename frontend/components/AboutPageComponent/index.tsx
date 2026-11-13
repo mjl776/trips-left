@@ -25,7 +25,7 @@ export const AboutPageComponent: FC = () => {
             <div className={styles.microLabel}>ABOUT</div>
             <h1 className={styles.heading}>Trips Left</h1>
             <div className={styles.content}>
-                <p className={styles.paragraph}>
+                <p className={`${styles.paragraph} ${styles.lead}`}>
                     Trips Left helps fantasy football managers get more out of the roster they already have.
                     Build a mock lineup and see exactly where you stand — your best player, your worst, and a data-driven &quot;dark horse&quot; who might be a bigger weapon than you realize. It&apos;s built for polishing the team you&apos;ve got, not chasing the next waiver add.
                 </p>
