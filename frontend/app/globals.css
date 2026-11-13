@@ -6,6 +6,8 @@
   --tertiary-color: #E84393;
   --secondary-text-color: #FFFFFF;
   --medium-bold: 600;
+  --highlight: #f0c31c; /* Best Player verdict only — not a general accent */
+  --on-accent: #06253C; /* text/icons on a solid --foreground fill */
 }
 
 @theme inline {
@@ -20,4 +22,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-space-grotesk);
+}
+
+:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
 }
