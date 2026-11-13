@@ -63,6 +63,27 @@
   color: var(--tertiary-color);
 }
 
+.highlight {
+  color: var(--highlight);
+}
+
+/* A filled verdict card takes its verdict color as a 35% ring and 8% tint.
+   Empty verdicts keep the neutral .card. */
+.highlightCard {
+  border-color: color-mix(in srgb, var(--highlight) 35%, transparent);
+  background: color-mix(in srgb, var(--highlight) 8%, transparent);
+}
+
+.cyanCard {
+  border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.magentaCard {
+  border-color: color-mix(in srgb, var(--tertiary-color) 35%, transparent);
+  background: color-mix(in srgb, var(--tertiary-color) 8%, transparent);
+}
+
 .cardName {
   margin-top: 0.625rem;
   font-size: 1.0625rem;
@@ -105,6 +126,16 @@
   font-size: 0.6875rem;
   letter-spacing: 0.04em;
   color: var(--foreground);
+}
+
+.footnote {
+  padding: 1.125rem 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  background: color-mix(in srgb, var(--foreground) 2%, transparent);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--secondary-text-color) 55%, transparent);
 }
 
 .visuallyHidden {

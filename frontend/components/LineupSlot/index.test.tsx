@@ -112,14 +112,15 @@ describe("LineupSlot", () => {
         expect(screen.getByText("—")).toBeInTheDocument();
     });
 
-    it("renders a cyan Best Player badge when isBestPlayer is true", () => {
+    it("renders a highlight (yellow) Best Player badge when isBestPlayer is true", () => {
         const { container } = render(
             <LineupSlot slot={buildSlot({ assignedPlayerName: "Justin Jefferson", isBestPlayer: true })} />
         );
 
         const badge = screen.getByText("Best Player");
         expect(badge).toBeInTheDocument();
-        expect(badge.className).toMatch(/cyan/);
+        expect(badge.className).toMatch(/highlight/);
+        expect(badge.className).not.toMatch(/cyan/);
         expect(container.querySelector('[class*="magenta"]')).not.toBeInTheDocument();
     });
 
@@ -154,7 +155,7 @@ describe("LineupSlot", () => {
             <LineupSlot slot={buildSlot({ assignedPlayerName: "CeeDee Lamb" })} onRemove={vi.fn()} />
         );
 
-        expect(screen.getByRole("button", { name: "Remove player from WR" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Remove CeeDee Lamb from WR" })).toBeInTheDocument();
     });
 
     it("calls onRemove with the slot when the remove button is clicked", () => {
@@ -162,7 +163,7 @@ describe("LineupSlot", () => {
         const slot = buildSlot({ assignedPlayerName: "CeeDee Lamb" });
         render(<LineupSlot slot={slot} onRemove={onRemove} />);
 
-        screen.getByRole("button", { name: "Remove player from WR" }).click();
+        screen.getByRole("button", { name: "Remove CeeDee Lamb from WR" }).click();
 
         expect(onRemove).toHaveBeenCalledWith(slot);
     });
@@ -170,13 +171,13 @@ describe("LineupSlot", () => {
     it("does not render a remove button for an empty slot", () => {
         render(<LineupSlot slot={buildSlot({ assignedPlayerName: null })} onRemove={vi.fn()} />);
 
-        expect(screen.queryByRole("button", { name: /Remove player/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Remove/ })).not.toBeInTheDocument();
     });
 
     it("does not render a remove button when onRemove is not provided", () => {
         render(<LineupSlot slot={buildSlot({ assignedPlayerName: "CeeDee Lamb" })} />);
 
-        expect(screen.queryByRole("button", { name: /Remove player/ })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Remove/ })).not.toBeInTheDocument();
     });
 
     it("renders as a swap-target button and calls onSwapTarget with the slot when clicked", () => {

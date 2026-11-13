@@ -75,7 +75,7 @@ describe("LineupSlotsList", () => {
         screen.getByText("Star Runner").closest("button")!.click();
         expect(onViewPlayer).toHaveBeenCalledWith(filledSlot);
 
-        screen.getByRole("button", { name: "Remove player from RB" }).click();
+        screen.getByRole("button", { name: "Remove Star Runner from RB" }).click();
         expect(onRemovePlayer).toHaveBeenCalledWith(filledSlot);
     });
 

@@ -43,13 +43,13 @@ describe("LineupInsightsPanel", () => {
     });
 
     describe("full insights (best, worst, and dark horse all present)", () => {
-        it("renders the best player card with cyan styling and season copy", () => {
+        it("renders the best player card with highlight (yellow) styling and season copy", () => {
             const { container } = render(<LineupInsightsPanel insights={buildInsights()} season={2026} />);
 
             const tag = screen.getByText("BEST PLAYER");
-            expect(tag.className).toMatch(/cyan/);
-            expect(tag.className).not.toMatch(/magenta/);
-            expect(screen.getByText("289.4")).toBeInTheDocument();
+            expect(tag.className).toMatch(/highlight/);
+            expect(tag.className).not.toMatch(/cyan|magenta/);
+            expect(screen.getByText("289.4").className).toMatch(/highlight/);
             expect(screen.getByText("Justin Jefferson")).toBeInTheDocument();
             expect(
                 screen.getByText(/Most fantasy points on your roster in 2026 under this league's scoring\./)
@@ -78,7 +78,31 @@ describe("LineupInsightsPanel", () => {
                 screen.getByText(/Season rushing EPA of 45\.6 clears the top-20% cutoff of 30\.1 for RBs\./)
             ).toBeInTheDocument();
             expect(screen.getByText(/RB RANK #4 OF 60/)).toBeInTheDocument();
-            expect(screen.getByText(/92TH PERCENTILE/)).toBeInTheDocument();
+            expect(screen.getByText(/92ND PERCENTILE/)).toBeInTheDocument();
+        });
+
+        it.each([
+            [1, "1ST"],
+            [2, "2ND"],
+            [3, "3RD"],
+            [11, "11TH"],
+            [91, "91ST"],
+        ])("labels a %i percentile as %s", (percentile, label) => {
+            const base = buildInsights().darkHorse!;
+            render(
+                <LineupInsightsPanel insights={buildInsights({ darkHorse: { ...base, percentile } })} season={2026} />
+            );
+            expect(screen.getByText(new RegExp(`· ${label} PERCENTILE`))).toBeInTheDocument();
+        });
+
+        it("rings and tints each filled verdict card in its own color", () => {
+            render(<LineupInsightsPanel insights={buildInsights()} season={2026} />);
+            // tag -> cardTop -> card
+            const cardOf = (tag: string) => screen.getByText(tag).parentElement?.parentElement?.className;
+
+            expect(cardOf("BEST PLAYER")).toMatch(/highlightCard/);
+            expect(cardOf("WORST PLAYER")).toMatch(/magentaCard/);
+            expect(cardOf("DARK HORSE")).toMatch(/cyanCard/);
         });
 
         it("falls back to the raw stat key when it isn't in the known EPA label map", () => {
@@ -179,6 +203,10 @@ describe("LineupInsightsPanel", () => {
             for (const node of emptyNodes) {
                 expect(node.className).not.toMatch(/magenta/);
             }
+            // Empty verdict cards stay neutral: no verdict ring or tint.
+            expect(container.querySelector('[class*="highlightCard"]')).not.toBeInTheDocument();
+            expect(container.querySelector('[class*="magentaCard"]')).not.toBeInTheDocument();
+            expect(container.querySelector('[class*="cyanCard"]')).not.toBeInTheDocument();
         });
 
         it("renders a neutral empty worst-player card even when best and dark horse are present", () => {
@@ -198,6 +226,9 @@ describe("LineupInsightsPanel", () => {
                 node.textContent?.includes("Needs at least two")
             );
             expect(worstCardEmpty?.className).not.toMatch(/magenta/);
+            expect(container.querySelector('[class*="magentaCard"]')).not.toBeInTheDocument();
+            expect(container.querySelector('[class*="highlightCard"]')).toBeInTheDocument();
+            expect(container.querySelector('[class*="cyanCard"]')).toBeInTheDocument();
         });
 
         it("renders a neutral empty best-player card when bestPlayer is null", () => {
@@ -224,7 +255,7 @@ describe("LineupInsightsPanel", () => {
             const { container } = render(<LineupInsightsPanel insights={null} season={2026} status="loading" />);
 
             expect(screen.getByText("LINEUP INSIGHTS")).toBeInTheDocument();
-            expect(screen.getByText("BEST PLAYER").className).toMatch(/cyan/);
+            expect(screen.getByText("BEST PLAYER").className).toMatch(/highlight/);
             expect(screen.getByText("WORST PLAYER").className).toMatch(/magenta/);
             expect(screen.getByText("DARK HORSE").className).toMatch(/cyan/);
             expect(container.querySelector('[aria-busy="true"]')).toBeInTheDocument();
@@ -253,6 +284,14 @@ describe("LineupInsightsPanel", () => {
 
             fireEvent.click(screen.getByRole("button", { name: "RETRY" }));
             expect(onRetry).toHaveBeenCalledTimes(1);
+        });
+
+        it.each(["loading", "ready", "error"] as const)("renders the scoring footnote when %s", (status) => {
+            render(<LineupInsightsPanel insights={buildInsights()} season={2026} status={status} />);
+            expect(
+                screen.getByText(/Points are realized 2026 totals recomputed under this league's scoring settings/)
+            ).toBeInTheDocument();
+            expect(screen.getByText(/Kickers and defenses are scored/)).toBeInTheDocument();
         });
 
         it("ready renders today's cards", () => {

@@ -60,7 +60,7 @@ const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer, onRemove
       )}
       {slot.assignedPlayerName && (
         <span className={styles.actions}>
-          {slot.isBestPlayer && <SquareLabel labelText="Best Player" tone="cyan" />}
+          {slot.isBestPlayer && <SquareLabel labelText="Best Player" tone="highlight" />}
           {slot.isDarkHorse && <SquareLabel labelText="Dark Horse" tone="cyan" />}
           {slot.isWorstPlayer && <SquareLabel labelText="Worst Player" tone="magenta" />}
           <ProjectPointsBox stats={slot.assignedPlayerStats} />
@@ -68,7 +68,7 @@ const LineupSlot: FC<LineupSlotProps> = ({ slot, onClick, onViewPlayer, onRemove
             <button
               type="button"
               className={styles.removeCircle}
-              aria-label={`Remove player from ${slot.label}`}
+              aria-label={`Remove ${slot.assignedPlayerName} from ${slot.label}`}
               onClick={() => onRemove(slot)}
             >
               <span className={styles.minus}>&minus;</span>

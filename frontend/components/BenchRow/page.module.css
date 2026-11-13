@@ -9,6 +9,19 @@
   background: color-mix(in srgb, var(--foreground) 2%, transparent);
 }
 
+.darkHorse {
+  border-color: color-mix(in srgb, var(--foreground) 40%, transparent);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 .position {
   font-size: 0.6875rem;
   font-weight: var(--medium-bold);

@@ -27,4 +27,13 @@ describe("SquareLabel", () => {
         expect(label).toHaveClass(styles.magenta);
         expect(label).not.toHaveClass(styles.cyan);
     });
+
+    it("renders the highlight tone for a best-player badge", () => {
+        render(<SquareLabel labelText="Best Player" tone="highlight" />);
+
+        const label = screen.getByText("Best Player");
+        expect(label).toHaveClass(styles.highlight);
+        expect(label).not.toHaveClass(styles.cyan);
+        expect(label).not.toHaveClass(styles.magenta);
+    });
 });
