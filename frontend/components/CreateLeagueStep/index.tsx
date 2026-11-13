@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useId, useState } from "react";
 import styles from "./page.module.css";
 import { API_BASE_URL } from "@/lib/api";
 import { STARTER_SLOTS } from "@/constants";
@@ -13,6 +13,8 @@ type CreateLeagueStepProps = {
 
 const CreateLeagueStep: FC<CreateLeagueStepProps> = ({ onLeagueAttached }) => {
   const { showToast } = useToast();
+  const inputId = useId();
+  const hintId = useId();
   const [isCreatingMock, setIsCreatingMock] = useState(false);
   const [importId, setImportId] = useState("");
   const [importHint, setImportHint] = useState("Find the ID in your Sleeper league URL.");
@@ -63,10 +65,7 @@ const CreateLeagueStep: FC<CreateLeagueStepProps> = ({ onLeagueAttached }) => {
   return (
     <div className={styles.grid}>
       <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <span className={styles.cardTitle}>Mock league</span>
-          <span className={styles.endpointTag}>create-mock-league</span>
-        </div>
+        <h3 className={styles.cardTitle}>Mock league</h3>
         <p className={styles.cardBody}>
           Sleeper&apos;s default scoring and a standard roster. Nothing to configure — settings are fixed once the
           league is created.
@@ -77,7 +76,7 @@ const CreateLeagueStep: FC<CreateLeagueStepProps> = ({ onLeagueAttached }) => {
               {slot}
             </span>
           ))}
-          <span className={`${styles.chip} ${styles.chipMuted}`}>10× BN</span>
+          <span className={`${styles.chip} ${styles.chipMuted}`}>10 × BN</span>
         </div>
         <button type="button" className={styles.primaryButton} onClick={handleCreateMock} disabled={isCreatingMock}>
           {isCreatingMock ? "Creating..." : "Create mock league"}
@@ -85,17 +84,21 @@ const CreateLeagueStep: FC<CreateLeagueStepProps> = ({ onLeagueAttached }) => {
       </div>
 
       <div className={styles.card}>
-        <div className={styles.cardHeader}>
-          <span className={styles.cardTitle}>Import from Sleeper</span>
-          <span className={styles.endpointTag}>import-sleeper-league</span>
-        </div>
+        <h3 className={styles.cardTitle}>Import from Sleeper</h3>
         <p className={styles.cardBody}>
           Pulls the real scoring settings and roster positions from your league. Read-only — nothing is written back
           to Sleeper.
         </p>
+        <label htmlFor={inputId} className={styles.srOnly}>
+          Sleeper league ID
+        </label>
         <div className={styles.importRow}>
           <input
+            id={inputId}
             type="text"
+            inputMode="numeric"
+            aria-describedby={hintId}
+            aria-invalid={importError}
             value={importId}
             onChange={(event) => {
               setImportId(event.target.value);
@@ -109,7 +112,13 @@ const CreateLeagueStep: FC<CreateLeagueStepProps> = ({ onLeagueAttached }) => {
             {isImporting ? "Importing..." : "Import"}
           </button>
         </div>
-        <div className={`${styles.importHint} ${importError ? styles.importHintError : ""}`}>{importHint}</div>
+        <div
+          id={hintId}
+          aria-live="polite"
+          className={`${styles.importHint} ${importError ? styles.importHintError : ""}`}
+        >
+          {importHint}
+        </div>
       </div>
     </div>
   );

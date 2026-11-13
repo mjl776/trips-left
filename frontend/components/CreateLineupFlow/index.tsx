@@ -8,6 +8,9 @@ import styles from "./page.module.css";
 
 const CreateLineupFlow: FC = () => {
   const [league, setLeague] = useState<League | null>(null);
+  // Owned here, not in the slots panel, so "Change league" (which unmounts the
+  // panel) doesn't throw away the name the user already typed.
+  const [name, setName] = useState("");
   const step = league ? "roster" : "league";
 
   return (
@@ -21,7 +24,12 @@ const CreateLineupFlow: FC = () => {
       </p>
       <div className={styles.body}>
         {league ? (
-          <CreateLineupSlotsPanel league={league} onChangeLeague={() => setLeague(null)} />
+          <CreateLineupSlotsPanel
+            league={league}
+            name={name}
+            onNameChange={setName}
+            onChangeLeague={() => setLeague(null)}
+          />
         ) : (
           <CreateLeagueStep onLeagueAttached={setLeague} />
         )}

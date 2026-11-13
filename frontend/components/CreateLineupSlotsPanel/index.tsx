@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useId, useState } from "react";
 import styles from "./page.module.css";
 import AddPlayerOverlay from "../AddPlayerOverlay";
 import type { AddPlayerOverlayPlayer } from "../AddPlayerOverlay";
@@ -38,18 +38,20 @@ async function readErrorMessage(response: Response): Promise<string> {
 
 type CreateLineupSlotsPanelProps = {
   league: League;
+  name: string;
+  onNameChange: (name: string) => void;
   onChangeLeague: () => void;
 };
 
-const CreateLineupSlotsPanel: FC<CreateLineupSlotsPanelProps> = ({ league, onChangeLeague }) => {
+const CreateLineupSlotsPanel: FC<CreateLineupSlotsPanelProps> = ({ league, name, onNameChange, onChangeLeague }) => {
   const router = useRouter();
   const { showToast } = useToast();
+  const nameInputId = useId();
 
   const [players, setPlayers] = useState<AddPlayerOverlayPlayer[]>([]);
   const [assignments, setAssignments] = useState<Record<string, AddPlayerOverlayPlayer>>({});
   const [activeSlot, setActiveSlot] = useState<ActiveSlot | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [name, setName] = useState("");
   const [playerStatsByPlayerId, setPlayerStatsByPlayerId] = useState<Record<string, PlayerStats>>({});
 
   useEffect(() => {
@@ -138,10 +140,14 @@ const CreateLineupSlotsPanel: FC<CreateLineupSlotsPanelProps> = ({ league, onCha
   return (
     <div className={styles.layout}>
       <div className={styles.main}>
+        <label htmlFor={nameInputId} className={styles.srOnly}>
+          Lineup name
+        </label>
         <input
+          id={nameInputId}
           type="text"
           value={name}
-          onChange={(event) => setName(event.target.value)}
+          onChange={(event) => onNameChange(event.target.value)}
           placeholder="Name your lineup"
           className={styles.nameInput}
         />
