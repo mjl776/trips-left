@@ -51,9 +51,8 @@ const EPA_LABELS: Record<string, string> = {
 // Static, so it renders under the panel in every status.
 const Footnote: FC<{ season: number }> = ({ season }) => (
   <p className={styles.footnote}>
-    Points are realized {season} totals recomputed under this league&apos;s scoring settings, not a forward
-    projection. Kickers and defenses are scored, but they have no advanced metrics, so they never get a stat rank or
-    a dark-horse pick.
+    {`Points are realized ${season} totals recomputed under this league's scoring settings, not a forward projection. ` +
+      "Kickers and defenses are scored, but they have no advanced metrics, so they never get a stat rank or a dark-horse pick."}
   </p>
 );
 
